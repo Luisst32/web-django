@@ -1,0 +1,71 @@
+/* base.css */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Ajustes para la barra de búsqueda */
+.search-container {
+    width: 100%;
+    max-width: 400px; /* Tamaño máximo en PC */
+}
+
+#userSearch {
+    font-size: 1rem;
+    padding: 8px 12px;
+    border-radius: 20px; /* Estilo redondeado */
+    border: 1px solid #444; /* Borde sutil para fondo oscuro */
+    background-color: #f1f1f1;
+    transition: all 0.3s ease;
+}
+
+#userSearch:focus {
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    outline: none;
+}
+
+/* Resultados de búsqueda */
+#userList {
+    max-height: 300px;
+    overflow-y: auto;
+    display: none; /* JS lo manejará */
+    z-index: 1000;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    border: none;
+    margin-top: 5px;
+}
+
+.search-result-item {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Ajustes responsivos adicionales si son necesarios */
+@media (max-width: 991px) {
+    .search-container {
+        max-width: 100%; /* En móvil ocupa todo el ancho */
+        margin: 10px 0;
+    }
+    
+    .navbar-nav {
+        flex-direction: row; /* Mantiene íconos en fila en móvil si se prefiere */
+        justify-content: flex-end;
+    }
+}

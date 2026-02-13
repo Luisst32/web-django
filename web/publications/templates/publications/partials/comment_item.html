@@ -1,0 +1,57 @@
+<div class="comment-item" id="comment-{{ comentario.pk }}">
+
+    <div class="flex-shrink-0 me-2 comment-avatar">
+        {% if comentario.usuario.foto_perfil %}
+        <img src="{{ comentario.usuario.foto_perfil.url }}" alt="{{ comentario.usuario.username }}">
+        {% else %}
+        <div class="avatar-placeholder">
+            {{ comentario.usuario.username|slice:":2"|upper }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="comment-body">
+        <div class="comment-bubble">
+            <div class="comment-header">
+                <span class="comment-author">
+                    {{ comentario.usuario.username }}
+                    {% if comentario.usuario.verification_badge %}
+                    <img src="{{ comentario.usuario.verification_badge.icon.url }}"
+                        title="{{ comentario.usuario.verification_badge.name }}"
+                        style="width: 18px; height: 18px; margin-left: 2px;" data-bs-toggle="tooltip">
+                    {% endif %}
+                </span>
+                <span class="comment-date">{{ comentario.fecha_publicacion|timesince }}</span>
+            </div>
+            <p class="comment-text">{{ comentario.descripcion }}</p>
+            {% if comentario.imagen %}
+            <div class="comment-image-container">
+                <img src="{{ comentario.imagen.url }}" alt="Imagen de comentario" class="comment-image"
+                    onclick="window.open(this.src, '_blank')">
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="comment-actions">
+            <button class="btn-reply"
+                onclick="window['setReplyTarget_{{ comentario.post.id }}']('{{ comentario.id }}', '{{ comentario.usuario.username }}')">
+                Responder
+            </button>
+            {% if request.user == comentario.usuario %}
+            <button class="btn-reply text-danger ms-2" type="button"
+                onclick="window.CommentsApp.requestDelete('{% url 'publications:eliminar_comentario' comment_id=comentario.id %}')">
+                <i class="bi bi-trash"></i>
+            </button>
+            {% endif %}
+        </div>
+
+        <div class="replies-container" id="replies-for-{{ comentario.pk }}">
+            {% if comentario.respuestas.count > 0 %}
+            <button class="btn-load-replies" hx-get="{% url 'publications:load_replies' comment_id=comentario.pk %}"
+                hx-target="#replies-for-{{ comentario.pk }}" hx-swap="innerHTML">
+                Ver {{ comentario.respuestas.count }} respuestas
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>

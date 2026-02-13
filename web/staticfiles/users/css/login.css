@@ -1,0 +1,106 @@
+/* users/static/users/css/login.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6;
+    /* Light gray background */
+    color: #1f2937;
+    /* Dark gray text */
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-card {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.brand-title {
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    font-weight: 700;
+    color: #6b7280;
+    /* Muted text */
+}
+
+.page-title {
+    color: #111827;
+    /* Near black */
+}
+
+/* Form Inputs Light Mode */
+.form-control {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #1f2937;
+}
+
+.form-control:focus {
+    background-color: #ffffff;
+    border-color: #000;
+    color: #1f2937;
+    box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.1);
+}
+
+.form-control::placeholder {
+    color: #9ca3af;
+}
+
+.form-label {
+    color: #374151;
+}
+
+/* Button - Keep Black for Branding */
+.btn-black {
+    background-color: #000000;
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-black:hover {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+.btn-black:disabled {
+    background-color: #e5e7eb;
+    color: #9ca3af;
+}
+
+.text-muted {
+    color: #6b7280 !important;
+}
+
+.text-black {
+    color: #000 !important;
+}
+
+/* Animations */
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

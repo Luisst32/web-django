@@ -1,0 +1,110 @@
+{% extends 'home/index.html' %}
+{% load static %}
+
+{% block main_content %}
+<!-- CONTENEDOR CENTRAL: Mantiene el ancho original (900px) para carga FULL -->
+<!-- Pero al usar el partial, este se adaptará a su contenedor padre -->
+<div class="container px-0 mb-4" style="max-width: 100%;">
+    {% include 'profiles/partials/full_profile_content.html' %}
+</div>
+{% endblock main_content %}
+
+
+{% block extra_js %}
+<style>
+    /* Estilos base (Body) */
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f3f4f6;
+    }
+
+    /* Ajustes específicos */
+    .hover-opacity-100:hover {
+        opacity: 1 !important;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const backBtn = document.getElementById('backToPrevious');
+        if (backBtn) {
+            backBtn.addEventListener('click', function (event) {
+                event.preventDefault();
+                if (document.referrer && document.referrer.includes(window.location.origin)) {
+                    window.history.back();
+                } else {
+                    window.location.href = "{% url 'index' %}";
+                }
+            });
+        }
+        // WebSocket logic is handled in profiles/partials/full_profile_content.html
+    });
+
+    // --- 3. Lógica Optimista del Botón Seguir ---
+    function toggleFollow(event, userId) {
+        event.preventDefault(); // Evitar redirección
+        const btn = event.currentTarget;
+        const icon = btn.querySelector('i');
+
+        // Determinar estado actual por la clase del botón
+        const isFollowing = btn.classList.contains('btn-light'); // Si es light (blanco), está siguiendo
+
+        // URLs (Django reversible urls injected via data attributes ideally, but hardcoding for simplicity given context)
+        const urlSeguir = `/perfil/seguir/${userId}/`;
+        const urlDejar = `/perfil/dejar-seguir/${userId}/`;
+        const targetUrl = isFollowing ? urlDejar : urlSeguir;
+
+        // UI OPTIMISTA: Cambiar inmediatamente antes de que el servidor responda
+        if (isFollowing) {
+            // Pasar a estado "No siguiendo" (Botón Negro, user-plus)
+            btn.classList.remove('btn-light', 'text-danger', 'border');
+            btn.classList.add('btn-dark');
+            btn.title = "Seguir";
+            icon.classList.remove('fa-user-check');
+            icon.classList.add('fa-user-plus');
+        } else {
+            // Pasar a estado "Siguiendo" (Botón Blanco, user-check)
+            btn.classList.remove('btn-dark');
+            btn.classList.add('btn-light', 'text-danger', 'border');
+            btn.title = "Dejar de seguir";
+            icon.classList.remove('fa-user-plus');
+            icon.classList.add('fa-user-check');
+        }
+
+        // Enviar petición al servidor (AJAX)
+        fetch(targetUrl, {
+            method: 'GET', // Las vistas actuales son GET
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(response => {
+            if (!response.ok) {
+                // Si falla, revertimos los cambios visuales
+                console.error("Error al actualizar seguimiento");
+                revertButtonState(btn, !isFollowing);
+            }
+            // El WebSocket se encargará de actualizar el número de seguidores
+        }).catch(err => {
+            console.error(err);
+            revertButtonState(btn, !isFollowing);
+        });
+    }
+
+    function revertButtonState(btn, wasFollowing) {
+        const icon = btn.querySelector('i');
+        if (wasFollowing) {
+            btn.classList.remove('btn-dark');
+            btn.classList.add('btn-light', 'text-danger', 'border');
+            btn.title = "Dejar de seguir";
+            icon.classList.remove('fa-user-plus');
+            icon.classList.add('fa-user-check');
+        } else {
+            btn.classList.remove('btn-light', 'text-danger', 'border');
+            btn.classList.add('btn-dark');
+            btn.title = "Seguir";
+            icon.classList.remove('fa-user-check');
+            icon.classList.add('fa-user-plus');
+        }
+    }
+</script>
+{% endblock extra_js %}

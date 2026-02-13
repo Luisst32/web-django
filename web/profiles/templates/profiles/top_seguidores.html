@@ -1,0 +1,109 @@
+{% extends 'home/index.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header con botón de regreso -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'index' %}" class="btn btn-light rounded-circle shadow-sm me-3"
+                    style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h2 class="fw-bold m-0">Top Seguidores</h2>
+            </div>
+
+            <!-- Card Principal -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for usuario in top_usuarios %}
+                        <div class="list-group-item p-3 d-flex align-items-center justify-content-between border-bottom-0"
+                            style="transition: background-color 0.2s;">
+                            <!-- Info Usuario -->
+                            <div class="d-flex align-items-center">
+                                <!-- Ranking Number (Opcional, estilo medalla) -->
+                                <div class="me-3 fw-bold text-muted fs-5 rank-number" style="min-width: 25px;"></div>
+
+                                <a href="{% url 'perfil_detalle' username=usuario.username %}"
+                                    class="text-decoration-none">
+                                    {% if usuario.foto_perfil %}
+                                    <img src="{{ usuario.foto_perfil.url }}" alt="{{ usuario.username }}"
+                                        class="rounded-circle border"
+                                        style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center border"
+                                        style="width: 50px; height: 50px;">
+                                        <i class="fas fa-user text-muted fs-5"></i>
+                                    </div>
+                                    {% endif %}
+                                </a>
+
+                                <div class="ms-3">
+                                    <a href="{% url 'perfil_detalle' username=usuario.username %}"
+                                        class="text-dark text-decoration-none fw-bold d-flex align-items-center gap-1">
+                                        {{ usuario.first_name }} {{ usuario.last_name }}
+                                        {% if usuario.verification_badge %}
+                                        <img src="{{ usuario.verification_badge.icon.url }}"
+                                            title="{{ usuario.verification_badge.name }}"
+                                            style="width: 18px; height: 18px;" data-bs-toggle="tooltip">
+                                        {% endif %}
+                                    </a>
+                                    <div class="text-muted small">@{{ usuario.username }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Contador & Botón -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="text-end d-none d-sm-block">
+                                    <div class="fw-bold fs-5">{{ usuario.num_seguidores }}</div>
+                                    <small class="text-muted">Seguidores</small>
+                                </div>
+                                <a href="{% url 'perfil_detalle' username=usuario.username %}"
+                                    class="btn btn-sm btn-black rounded-pill px-3">
+                                    Ver Perfil
+                                </a>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                            <p class="text-muted fw-bold">No hay usuarios destacados aún.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .list-group {
+        counter-reset: ranking;
+    }
+
+    .rank-number::before {
+        counter-increment: ranking;
+        content: "#" counter(ranking);
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .btn-black {
+        background-color: #000;
+        color: #fff;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .btn-black:hover {
+        background-color: #333;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}

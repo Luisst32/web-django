@@ -1,0 +1,1059 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Historia</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="icon" href="{% static 'logo/logo.png' %}" type="image/png">
+</head>
+
+<body>
+    <div class="main-container">
+
+        <div class="form-card">
+            <h1>Nueva Publicación</h1>
+            <form method="post" enctype="multipart/form-data" class="form-publicacion">
+                {% csrf_token %}
+                <div style="display:none;">
+                    {{ form.musica }}{{ form.musica_inicio }}{{ form.musica_fin }}
+                </div>
+
+                <!-- 1. DESCRIPCIÓN (Clean, no label) -->
+                <div class="mb-3">
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="user-avatar-placeholder flex-shrink-0">
+                            {% if request.user.foto_perfil %}
+                            <img src="{{ request.user.foto_perfil.url }}" class="rounded-circle"
+                                style="width: 48px; height: 48px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-muted"
+                                style="width: 48px; height: 48px;"><i class="bi bi-person-fill"></i></div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            {{ form.descripcion }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. MEDIOS & PREVIEW CON OVERLAYS -->
+                <div class="media-section mb-4 position-relative">
+                    <!-- Input oculto -->
+                    <div class="d-none">
+                        {{ form.imagen }}
+                    </div>
+
+                    <!-- Trigger (Big Box) -->
+                    <div id="media-trigger" class="media-upload-box" onclick="$('#id_imagen').click();">
+                        <div class="text-center">
+                            <i class="bi bi-images display-6 text-muted mb-2"></i>
+                            <span class="d-block text-muted fw-medium small">Agregar Fotos/Videos</span>
+                        </div>
+                    </div>
+
+                    <!-- PREVIEW CONTAINER -->
+                    <div id="media-preview-container" class="preview-container" style="display:none;">
+                        <img id="image-preview" src="" class="media-fit">
+                        <video id="video-preview" controls class="media-fit" style="display: none;"></video>
+
+                        <!-- ACTION OVERLAYS (Icons on top of image) -->
+                        <div class="media-actions-overlay">
+                            <!-- Botón Música -->
+                            <button type="button" id="btn-trigger-music" class="action-btn" title="Agregar Música">
+                                <i class="bi bi-music-note-beamed"></i>
+                            </button>
+
+                            <!-- Botón Etiquetar -->
+                            <button type="button" id="btn-trigger-tag" class="action-btn" title="Etiquetar">
+                                <i class="bi bi-person-fill"></i>
+                            </button>
+
+                            <!-- Botón Eliminar -->
+                            <button type="button" id="btn-remove-media" class="action-btn btn-danger-soft">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+
+                        <!-- Music Status Indicator (Overlay Bottom) -->
+                        <div id="music-indicator-overlay" class="music-indicator glass-effect" style="display: none;">
+                            <i class="bi bi-soundwave wave-anim"></i>
+                            <span id="overlay-song-name" class="text-truncate" style="max-width: 150px;">Canción</span>
+                            <button type="button" id="btn-clean-music-overlay" class="reset-btn">&times;</button>
+                        </div>
+                    </div>
+
+                    <!-- Search User Overlay (Absolute, toggled) -->
+                    <div id="tag-user-overlay" class="tag-search-box glass-effect" style="display:none;">
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text bg-transparent border-0 ps-2"><i
+                                    class="bi bi-search"></i></span>
+                            <input type="text" id="buscador_usuarios" class="form-control bg-transparent border-0"
+                                placeholder="Buscar..." autocomplete="off">
+                        </div>
+                        <ul id="resultado_busqueda" class="results-list-overlay"></ul>
+                        <div class="d-flex justify-content-between align-items-center mt-2 border-top pt-2">
+                            <small class="text-muted">Etiquetados:</small>
+                            <button type="button" onclick="$('#tag-user-overlay').fadeOut()"
+                                class="btn btn-sm btn-link text-dark p-0" style="text-decoration:none;">OK</button>
+                        </div>
+                        <ul id="lista_usuarios_etiquetados" class="tagged-list-overlay"></ul>
+                    </div>
+                </div>
+                <input type="hidden" name="tipo" value="publico">
+
+                <button type="submit"
+                    class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm mt-3">PUBLICAR</button>
+            </form>
+            <a href="{% url 'perfil_detalle' username=request.user.username %}"
+                class="btn btn-light w-100 rounded-pill mt-2 fw-bold text-secondary border-0">Cancelar</a>
+            <!-- Backdrop for Bottom Sheet (Local) -->
+            <div id="sheet-backdrop" class="sheet-backdrop"></div>
+
+            <!-- Dropdown Library (Replaces Modal) -->
+            <div id="dropdown-library" class="dropdown-menu-custom">
+                <!-- Close Button (Mobile Style) -->
+                <div class="d-flex justify-content-center pt-2 pb-3">
+                    <div class="sheet-handle"></div>
+                </div>
+
+                <input type="text" id="search-library" placeholder="Buscar música..."
+                    class="form-control form-control-sm mb-2 rounded-pill bg-light border-0 px-3">
+                <ul id="library-list" class="list-unstyled mb-0"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editor Overlay (Instagram Style) -->
+    <div id="modal-editor" class="editor-overlay" style="display: none;">
+        <div class="editor-card">
+            <!-- Top Handle -->
+            <div class="editor-handle"></div>
+
+            <!-- Cover & Info -->
+            <div class="text-center mb-3">
+                <div class="album-art-placeholder mb-2">
+                    <i class="bi bi-music-note-beamed"></i>
+                </div>
+                <h5 id="editor-song-name" class="fw-bold mb-0 text-white">Nombre Canción</h5>
+                <small id="label-start" class="text-white fw-bold fs-5 d-block mt-1">0:00</small>
+            </div>
+
+            <!-- Controls Row: 30s - Slider - Play -->
+            <div class="d-flex align-items-center gap-3 mb-4 px-2">
+                <button class="btn-circle-small text-white border border-secondary bg-dark">30</button>
+
+                <!-- Waveform Slider -->
+                <div class="waveform-container flex-grow-1 position-relative">
+                    <div class="waveform-track"></div>
+                    <div id="progress-fill" class="waveform-active"></div>
+                    <input type="range" id="editor-slider" class="editor-range-input" min="0" max="100" value="0">
+                </div>
+
+                <button id="sticker-play-pause" class="btn-circle-small bg-white text-dark border-0">
+                    <i class="bi bi-play-fill" id="sticker-play-icon"></i>
+                </button>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="d-flex justify-content-between align-items-center w-100 mt-2 px-1">
+                <button type="button" id="btn-cancel-editor"
+                    class="btn btn-link text-white text-decoration-none fw-medium p-0">Cancelar</button>
+                <span class="text-white fw-bold">Audio</span>
+                <button type="button" id="btn-confirm-editor"
+                    class="btn btn-link text-white text-decoration-none fw-medium p-0">Listo</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const musicDB = {
+            {% for m in form.musica.field.queryset %}
+        "{{ m.id }}": "{{ m.archivo_musica.url }}",
+            {% endfor %}
+        };
+
+        $(document).ready(function () {
+            // --- VARIABLES GLOBALES ---
+            let currentAudio = new Audio();
+            let audioDuration = 0;
+            let selectionStart = 0;
+            let isDragging = false;
+            const CLIP_LEN = 30;
+            let tempId, tempName, tempUrl;
+            let usuariosEtiquetadosIds = [];
+
+            // 1. SUBIDA DE ARCHIVO (FOTO/VIDEO)
+            $('#id_imagen').change(function (e) {
+                if (e.target.files && e.target.files[0]) {
+                    let file = e.target.files[0];
+                    let reader = new FileReader();
+
+                    reader.onload = function (evt) {
+                        // Resetear vistas
+                        $('#media-trigger').hide();
+                        $('#media-preview-container').fadeIn();
+
+                        // Detectar tipo
+                        if (file.type.startsWith('image/')) {
+                            // ES IMAGEN
+                            $('#image-preview').attr('src', evt.target.result).show();
+                            $('#video-preview').hide();
+                            $('#editor-bg-image').attr('src', evt.target.result); // Poner en editor mus
+
+                            // Mostrar botones de overlay
+                            $('#btn-trigger-music').show();
+                            $('#btn-trigger-tag').show();
+                        } else if (file.type.startsWith('video/')) {
+                            // ES VIDEO
+                            $('#image-preview').hide();
+                            $('#video-preview').attr('src', URL.createObjectURL(file)).show();
+
+                            // Ocultar botones no soportados en video por ahora
+                            $('#btn-trigger-music').hide(); // No musica en videos
+                            $('#btn-trigger-tag').show(); // Etiquetar si se podría (pero el user pidió musica 'si imagen')
+
+                            // Resetear música si había
+                            resetMusic();
+                        }
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 2. ELIMINAR MEDIA
+            $('#btn-remove-media').click(function (e) {
+                e.preventDefault();
+                $('#id_imagen').val('');
+                $('#media-preview-container').hide();
+                $('#media-trigger').fadeIn();
+                $('#image-preview').attr('src', '');
+                $('#video-preview').attr('src', '');
+                resetMusic();
+                // Limpiar etiquetas también?
+            });
+
+            // 3. LOGICA MUSICA (Bottom Sheet)
+            $('#btn-trigger-music').click(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openLibrary();
+            });
+
+            // Close with Backdrop
+            $('#sheet-backdrop').click(function () {
+                closeLibrary();
+            });
+
+            $('#btn-clean-music-overlay').click(function (e) {
+                e.preventDefault();
+                resetMusic();
+            });
+
+            function resetMusic() {
+                $('select[name="musica"]').val('');
+                $('#music-indicator-overlay').fadeOut();
+                $('#btn-trigger-music').show();
+                currentAudio.pause();
+            }
+
+            function openLibrary() {
+                let $ul = $('#library-list');
+                $ul.empty();
+                $('select[name="musica"] option').each(function () {
+                    let val = $(this).val();
+                    if (val) $ul.append(`<li data-id="${val}" class="text-truncate px-2 py-2 mb-1 rounded hover-bg-light"><i class="bi bi-music-note-beamed me-2 text-muted"></i> ${$(this).text()}</li>`);
+                });
+
+                $('#sheet-backdrop').fadeIn();
+                $('#dropdown-library').show();
+                setTimeout(() => $('#dropdown-library').addClass('active'), 10); // Trigger transition
+            }
+
+            function closeLibrary() {
+                $('#dropdown-library').removeClass('active');
+                setTimeout(() => {
+                    $('#dropdown-library').hide();
+                    $('#sheet-backdrop').fadeOut();
+                }, 300);
+            }
+
+            // Seleccionar canción de lista
+            $(document).on('click', '#library-list li', function () {
+                tempId = $(this).data('id');
+                tempName = $(this).text().trim();
+                tempUrl = musicDB[tempId];
+                closeLibrary();
+                setTimeout(abrirEditor, 300); // Wait for close animation
+            });
+
+            // EDITOR DE MUSICA
+            function abrirEditor() {
+                $('#editor-song-name').text(tempName);
+                $('#modal-editor').css('display', 'flex').hide().fadeIn();
+                if (tempUrl) {
+                    currentAudio.src = tempUrl;
+                    currentAudio.load();
+                    $('#sticker-play-icon').removeClass('bi-pause-fill').addClass('bi-play-fill');
+
+                    // Reset UI
+                    $('#progress-fill').css('width', '0%');
+                    $('#editor-slider').val(0);
+                    // Mock waveform animation
+                    $('.waveform-active').css('width', '100px');
+                }
+            }
+
+            $('#btn-cancel-editor').click(function () {
+                currentAudio.pause();
+                $('#modal-editor').fadeOut();
+            });
+
+            // Confirmar Edición
+            $('#btn-confirm-editor').click(function () {
+                currentAudio.pause();
+                $('select[name="musica"]').val(tempId);
+                if ($('#id_musica_inicio').length === 0) $('form').append('<input type="hidden" name="musica_inicio" id="id_musica_inicio">');
+                if ($('#id_musica_fin').length === 0) $('form').append('<input type="hidden" name="musica_fin" id="id_musica_fin">');
+                $('#id_musica_inicio').val(selectionStart);
+                $('#id_musica_fin').val(selectionStart + CLIP_LEN);
+                $('#overlay-song-name').text(tempName);
+                $('#music-indicator-overlay').css('display', 'flex').hide().fadeIn();
+                $('#modal-editor').fadeOut();
+            });
+
+            // LOGICA REPRODUCTOR EDITOR
+            currentAudio.onloadedmetadata = function () {
+                audioDuration = currentAudio.duration;
+                $('#editor-slider').attr('max', Math.floor(audioDuration));
+                updateWindowVisual(0);
+            };
+
+            $('#sticker-play-pause').click(function () {
+                if (currentAudio.paused) {
+                    currentAudio.currentTime = selectionStart;
+                    currentAudio.play();
+                    $('#sticker-play-icon').removeClass('bi-play-fill').addClass('bi-pause-fill');
+                } else {
+                    currentAudio.pause();
+                    $('#sticker-play-icon').removeClass('bi-pause-fill').addClass('bi-play-fill');
+                }
+            });
+
+            $('#editor-slider').on('input', function () {
+                selectionStart = parseInt($(this).val());
+                $('#label-start').text(fmt(selectionStart));
+
+                // Move window instead of growing bar
+                updateWindowVisual(selectionStart);
+
+                if (!currentAudio.paused) {
+                    currentAudio.pause();
+                    $('#sticker-play-icon').removeClass('bi-pause-fill').addClass('bi-play-fill');
+                }
+                currentAudio.currentTime = selectionStart;
+            });
+
+            function fmt(s) { return Math.floor(s / 60) + ":" + (Math.floor(s % 60) < 10 ? "0" : "") + Math.floor(s % 60); }
+
+            function updateWindowVisual(startTime) {
+                if (audioDuration > 0) {
+                    // Calculate percentage position
+                    let pct = (startTime / audioDuration) * 100;
+                    // Clamp to max (so window doesn't overflow)
+                    if (pct > 90) pct = 90;
+
+                    // Move the gradient window
+                    $('#progress-fill').css({
+                        'left': pct + '%',
+                        'width': '20%' // Fixed width representing ~30s window
+                    });
+                }
+            }
+
+            // 4. ETIQUETADO OVERLAY
+            $('#btn-trigger-tag').click(function (e) {
+                e.preventDefault();
+                $('#tag-user-overlay').fadeToggle();
+                $('#buscador_usuarios').focus();
+            });
+
+            // Buscador
+            $("#buscador_usuarios").on("input", function () {
+                var query = $(this).val();
+                if (query.length > 1) {
+                    $.ajax({
+                        url: "{% url 'publications:buscar_usuarios' %}",
+                        data: { 'q': query },
+                        success: function (data) {
+                            $('#resultado_busqueda').empty();
+                            if (data.usuarios.length > 0) {
+                                data.usuarios.forEach(function (user) {
+                                    $('#resultado_busqueda').append(`<li><a href="#" class="etiquetar-usuario" data-id="${user.id}"><i class="bi bi-person-plus"></i> ${user.username}</a></li>`);
+                                });
+                            }
+                        }
+                    });
+                } else { $('#resultado_busqueda').empty(); }
+            });
+
+            // Añadir etiqueta
+            $(document).on("click", ".etiquetar-usuario", function (e) {
+                e.preventDefault();
+                let uid = $(this).data('id');
+                let uname = $(this).text().trim();
+                if (!usuariosEtiquetadosIds.includes(uid)) {
+                    usuariosEtiquetadosIds.push(uid);
+                    $('form').append(`<input type="hidden" name="usuarios_etiquetados" value="${uid}">`);
+                    $('#lista_usuarios_etiquetados').append(`<li>@${uname} <span class="rm-tag" data-id="${uid}">&times;</span></li>`);
+                    $('#buscador_usuarios').val('').focus();
+                    $('#resultado_busqueda').empty();
+                }
+            });
+
+            // Quitar etiqueta
+            $(document).on("click", ".rm-tag", function () {
+                let uid = $(this).data('id');
+                usuariosEtiquetadosIds = usuariosEtiquetadosIds.filter(id => id !== uid);
+                $(`input[name="usuarios_etiquetados"][value="${uid}"]`).remove();
+                $(this).parent().remove();
+            });
+
+            // Buscador libreria
+            $('#search-library').on('keyup', function () {
+                var val = $(this).val().toLowerCase();
+                $('#library-list li').filter(function () { $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1) });
+            });
+        });
+    </script>
+</body>
+
+</html>
+
+<style>
+    /* === ESTILO "CLASSIC PROFESSIONAL" (ENTERPRISE/MINIMAL) === */
+    :root {
+        --bg-body: #F5F5F5;
+        --bg-card: #FFFFFF;
+        --text-primary: #1A1A1A;
+        --text-secondary: #595959;
+        --accent: #2c3e50;
+        /* Dark Blue - Professional */
+        --accent-hover: #1a252f;
+        --border-color: #E0E0E0;
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+    }
+
+    body {
+        background-color: var(--bg-body);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: var(--text-primary);
+        line-height: 1.5;
+    }
+
+    .main-container {
+        padding: 40px 0;
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .form-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 40px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        /* KEY: Relative context for contained sheet */
+        position: relative;
+        overflow: hidden;
+    }
+
+    h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 24px;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 15px;
+        letter-spacing: -0.01em;
+    }
+
+    /* Form Fields */
+    textarea.form-control {
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        padding: 12px;
+        font-size: 1rem;
+        color: var(--text-primary);
+        background-color: #FAFAFA;
+        transition: all 0.2s;
+        resize: none;
+    }
+
+    textarea.form-control:focus {
+        background-color: #FFF;
+        border-color: var(--border-color);
+        box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+        outline: none;
+    }
+
+    /* Media Upload Area */
+    .media-upload-box {
+        border: 1px solid var(--border-color);
+        background-color: #FAFAFA;
+        border-radius: var(--radius-md);
+        padding: 30px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .media-upload-box:hover {
+        background-color: #F0F0F0;
+        border-color: #B0B0B0;
+    }
+
+    /* Media Preview */
+    .preview-container {
+        position: relative;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        background: #000;
+        border: 1px solid var(--border-color);
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .media-fit {
+        max-width: 100%;
+        height: auto;
+        max-height: 500px;
+        display: block;
+    }
+
+    /* Overlay Buttons (Clean & Sharp) */
+    .media-actions-overlay {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 10;
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 4px;
+        /* Squared */
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        transition: background 0.2s;
+    }
+
+    .action-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Buttons (Standard Professional) */
+    .btn-primary {
+        background-color: var(--accent);
+        border: none;
+        border-radius: var(--radius-sm);
+        font-weight: 500;
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        letter-spacing: 0.02em;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--accent-hover);
+    }
+
+    /* Modals & Overlays */
+    .tag-search-box {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        right: 60px;
+        background: white;
+        border: 1px solid var(--border-color);
+        padding: 10px;
+        border-radius: var(--radius-md);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 20;
+    }
+
+    .music-indicator {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 6px 12px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+    }
+
+    /* Utility */
+    .text-muted {
+        color: var(--text-secondary) !important;
+    }
+
+    /* Scrollbar */
+    .results-list-overlay::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .results-list-overlay::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+
+    /* === 1. BOTTOM SHEET LIBRARY (Contained in Div) === */
+    .dropdown-menu-custom {
+        position: absolute;
+        /* Changed from fixed */
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60%;
+        /* Percentage of parent card */
+        max-width: 100%;
+        background: #fff;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        /* Lower than modal overlays */
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        display: none;
+        /* Logic toggles this to flex + class 'active' */
+    }
+
+    .dropdown-menu-custom.active {
+        transform: translateY(0);
+    }
+
+    /* Handle for Bottom Sheet */
+    .dropdown-menu-custom::after {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 5px;
+        background: #e0e0e0;
+        border-radius: 10px;
+    }
+
+    /* Dim Background when sheet is open */
+    .sheet-backdrop {
+        position: absolute;
+        /* Contained backdrop */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 90;
+        display: none;
+        backdrop-filter: blur(1px);
+    }
+
+    #library-list {
+        overflow-y: auto;
+        flex: 1;
+        margin-top: 15px;
+    }
+
+    #library-list li {
+        padding: 15px;
+        border-bottom: 1px solid #f8f8f8;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    #library-list li:hover {
+        background: #f0f0f0;
+        border-radius: 12px;
+    }
+
+
+    /* === 2. EDITOR OVERLAY (Bottom Sheet Style) === */
+    .editor-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        /* Dimmed backdrop */
+        z-index: 2000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .editor-card {
+        width: 100%;
+        max-width: 380px;
+        background: #121212;
+        /* Dark theme */
+        border-radius: 20px;
+        padding: 20px;
+        position: relative;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        color: white;
+    }
+
+    /* Handle bar */
+    .editor-handle {
+        width: 40px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 0 auto 20px auto;
+        border-radius: 10px;
+    }
+
+    .album-art-placeholder {
+        width: 60px;
+        height: 60px;
+        background: #222;
+        border-radius: 8px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-circle-small {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: transform 0.1s;
+    }
+
+    .btn-circle-small:hover {
+        transform: scale(1.05);
+    }
+
+    /* Waveform Styles */
+    .waveform-container {
+        height: 40px;
+        display: flex;
+        align-items: center;
+    }
+
+    .waveform-track {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 100%;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .waveform-active {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 32px;
+        width: 33%;
+        /* Defines the 30s window visual */
+        background: linear-gradient(90deg, #ff9a44, #fc6076, #b95ce4);
+        border-radius: 6px;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        pointer-events: none;
+        /* Just visual */
+    }
+
+    /* Range Input Styling */
+    .editor-range-input {
+        -webkit-appearance: none;
+        width: 100%;
+        background: transparent;
+        position: relative;
+        z-index: 10;
+        cursor: grab;
+    }
+
+    .editor-range-input:focus {
+        outline: none;
+    }
+
+    .editor-range-input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 32px;
+        width: 16px;
+        background: #fff;
+        border-radius: 4px;
+        cursor: grab;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    .editor-range-input::-moz-range-thumb {
+        height: 32px;
+        width: 16px;
+        background: #fff;
+        border-radius: 4px;
+        cursor: grab;
+        border: none;
+    }
+    }
+
+    /* --- EDITOR REUSE (Restored Full Logic) --- */
+    .dark-overlay {
+        background: black;
+    }
+
+    .phone-frame {
+        width: 100%;
+        max-width: 380px;
+        height: 85vh;
+        background: #000;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+
+    #editor-bg-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.6;
+        z-index: 1;
+    }
+
+    .gradient-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), transparent, rgba(0, 0, 0, 0.8));
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .btn-close-editor {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        line-height: 1;
+    }
+
+    .sticker-container-bottom {
+        position: relative;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: center;
+        z-index: 5;
+        margin-top: auto;
+        /* Push to bottom */
+    }
+
+    .insta-sticker {
+        background: white;
+        border-radius: 12px;
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        transform: scale(1.05);
+        min-width: 180px;
+    }
+
+    .sticker-icon {
+        width: 35px;
+        height: 35px;
+        background: #262626;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .sticker-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+    }
+
+    #editor-song-name {
+        font-weight: bold;
+        font-size: 13px;
+        color: black;
+    }
+
+    .sticker-sub {
+        font-size: 10px;
+        color: #8e8e8e;
+    }
+
+    .playing-bars {
+        display: flex;
+        gap: 3px;
+        align-items: flex-end;
+        height: 15px;
+        margin-left: auto;
+    }
+
+    .playing-bars span {
+        width: 3px;
+        background: #262626;
+        animation: bounce 0.5s infinite;
+    }
+
+    .playing-bars span:nth-child(2) {
+        animation-delay: 0.1s;
+        height: 60%;
+    }
+
+    .playing-bars span:nth-child(3) {
+        animation-delay: 0.2s;
+        height: 80%;
+    }
+
+    @keyframes bounce {
+
+        0%,
+        100% {
+            height: 20%;
+        }
+
+        50% {
+            height: 100%;
+        }
+    }
+
+    .editor-controls {
+        position: relative;
+        padding: 20px;
+        z-index: 10;
+    }
+
+    .time-indicators {
+        text-align: center;
+        color: white;
+        font-size: 12px;
+        margin-bottom: 15px;
+        font-family: monospace;
+    }
+
+    .waveform-bg {
+        width: 100%;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: linear-gradient(45deg, #ff9a44, #fc6076, #b95ce4);
+    }
+
+    .insta-slider {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 20;
+    }
+
+    .editor-hint {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 11px;
+        margin-top: 15px;
+    }
+
+    .btn-done {
+        background: white;
+        color: black;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 14px;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        cursor: pointer;
+        z-index: 20;
+    }
+    }
+
+    .btn-done {
+        border-radius: 4px;
+        font-weight: 600;
+    }
+</style>

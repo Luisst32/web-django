@@ -1,0 +1,75 @@
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body p-2">
+        <h6 class="card-title d-flex align-items-center mb-2" style="font-size: 0.9rem;">
+            <i class="bi bi-stars text-warning me-2"></i>
+            <span class="fw-bold text-dark" style="letter-spacing: -0.02em;">Milanesa IA dice:</span>
+        </h6>
+        <!-- Loop de Resultados -->
+        <div class="d-flex flex-column gap-2">
+            {% for item in resultados %}
+            <div class="analysis-item">
+                <div class="ai-comment mb-2 p-2 rounded bg-light border-start border-4 border-warning fst-italic text-muted"
+                    style="font-size: 0.8rem; line-height: 1.2;">
+                    "{{ item.comentario }}"
+                </div>
+                <div class="card border shadow-sm" style="font-size: 0.8rem;">
+                    {% if item.post.usuario %}
+                    <div class="card-header bg-white border-0 p-2 d-flex align-items-center">
+                        {% if item.post.usuario.foto_perfil %}
+                        <img src="{{ item.post.usuario.foto_perfil.url }}" class="rounded-circle me-2" width="28"
+                            height="28" style="object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-secondary me-2 d-flex align-items-center justify-content-center text-white"
+                            style="width:28px; height:28px;">
+                            <i class="bi bi-person small"></i>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex flex-column" style="min-width: 0;">
+                            <div class="d-flex align-items-center">
+                                <span class="fw-bold text-dark text-truncate"
+                                    style="max-width: 120px; font-size: 0.8rem;">{{ item.post.usuario.first_name }}</span>
+                                    
+
+                                {% if item.post.usuario.verification_badge %}
+                                <img src="{{ item.post.usuario.verification_badge.icon.url }}" alt="V" width="12"
+                                    height="12" class="ms-1">
+                                {% endif %}
+                            </div>
+                            <small class="text-muted" style="font-size: 0.65rem;">@{{ item.post.usuario.username }}</small>
+                                
+
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if item.post.imagen %}
+                    <div class="w-100 position-relative bg-dark" style="height: 270px; overflow: hidden;">
+                        <img src="{{ item.post.imagen.url }}" alt="Post img" class="w-100 h-100"
+                            style="object-fit: contain;">
+                        <!-- Badge de tiempo (Rojo un poco más discreto pero visible) -->
+                        <div class="position-absolute bottom-0 end-0 m-2 px-2 py-1 bg-dark bg-opacity-75 text-white rounded d-flex align-items-center shadow-sm"
+                            style="font-size: 0.65rem; border: 1px solid rgba(255,255,255,0.3); z-index: 1000; backdrop-filter: blur(2px);">
+                            <i class="bi bi-clock-history me-1 text-warning"></i>
+                            <span class="fw-bold">Update in: {{ remaining_mins }}m</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="card-body p-2 pt-1 position-relative">
+                        <div class="text-dark mb-0 text-truncate" style="font-size: 0.75rem;">{{ item.post.descripcion }}</div>
+                            
+
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center text-muted small">Nada interesante...</div>
+            {% endfor %}
+        </div>
+        <div class="mt-2 text-end">
+            <small class="text-xs text-secondary" style="font-size: 0.65rem;">
+                <i class="bi bi-robot"></i> Milanesa IA
+            </small>
+        </div>
+    </div>
+</div>

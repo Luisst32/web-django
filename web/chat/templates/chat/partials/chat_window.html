@@ -1,0 +1,291 @@
+{% load static %}
+<div class="d-flex flex-column h-100 position-relative" data-chat-user-id="{{ otro_usuario.id }}">
+    <!-- Hidden input to safely store user ID for JS -->
+    <input type="hidden" id="current-chat-user-id" value="{{ otro_usuario.id }}">
+
+    <!-- Header -->
+    <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-white sticky-top"
+        style="z-index: 1020;">
+        <div class="d-flex align-items-center">
+            <button class="btn btn-sm btn-light me-2 d-md-none"
+                onclick="document.getElementById('sidebar-column').classList.remove('d-none'); document.getElementById('chat-column').classList.add('d-none');">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+
+            <div class="position-relative">
+                {% if otro_usuario.foto_perfil %}
+                <img src="{{ otro_usuario.foto_perfil.url }}" class="rounded-circle object-fit-cover border" width="40"
+                    height="40" alt="{{ otro_usuario.username }}">
+                {% else %}
+                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center border"
+                    style="width: 40px; height: 40px;">
+                    <i class="fas fa-user text-secondary"></i>
+                </div>
+                {% endif %}
+                <span
+                    class="position-absolute bottom-0 end-0 p-1 rounded-circle border border-white {% if otro_usuario.is_online %}bg-success{% else %}bg-secondary{% endif %}"
+                    style="width: 12px; height: 12px;"></span>
+            </div>
+
+            <div class="ms-3">
+                <h6 class="mb-0 fw-bold">{{ otro_usuario.username }}</h6>
+                <small class="text-muted" id="chat-header-status">
+                    {% if otro_usuario.is_online %}En línea{% else %}Desconectado{% endif %}
+                </small>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <button class="btn btn-light btn-sm rounded-circle" data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                <li><a class="dropdown-item" href="{% url 'perfil_detalle' username=otro_usuario.username %}">Ver
+                        perfil</a></li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li><a class="dropdown-item text-danger" href="#">Bloquear usuario</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Messages Area -->
+    <style>
+        .message-status {
+            display: none !important;
+        }
+
+        .message-status.last-sent-status {
+            display: block !important;
+        }
+    </style>
+
+    <div id="messages-container" class="flex-grow-1 p-3 overflow-auto d-flex flex-column"
+        style="background: #f0f2f5; height: 330px;">
+
+        <!-- Pagination Sentinel -->
+        {% if has_next %}
+        <div id="pagination-sentinel" hx-get="{% url 'get_chat_history' otro_usuario.id %}?page={{ next_page }}"
+            hx-trigger="intersect once" hx-target="#pagination-sentinel" hx-swap="outerHTML" class="text-center p-2">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        </div>
+        {% endif %}
+
+        {% for mensaje in mensajes %}
+        <div class="message mb-2 d-flex {% if mensaje.user == request.user %}justify-content-end{% endif %}">
+            <div class="message-bubble p-2 rounded-3 shadow-sm"
+                style="max-width: 80%; {% if mensaje.tipo == 'imagen' %}background: transparent; box-shadow: none !important;{% elif mensaje.user == request.user %}background: #0084ff; color: white;{% else %}background: white; color: #1c1e21;{% endif %}">
+                {% if mensaje.tipo == 'imagen' %}
+                <img src="{{ mensaje.imagen.url }}" class="img-fluid rounded-2 mb-1"
+                    style="max-height: 250px; cursor: pointer; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"
+                    onclick="window.open('{{ mensaje.imagen.url }}', '_blank')">
+                {% else %}
+                <div class="message-text" style="word-wrap: break-word;">{{ mensaje.descripcion }}</div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between align-items-center mt-1"
+                    style="font-size: 0.7rem; opacity: 0.9;">
+                    {% if mensaje.user.id == request.user.id %}
+                    <div class="message-status status-sent me-2"
+                        style="{% if mensaje.es_leido %}color: {% if mensaje.imagen %}#0084ff{% else %}#d1f2ff{% endif %}; font-weight: bold;{% else %}color: {% if mensaje.imagen %}#666{% else %}#e0e0e0{% endif %};{% endif %}">
+                        {% if mensaje.es_leido %}
+                        <i class="fas fa-check-double"></i> Visto
+                        {% else %}
+                        <i class="fas fa-check"></i> Enviado
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <div>{{ mensaje.fecha_mensaje|date:"H:i" }}</div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+            <i class="fas fa-comments fa-3x mb-3 text-secondary"></i>
+            <p class="text-secondary fw-bold">Empezar conversación</p>
+        </div>
+        {% endfor %}
+
+        <!-- Placeholder for real-time messages -->
+        <div id="typing-indicator"></div>
+
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-3 bg-white border-top">
+        <form id="chat-form" onsubmit="event.preventDefault(); sendMessage();" class="d-flex align-items-center gap-2">
+            {% csrf_token %}
+            <input type="file" id="image-input" accept="image/*" style="display: none;"
+                onchange="handleImageSelect(this)">
+            <button type="button" class="btn btn-light rounded-circle text-primary"
+                onclick="document.getElementById('image-input').click()">
+                <i class="fas fa-image"></i>
+            </button>
+            <div class="position-relative flex-grow-1">
+                <input type="text" id="chat-message-input" class="form-control rounded-pill bg-light border-0 py-2 px-3"
+                    placeholder="Escribe un mensaje..." autocomplete="off" onfocus="markChatAsRead()">
+                <div id="image-preview-container"
+                    class="position-absolute bottom-100 start-0 mb-2 p-2 bg-white rounded shadow-sm d-none"
+                    style="z-index: 10;">
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-1 p-1" aria-label="Close"
+                        onclick="clearImageSelection()" style="font-size: 0.7rem;"></button>
+                    <img id="image-preview" src="" alt="Preview" style="max-height: 100px; border-radius: 8px;">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary rounded-circle shadow-sm"
+                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // --- GLOBAL SCOPE ASSIGNMENT FOR PARTIAL FUNCTIONS ---
+
+    window.markChatAsRead = function () {
+        // Read from DOM instead of template tag to prevent syntax errors
+        const userIdInput = document.getElementById('current-chat-user-id');
+        if (!userIdInput) return;
+
+        const userId = userIdInput.value;
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(`/chat/mark_read/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            }
+        }).then(res => res.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    console.log('Mensajes marcados como leídos');
+                    if (typeof clearUserBadgeAndBold === 'function') {
+                        clearUserBadgeAndBold(userId);
+                    }
+                }
+            });
+    };
+
+    // Update global var for floating_chat.html consumption if needed
+    // Safely parse
+    try {
+        const uid = document.getElementById('current-chat-user-id').value;
+        window.currentChatOtherUserId = parseInt(uid);
+    } catch (e) { console.error(e); }
+
+    // Scroll to bottom
+    window.scrollToBottom = function () {
+        const container = document.getElementById('messages-container');
+        if (!container) return;
+
+        container.scrollTop = container.scrollHeight + 5000;
+
+        const messages = container.querySelectorAll('.message');
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            lastMessage.scrollIntoView({ block: "end", behavior: "auto" });
+        }
+    };
+
+    // Scroll listener for "Mark as Read" behavior
+    var messagesContainerVar = document.getElementById('messages-container');
+    var initialScrollCompleted = false;
+
+    if (messagesContainerVar) {
+        messagesContainerVar.addEventListener('scroll', function () {
+            if (!initialScrollCompleted) return; // Ignorar el scroll automático inicial
+
+            // Check if user is near bottom (e.g., within 50px)
+            const isNearBottom = messagesContainerVar.scrollHeight - messagesContainerVar.scrollTop - messagesContainerVar.clientHeight < 100;
+
+            if (isNearBottom) {
+                window.markChatAsRead();
+            }
+        });
+    }
+
+    // Scroll immediately
+    setTimeout(() => { window.scrollToBottom(); initialScrollCompleted = true; }, 500); // Activar listener después del auto-scroll
+    setTimeout(window.scrollToBottom, 200);
+
+    // Connect WebSocket - Con manejo de errores
+    const chatId = {{ chat.id|default:"null" }};
+    if (chatId) {
+        console.log('Conectando a chat:', chatId);
+        connectToChat(chatId);
+    } else {
+        console.error('ERROR: Chat ID no disponible');
+    }
+
+    window.updateLastSentStatus = function () {
+        document.querySelectorAll('.message-status.status-sent').forEach(el => el.classList.remove('last-sent-status'));
+        const sentStatuses = document.querySelectorAll('.message-status.status-sent');
+        if (sentStatuses.length > 0) {
+            sentStatuses[sentStatuses.length - 1].classList.add('last-sent-status');
+        }
+    };
+    window.updateLastSentStatus();
+
+    window.sendMessage = function () {
+        const input = document.getElementById('chat-message-input');
+        const message = input.value.trim();
+        const fileInput = document.getElementById('image-input');
+        const file = fileInput.files[0];
+
+        if (!message && !file) return;
+
+        if (file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('chat_id', '{{ chat.id }}');
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch("{% url 'upload_chat_image' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken },
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        window.clearImageSelection();
+                    } else {
+                        console.error('Error uploading image:', data.error);
+                    }
+                })
+                .catch(err => console.error('Fetch error:', err));
+            return;
+        }
+
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            input.value = '';
+        } else {
+            console.error('WebSocket not connected');
+        }
+    };
+
+    window.handleImageSelect = function (input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const preview = document.getElementById('image-preview');
+                const container = document.getElementById('image-preview-container');
+                preview.src = e.target.result;
+                container.classList.remove('d-none');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.clearImageSelection = function () {
+        document.getElementById('image-input').value = '';
+        document.getElementById('image-preview-container').classList.add('d-none');
+        document.getElementById('image-preview').src = '';
+    };
+</script>

@@ -1,0 +1,61 @@
+<div class="container">
+    <h2>Notificaciones</h2>
+
+    {% if notificaciones %}
+      <div class="notification-list">
+        {% for notificacion in notificaciones %}
+          <div class="notification-item{% if notificacion.leida %} read{% else %} unread{% endif %}">
+            <p><strong>{{ notificacion.usuario_origen.username }}</strong> {{ notificacion.mensaje }}</p>
+            <p class="timestamp">{{ notificacion.fecha_creacion|date:"F j, Y, g:i a" }}</p>
+
+            {% if notificacion.leida %}
+              <span class="status">Leída</span>
+            {% else %}
+              <span class="status">No Leída</span>
+              <form method="POST" action="{% url 'marcar_como_leida' notificacion.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-mark-read">Marcar como leída</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No tienes notificaciones.</p>
+    {% endif %}
+  </div>
+
+
+<style>
+  .notification-item {
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 5px;
+  }
+  
+  .notification-item.unread {
+    background-color: #f9f9f9;
+  }
+  
+  .notification-item.read {
+    background-color: #e0e0e0;
+  }
+  
+  .notification-item .status {
+    font-weight: bold;
+    margin-top: 5px;
+  }
+  
+  .notification-item .btn-mark-read {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  .notification-item .btn-mark-read:hover {
+    background-color: #45a049;
+  }
+</style>

@@ -1,0 +1,15 @@
+
+# Environment
+.env
+venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+db.sqlite3
+fix_*.py
+*.sql
+
+# Media & Static
+media/
+# static/ (Incluir estáticos en la imagen para evitar errores de volumen vacío)

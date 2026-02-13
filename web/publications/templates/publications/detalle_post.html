@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+
+<body>
+    <div class="comentarios-panel">
+        <h3>Comentarios</h3>
+
+        {% for comentario in comentarios %}
+        <p><strong>{{ comentario.usuario }}:</strong> {{ comentario.texto }}</p>
+        {% empty %}
+        <p>No hay comentarios todavía.</p>
+        {% endfor %}
+
+        <form method="post" hx-post="{% url 'publications:crear_comentario' post.id %}"
+            hx-target="#panel-comentarios-{{ post.id }}" hx-swap="innerHTML">
+
+            {% csrf_token %}
+            <textarea name="texto" required></textarea>
+            <button type="submit">Comentar</button>
+        </form>
+    </div>
+
+
+
+    <h2 class="mb-3">Comentarios (Tiempo Real)</h2>
+
+    <div id="comentarios-container">
+        {% for comentario in comentarios_principales %}
+        {# Se llama al parcial para cada comentario principal #}
+        {% include 'publications/partials/comment_item.html' with comentario=comentario %}
+        {% endfor %}
+    </div>
+
+    <hr>
+    <h3 class="h5">Agregar Comentario: <span id="reply-target-name" style="font-size: 0.9em; color: #555;"></span></h3>
+
+    <form id="comment-form" method="POST" hx-post="{% url 'publications:agregar_comentario_http' post_id=post.pk %}"
+        hx-trigger="submit" hx-target="body" hx-swap="none" hx-on--after-request="this.reset(); resetReplyState();"
+        data-parent-id="">
+
+        {% csrf_token %}
+
+        <input type="hidden" name="comentario_padre_id" id="id_comentario_padre_id" value="">
+
+        <div class="mb-3">
+            {{ comentario_form.descripcion }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Publicar</button>
+        <button type="button" id="cancel-reply-btn" class="btn btn-sm btn-secondary ms-2"
+            style="display: none;">Cancelar Respuesta</button>
+    </form>
+
+    </div>
+
+    <script>
+        // 1. Configuración y Conexión WebSocket
+        const postId = {{ post.pk }};
+        const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const wsUrl = wsProtocol + window.location.host + '/ws/post/' + postId + '/comments/';
+        const commentSocket = new WebSocket(wsUrl);
+
+        commentSocket.onopen = function (e) {
+            console.log("WebSocket conectado exitosamente al post:", postId);
+        };
+
+        commentSocket.onclose = function (e) {
+            console.log("WebSocket desconectado. Código:", e.code);
+        };
+
+        // 2. Manejo de Mensajes Recibidos (Actualización en Tiempo Real)
+        commentSocket.onmessage = function (e) {
+            console.log("WS MESSAGE RECEIVED (RAW):", e.data);
+
+            try {
+                const data = JSON.parse(e.data);
+
+                if (data.type === 'new_comment') {
+                    const commentHtml = data.html;
+                    const parentId = data.parent_id;
+
+                    // Determina el contenedor de destino
+                    const isMainComment = (parentId === 'main' || parentId === null || parentId === undefined);
+                    const containerId = isMainComment ? 'comentarios-container' : 'replies-for-' + parentId;
+
+                    const container = document.getElementById(containerId);
+
+                    if (container) {
+                        // CRÍTICO: Insertar el HTML
+                        container.insertAdjacentHTML('beforeend', commentHtml);
+                        console.log(`✅ COMENTARIO INSERTADO. Target ID: ${containerId}`);
+                    } else {
+                        console.error(`❌ FALLO DE INSERCIÓN: Contenedor no encontrado. ID esperado: ${containerId}`);
+                    }
+
+                }
+            } catch (error) {
+                console.error("❌ ERROR CRÍTICO AL PROCESAR JSON DE WS:", error);
+            }
+        };
+
+
+        // 3. Lógica del Botón "Responder" y Limpieza de Estado (Usada por HTMX)
+        function resetReplyState() {
+            document.getElementById('comment-form').dataset.parentId = '';
+            document.getElementById('reply-target-name').innerText = '';
+            document.getElementById('cancel-reply-btn').style.display = 'none';
+            document.getElementById('id_comentario_padre_id').value = '';
+        }
+
+        window.setReplyTarget = function (parentId, parentUserName) {
+            document.getElementById('comment-form').dataset.parentId = parentId;
+            document.getElementById('reply-target-name').innerText = `Respondiendo a ${parentUserName}`;
+            document.getElementById('cancel-reply-btn').style.display = 'inline';
+            document.getElementById('id_descripcion').focus();
+
+            // Actualizar el campo oculto y el target de HTMX
+            document.getElementById('id_comentario_padre_id').value = parentId;
+            document.getElementById('comment-form').setAttribute('hx-target', `#replies-for-${parentId}`);
+        };
+
+        document.getElementById('cancel-reply-btn').onclick = function () {
+            // Revertir el target de HTMX al contenedor principal
+            document.getElementById('comment-form').setAttribute('hx-target', `#comentarios-container`);
+            resetReplyState();
+        };
+
+    </script>
+</body>
+
+</html>

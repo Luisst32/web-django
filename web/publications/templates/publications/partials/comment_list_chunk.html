@@ -1,0 +1,13 @@
+{% for comentario in comentarios %}
+{% include 'publications/partials/comment_item.html' with comentario=comentario %}
+{% endfor %}
+
+{% if comentarios.has_next %}
+<div class="text-center mt-3" id="load-more-container-{{ comentarios.next_page_number }}">
+    <button class="btn btn-sm btn-link text-decoration-none text-muted"
+        hx-get="{% url 'publications:panel_comentarios' post_id=comentarios.object_list.0.post.id %}?page={{ comentarios.next_page_number }}"
+        hx-target="#load-more-container-{{ comentarios.next_page_number }}" hx-swap="outerHTML">
+        Cargar más comentarios
+    </button>
+</div>
+{% endif %}

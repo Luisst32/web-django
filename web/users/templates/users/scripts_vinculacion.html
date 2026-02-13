@@ -1,0 +1,90 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Solo intentamos si ya tenemos permiso (para no molestar)
+        if ('Notification' in window && Notification.permission === "granted") {
+            autoRepararSuscripcion();
+        }
+    });
+
+    function autoRepararSuscripcion() {
+        console.log("🔧 [AUTO] Iniciando diagnóstico y reparación...");
+
+        if (!('serviceWorker' in navigator)) return;
+
+        navigator.serviceWorker.register("/sw.js")
+        .then(function(registration) {
+            return navigator.serviceWorker.ready;
+        })
+        .then(function(registration) {
+            // 1. Preguntamos: ¿Existe la suscripción?
+            return registration.pushManager.getSubscription()
+            .then(function(subscription) {
+                
+                // CASO A: YA EXISTE (Todo bien)
+                if (subscription) {
+                    console.log("✅ Suscripción encontrada.");
+                    return subscription; 
+                }
+
+                // CASO B: NO EXISTE (Tu error actual). ¡LA CREAMOS!
+                console.warn("⚠️ Permiso concedido pero falta suscripción. Generando nueva...");
+                
+                // ============================================================
+                // IMPORTANTE: PEGA TU CLAVE PÚBLICA DE SETTINGS.PY AQUÍ ABAJO
+                // ============================================================
+                const vapidPublicKey = "BGxaTJu4_1EZj4GcKd6GaCuJklMOiWd4ynXg5x5Wn_aOa5eSJepYINy9Tfb6c7iXIoIyEGNM-3f_gtwJMG8InKI"; 
+                
+                const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+
+                // Pedimos el token a Chrome automáticamente
+                return registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: convertedVapidKey
+                });
+            });
+        })
+        .then(function(subscription) {
+            // 2. Enviamos la suscripción (vieja o nueva) a la Base de Datos
+            if (subscription) {
+                enviarA_BaseDatos(subscription);
+            }
+        })
+        .catch(function(err) {
+            console.error("❌ Error fatal reparando suscripción:", err);
+            console.log("Revisa que la clave VAPID sea correcta.");
+        });
+    }
+
+ function enviarA_BaseDatos(subscription) {
+        console.log("💾 Guardando suscripción COMPLETA en BD...");
+        
+        // Convertimos la suscripción a un objeto plano JSON
+        // Esto incluye endpoint, keys (p256dh, auth) y expirationTime
+        const datosCompletos = JSON.parse(JSON.stringify(subscription));
+
+        fetch("{% url 'vincular_dispositivo' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            // Enviamos TODO el objeto
+            body: JSON.stringify(datosCompletos)
+        })
+        .then(res => {
+            if(res.ok) console.log("🎉 DISPOSITIVO Y LLAVES GUARDADOS");
+            else console.error("❌ Error guardando:", res.status);
+        });
+    }
+    // Herramienta para convertir la clave (No tocar)
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+</script>

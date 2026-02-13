@@ -1,0 +1,486 @@
+{% load static %}
+
+
+{# Token CSRF necesario para las peticiones AJAX #}
+{% csrf_token %}
+
+{% for publicacion in publicaciones %}
+
+{# === INICIO LÓGICA SCROLL INFINITO === #}
+{% if es_feed_infinito and forloop.last and publicaciones.has_next %}
+
+<div class="publicacion {% if publicacion.is_highlighted %}post-highlight{% endif %}"
+    hx-get="{{ feed_url }}?page={{ publicaciones.next_page_number }}" hx-trigger="revealed" hx-swap="afterend">
+
+    {% else %}
+
+    <div class="publicacion {% if publicacion.is_highlighted %}post-highlight{% endif %}">
+
+        {% endif %}
+        {# === FIN LÓGICA SCROLL INFINITO === #}
+
+
+        <div class="publicacion-header">
+
+            <div class="header-left">
+                {% if publicacion.usuario.foto_perfil %}
+                <img src="{{ publicacion.usuario.foto_perfil.url }}" alt="Foto" class="publicacion-foto-perfil" />
+                {% else %}
+                <img src="/static/img/default-profile.png" alt="Foto default" class="publicacion-foto-perfil" />
+                {% endif %}
+            </div>
+
+            <div class="header-center">
+                <div class="user-row">
+                    <a href="{% url 'perfil_detalle' publicacion.usuario.username %}" class="usuario-link">
+                        @{{ publicacion.usuario.username }}
+                    </a>
+                    {% if publicacion.usuario.verification_badge %}
+                    <img src="{{ publicacion.usuario.verification_badge.icon.url }}"
+                        title="{{ publicacion.usuario.verification_badge.name }}"
+                        style="width: 22px; height: 22px; margin-left: 4px;" data-bs-toggle="tooltip">
+                    {% endif %}
+                </div>
+
+                {% with etiquetados=publicacion.usuarios_etiquetados.all %}
+                {% if etiquetados %}
+                <div class="etiquetas-row">
+                    <span class="texto-con">con</span>
+                    {% if usuario and usuario in etiquetados %}
+                    <a href="{% url 'perfil_detalle' usuario.username %}" class="usuario-link text-primary">
+                        {{ usuario.username }}
+                    </a>
+                    {% else %}
+                    {% for u in etiquetados|slice:":1" %}
+                    <a href="{% url 'perfil_detalle' u.username %}" class="usuario-link text-primary">
+                        {{ u.username }}
+                    </a>
+                    {% endfor %}
+                    {% endif %}
+                    {% if etiquetados|length > 1 %}
+                    <label for="modal-etiquetados-toggle-{{ publicacion.id }}" class="text-muted clickeable">
+                        y {{ etiquetados|length|add:"-1" }} más...
+                    </label>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+
+            <div class="header-right">
+                <div class="dropdown-wrapper" tabindex="0">
+                    <button class="menu-toggle">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        {% if request.user == publicacion.usuario %}
+                        <button onclick="">Editar</button>
+                        <button onclick="">Editar</button>
+                        <label for="modal-eliminar-toggle-{{ publicacion.id }}" class="btn-eliminar">Eliminar</label>
+                        {% else %}
+                        <button>Reportar</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <input type="checkbox" id="modal-etiquetados-toggle-{{ publicacion.id }}" class="modal-etiquetados-toggle"
+                hidden />
+
+            <div class="modal-etiquetados">
+                <label for="modal-etiquetados-toggle-{{ publicacion.id }}" class="modal-etiquetados-overlay"></label>
+                <div class="modal-etiquetados-contenido">
+                    <h3>Etiquetados</h3>
+                    {% with etiquetados=publicacion.usuarios_etiquetados.all %}
+                    <ul>
+                        {% for usuario in etiquetados %}
+                        <li><a href="#">@{{ usuario.username }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    {% endwith %}
+                    <label for="modal-etiquetados-toggle-{{ publicacion.id }}" class="btn-cerrar">Cerrar</label>
+                </div>
+            </div>
+
+        </div>
+
+        <p class="publicacion-texto">{{ publicacion.descripcion }}</p>
+
+        {% if publicacion.imagen %}
+        <div class="media-wrapper">
+            {% with ext=publicacion.imagen.name|lower|slice:'-4:' ext_long=publicacion.imagen.name|lower|slice:'-5:' %}
+
+            {% if ext == '.jpg' or ext == '.png' or ext == '.gif' or ext_long == '.jpeg' or ext_long == '.webp' %}
+            <img src="{{ publicacion.imagen.url }}" alt="Imagen de la publicación" class="publicacion-imagen"
+                loading="lazy" onclick="mostrarImagen(this)" />
+
+            {% elif ext == '.mp4' or ext == '.mov' or ext == '.avi' or ext == '.mkv' or ext_long == '.webm' %}
+
+            {% include 'publications/partials/video_player.html' with video_url=publicacion.imagen.url is_muted=publicacion.musica %}
+
+            
+
+
+
+            {% endif %}
+
+            {% endwith %}
+
+            {% if publicacion.musica %}
+            <div class="music-tag-overlay">
+                <i class="bi bi-music-note-beamed"></i> {{ publicacion.musica.nombre }}
+            </div>
+
+            <button class="btn-audio-overlay"
+                onclick="toggleAudio(this, '{{ publicacion.id }}', {{ publicacion.musica_inicio }}, {{ publicacion.musica_fin }})">
+                <i class="bi bi-volume-mute-fill" id="icon-audio-{{ publicacion.id }}"></i>
+            </button>
+
+            <audio id="audio-post-{{ publicacion.id }}" preload="none"
+                data-start="{{ publicacion.musica_inicio|default:0 }}"
+                data-end="{{ publicacion.musica_fin|default:15 }}">
+                <source src="{{ publicacion.musica.archivo_musica.url }}" type="audio/mpeg">
+            </audio>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+        <div class="publicacion-footer">
+            <p class="fecha-publicacion">{{ publicacion.fecha_publicacion|date:'d M Y, H:i' }}</p>
+        </div>
+
+        <div class="acciones-container">
+            <button class="btn-accion btn-love {% if publicacion.user_reaction == 1 %}active{% endif %}"
+                data-id="{{ publicacion.id }}" data-tipo="1">
+                <i class="bi bi-heart-fill"></i>
+                <span class="count love-count">{{ publicacion.love_count }}</span>
+            </button>
+
+            <button class="btn-accion btn-comment" data-id="{{ publicacion.id }}"
+                hx-get="{% url 'publications:panel_comentarios' publicacion.id %}"
+                hx-target="#contenido-modal-comentarios" hx-trigger="click" hx-swap="innerHTML"
+                onclick="abrirModalComentarios()">
+
+                <i class="bi bi-chat-fill"></i>
+
+                <span class="text-btn">
+                    Comentar
+                    <span id="btn-count-{{ publicacion.id }}" class="ms-1">
+                        {% if publicacion.comentarios.count > 0 %}
+                        {{ publicacion.comentarios.count }}
+                        {% endif %}
+                    </span>
+                </span>
+            </button>
+
+            <button class="btn-accion btn-dislike {% if publicacion.user_reaction == 2 %}active{% endif %}"
+                data-id="{{ publicacion.id }}" data-tipo="2">
+                <span class="count fun-count">{{ publicacion.fun_count }}</span>
+                <i class="bi bi-hand-thumbs-down-fill"></i>
+            </button>
+        </div>
+
+        <input type="checkbox" id="modal-eliminar-toggle-{{ publicacion.id }}" class="modal-eliminar-toggle" hidden />
+        <div class="modal-eliminar">
+            <label for="modal-eliminar-toggle-{{ publicacion.id }}" class="modal-eliminar-overlay"></label>
+            <div class="modal-eliminar-contenido">
+                <p>¿Eliminar publicación?</p>
+                <div class="modal-eliminar-botones">
+                    <label for="modal-eliminar-toggle-{{ publicacion.id }}" class="btn-eliminar-cancelar">No</label>
+                    <form action="{% url 'publications:eliminar_publicacion' publicacion.id %}" method="POST"
+                        style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-eliminar-confirmar">Sí, eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div> {% empty %}
+    <p class="sin-publicaciones">Sin publicaciones.</p>
+    {% endfor %}
+
+    <div id="modal-imagen" class="modal">
+        <span class="cerrar" onclick="cerrarImagen()">&times;</span>
+        <img class="modal-contenido" id="imagen-ampliada" />
+    </div>
+
+    <style>
+        /* Contenedor Principal */
+        .publicaciones-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .publicacion {
+            padding-bottom: 25px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        /* HEADER */
+        .publicacion-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .header-left {
+            flex-shrink: 0;
+            margin-right: 12px;
+        }
+
+        .header-center {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .header-right {
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .publicacion-foto-perfil {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-row {
+            font-weight: 700;
+            font-size: 1rem;
+            line-height: 1.2;
+        }
+
+        .etiquetas-row {
+            font-size: 0.9rem;
+            color: #65676b;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            color: #606770;
+        }
+
+        /* === NUEVOS ESTILOS MULTIMEDIA (PARLANTE SOBRE IMAGEN) === */
+
+        /* 1. Contenedor relativo para posicionar elementos encima */
+        .media-wrapper {
+            position: relative;
+            width: 100%;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* 2. Botón Flotante (Abajo Derecha) */
+        .btn-audio-overlay {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.7);
+            /* Fondo oscuro semitransparente */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.1s;
+        }
+
+        .btn-audio-overlay:active {
+            transform: scale(0.9);
+        }
+
+        .btn-audio-overlay i {
+            font-size: 14px;
+        }
+
+        /* 3. Etiqueta Nombre Canción (Arriba Izquierda) */
+        .music-tag-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            pointer-events: none;
+            backdrop-filter: blur(2px);
+            z-index: 10;
+        }
+
+        /* Imagen/Video ajustados */
+        .publicacion-imagen,
+        .publicacion-video {
+            width: 100%;
+            height: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .publicacion-imagen {
+            cursor: pointer;
+        }
+
+        .video-container {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* ======================================================== */
+
+        /* BOTONES DE ACCIÓN */
+        .acciones-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #f0f2f5;
+        }
+
+        .btn-accion {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f5f5f5;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            color: #65676b;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-accion:hover {
+            background: #e4e6eb;
+        }
+
+        .btn-accion i {
+            font-size: 1.1rem;
+        }
+
+        .btn-love.active {
+            color: #e41e3f;
+            background: rgba(228, 30, 63, 0.1);
+        }
+
+        .btn-dislike.active {
+            color: #000;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-comment {
+            flex-grow: 0;
+        }
+
+        .publicacion-texto {
+            margin: 10px 0;
+        }
+
+        .usuario-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Dropdown Styles */
+        .dropdown-wrapper {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            width: 120px;
+            z-index: 10;
+        }
+
+        .dropdown-wrapper:hover .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-menu button,
+        .btn-eliminar {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            text-align: left;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        .dropdown-menu button:hover {
+            background: #f5f5f5;
+        }
+
+        /* Modales CSS */
+        .modal,
+        .modal-eliminar,
+        .modal-etiquetados {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-contenido {
+            max-width: 90%;
+        }
+
+        .modal-eliminar-toggle:checked+.modal-eliminar,
+        .modal-etiquetados-toggle:checked+.modal-etiquetados {
+            display: flex;
+        }
+
+        .modal-eliminar-contenido,
+        .modal-etiquetados-contenido {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .btn-eliminar-confirmar {
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+    </style>

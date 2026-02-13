@@ -1,0 +1,115 @@
+/* users/static/users/css/register.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6;
+    color: #1f2937;
+    height: 100vh;
+    /* Force full height, no scroll if possible */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    overflow: hidden;
+    /* Hide scrollbar if slightly over */
+}
+
+/* Scrollable card only if needed, but we aim for fit */
+.register-card {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    max-height: 95vh;
+    width: 100%;
+    overflow-y: auto;
+    /* Allow internal scroll if height < content */
+}
+
+/* Compact Typography */
+.brand-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+    color: #6b7280;
+}
+
+.page-title {
+    color: #111827;
+    font-size: 1.25rem;
+    /* Smaller title */
+    margin-bottom: 0.5rem;
+}
+
+/* Compact Form Styling */
+.form-label {
+    color: #374151;
+    font-weight: 500;
+    font-size: 0.8rem;
+    /* Smaller labels */
+    margin-bottom: 0.2rem;
+}
+
+.form-control,
+.form-select {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #1f2937;
+    padding: 0.4rem 0.75rem;
+    /* Reduced padding */
+    border-radius: 0.4rem;
+    font-size: 0.9rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #000;
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.05);
+}
+
+.btn-black {
+    background-color: #000000;
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+    padding: 0.6rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.btn-black:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+.mb-3 {
+    margin-bottom: 0.75rem !important;
+    /* Force smaller spacing */
+}
+
+.mb-4 {
+    margin-bottom: 1rem !important;
+}
+
+.text-muted {
+    font-size: 0.8rem;
+    color: #6b7280 !important;
+}
+
+/* Validation Styles */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: none;
+    /* Remove Bootstrap icon to keep it clean if desired, or keep it */
+}
+
+.form-control.is-valid {
+    border-color: #198754;
+}
+
+.invalid-feedback {
+    font-size: 0.75rem;
+    color: #dc3545;
+    margin-top: 0.1rem;
+}

@@ -1,0 +1,106 @@
+<div class="comments-wrapper" id="comments-panel-{{ post.id }}">
+
+    <div class="comments-header">
+        <h5>Comentarios</h5>
+    </div>
+
+    <div id="comentarios-container-{{ post.id }}" class="comments-list">
+        {% for comentario in comentarios_principales %}
+        {% include 'publications/partials/comment_item.html' with comentario=comentario %}
+        {% empty %}
+        <div class="empty-comments">
+            <i class="bi bi-chat-dots"></i>
+            <p class="mt-2 text-muted">Sé la primera persona en comentar.</p>
+        </div>
+        {% endfor %}
+
+        {% if has_next %}
+        <div class="text-center mt-3" id="load-more-container-{{ next_page_number }}">
+            <button class="btn btn-sm btn-link text-decoration-none text-muted"
+                hx-get="{% url 'publications:panel_comentarios' post_id=post.id %}?page={{ next_page_number }}"
+                hx-target="#load-more-container-{{ next_page_number }}" hx-swap="outerHTML">
+                Cargar más comentarios
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="comment-footer">
+
+        <div id="reply-info-wrapper-{{ post.id }}" class="reply-info-wrapper">
+            <small>
+                Respondiendo a <span id="reply-target-name-{{ post.id }}" class="reply-target-name"></span>
+            </small>
+            <button type="button" id="cancel-reply-btn-{{ post.id }}" class="btn-cancel-reply">(Cancelar)</button>
+        </div>
+
+        <form id="comment-form-{{ post.id }}" class="comment-form" method="POST" enctype="multipart/form-data"
+            hx-post="{% url 'publications:agregar_comentario_http' post_id=post.pk %}" hx-trigger="submit"
+            hx-target="body" hx-swap="none"
+            hx-on--after-request="this.reset(); window['resetReplyState_{{ post.id }}']();" data-parent-id="">
+
+            {% csrf_token %}
+            <input type="hidden" name="comentario_padre_id" id="id_comentario_padre_id_{{ post.id }}" value="">
+
+            <!-- Input de archivo oculto -->
+            <input type="file" name="imagen" id="imagen-comentario-{{ post.id }}" class="d-none" accept="image/*">
+
+            <div class="flex-grow-1 position-relative">
+                <!-- Preview de imagen -->
+                <div id="preview-container-{{ post.id }}" class="image-preview-container d-none">
+                    <img id="image-preview-{{ post.id }}" src="" alt="Preview">
+                    <button type="button" class="btn-remove-image"
+                        onclick="window['removeImage_{{ post.id }}']()">×</button>
+                </div>
+
+                <div class="comment-input-container">
+                    <textarea name="descripcion" id="input-comentario-{{ post.id }}" class="form-control comment-input"
+                        rows="1" placeholder="Escribe un comentario..."></textarea>
+                </div>
+            </div>
+
+            <!-- Boton de camara -->
+            <button type="button" class="btn btn-light rounded-circle text-primary"
+                onclick="document.getElementById('imagen-comentario-{{ post.id }}').click()">
+                <i class="bi bi-camera-fill"></i>
+            </button>
+
+            <button type="submit" class="btn btn-primary rounded-circle btn-send-comment">
+                <i class="bi bi-send-fill" style="margin-left: -2px;"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div class="modal fade" id="deleteCommentModal" tabindex="-1" aria-labelledby="deleteCommentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="deleteCommentModalLabel">¿Eliminar comentario?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-3">
+                    Esta acción no se puede deshacer. Todos los datos asociados se perderán definitivamente.
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger px-4" hx-delete=""
+                        hx-target="body" hx-swap="none" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                        data-bs-dismiss="modal">
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    if (window.CommentsApp) {
+        window.CommentsApp.init({{ post.pk }}); 
+    } else {
+        console.error('CommentsApp no cargado');
+    }
+</script>

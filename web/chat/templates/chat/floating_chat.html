@@ -1,0 +1,430 @@
+<!-- MESSAGE PANEL (Floating Bottom-Right) -->
+<div id="message-panel" class="message-panel">
+    <div class="message-header" onclick="toggleMinimize()" style="cursor: pointer;">
+        <div class="d-flex flex-column" style="display: none !important;">
+            <span id="chat-title" class="fw-bold">Mensajes</span>
+            <small id="chat-status" class="text-muted" style="font-size: 0.7rem; line-height: 1;"></small>
+        </div>
+        <input type="hidden" id="current-user-id" value="{{ request.user.id }}">
+        <div class="header-actions">
+            <!-- Minimize Button -->
+            <button class="header-btn" title="Minimizar" onclick="event.stopPropagation(); minimizePanel()">
+                <i class="fas fa-minus"></i>
+            </button>
+            <!-- Close Button -->
+            <button class="header-btn" title="Cerrar" onclick="event.stopPropagation(); closePanel()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    <div id="chat-content-area" class="message-content h-100" hx-get="{% url 'load_chat_panel' %}"
+        hx-trigger="intersect once" style="display: flex; flex-direction: column; min-height: 0;">
+        <div class="d-flex justify-content-center align-items-center flex-grow-1">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHAT COMPACT TRIGGER -->
+<div id="chat-compact-trigger" class="chat-compact-trigger hidden" onclick="toggleMessagePanel()">
+    <div class="d-flex align-items-center justify-content-center h-100">
+        <i class="fas fa-comment-dots me-2" style="color: #0084ff;"></i>
+        <span class="fw-bold text-dark">Chat</span>
+    </div>
+</div>
+
+<style>
+    /* --- Message Panel Styles --- */
+    .message-panel {
+        position: fixed;
+        bottom: -100%;
+        right: 20px;
+        width: 650px;
+        /* Widened for desktop-like feel */
+        height: 500px;
+        /* Slightly taller */
+        max-height: 85vh;
+        /* Safety for small screens */
+        background: white;
+        border-radius: 12px 12px 0 0;
+        box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.15);
+        z-index: 2050;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        visibility: hidden;
+        opacity: 0;
+    }
+
+    .message-panel.active {
+        bottom: 0;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .message-panel.minimized {
+        bottom: -435px;
+        /* Adjust based on header height */
+    }
+
+    /* --- Compact Trigger Styles --- */
+    .chat-compact-trigger {
+        position: fixed;
+        bottom: 0;
+        right: 30px;
+        width: 130px;
+        height: 45px;
+        background: white;
+        border-radius: 15px 15px 0 0;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        z-index: 2045;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid #f0f0f0;
+        border-bottom: none;
+        display: block;
+    }
+
+    .chat-compact-trigger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .chat-compact-trigger.hidden {
+        transform: translateY(100%);
+        pointer-events: none;
+        opacity: 0;
+    }
+
+    .message-header {
+        background: #fff;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 12px 15px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        color: #1f2937;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .header-btn {
+        background: none;
+        border: none;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+    }
+
+    .header-btn:hover {
+        color: #1f2937;
+        background-color: #f3f4f6;
+    }
+
+    .message-content {
+        flex: 1;
+        background: #fff;
+        overflow: hidden;
+        /* Prevent content from growing panel */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    let chatSocket = null;
+    let presenceSocket = null;
+    const presenceTimers = {}; // To manage 5-minute timeouts
+    const currentUserId = parseInt("{{ request.user.id }}".trim());
+    console.log("Current User ID initialized:", currentUserId);
+
+    function toggleMessagePanel() {
+        var panel = document.getElementById('message-panel');
+        if (!panel) return;
+
+        // Show panel and hide trigger (Active state)
+        panel.classList.add('active');
+        const trigger = document.getElementById('chat-compact-trigger');
+        if (trigger) trigger.classList.add('hidden');
+
+        // Mark all as read
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({ 'action': 'read_messages' }));
+        }
+
+        // Force scroll to bottom on re-open
+        if (typeof window.scrollToBottom === 'function') {
+            setTimeout(window.scrollToBottom, 100); // Small delay for animation
+        }
+    }
+
+    function minimizePanel() {
+        var panel = document.getElementById('message-panel');
+        if (panel) panel.classList.remove('active');
+
+        // Show compact trigger (Minimized state)
+        const trigger = document.getElementById('chat-compact-trigger');
+        if (trigger) trigger.classList.remove('hidden');
+    }
+
+    function closePanel() {
+        var panel = document.getElementById('message-panel');
+        if (panel) {
+            panel.classList.remove('active');
+            panel.classList.remove('minimized');
+        }
+        // Hide compact trigger too (Closed state)
+        const trigger = document.getElementById('chat-compact-trigger');
+        if (trigger) trigger.classList.add('hidden');
+    }
+
+    function toggleMinimize() {
+        // From header click, we minimize to the tab
+        minimizePanel();
+    }
+
+    // WebSocket logic (reused from before)
+    let typingTimeout = null;
+
+    function connectToPresence() {
+        if (!document.getElementById('current-user-id')) return;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/presence/`;
+        presenceSocket = new WebSocket(wsUrl);
+
+        presenceSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+            if (data.type === 'user_status') {
+                updateUserStatusInList(data.user_id, data.status);
+                // Also update header if chatting with this user
+                if (window.currentChatOtherUserId && window.currentChatOtherUserId == data.user_id) {
+                    const statusEl = document.getElementById('chat-status');
+                    if (statusEl) {
+                        statusEl.innerText = (data.status === 'online') ? 'En línea' : 'Desconectado';
+                        statusEl.style.color = (data.status === 'online') ? '#22c55e' : '#9ca3af';
+                    }
+                }
+            }
+        };
+
+        presenceSocket.onclose = function () {
+            setTimeout(connectToPresence, 5000);
+        };
+    }
+
+    function updateUserStatusInList(userId, status) {
+        const item = document.querySelector(`.contact-list-item[data-user-id="${userId}"]`);
+        if (item) {
+            const indicator = item.querySelector('.status-indicator');
+            if (indicator) {
+                indicator.className = `status-indicator ${status === 'online' ? 'bg-success' : 'bg-secondary'}`;
+            }
+        }
+    }
+
+    function connectToChat(chatId) {
+        if (!chatId) {
+            console.error('ERROR: Chat ID no válido:', chatId);
+            return;
+        }
+
+        if (chatSocket) {
+            chatSocket.close();
+        }
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/chat/${chatId}/`;
+        
+        console.log('Conectando WebSocket a:', wsUrl);
+
+        chatSocket = new WebSocket(wsUrl);
+
+        chatSocket.onopen = function (e) {
+            console.log('Chat socket connected');
+            // Check read status on connect
+            chatSocket.send(JSON.stringify({ 'action': 'read_messages' }));
+        };
+
+        chatSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+            console.log('Chat message received:', data);
+
+            if (data.type === 'chat_message') {
+                renderIncomingMessage(data);
+                if (typeof updateLastSentStatus === 'function') {
+                    updateLastSentStatus();
+                }
+            } else if (data.type === 'chat_read_receipt') {
+                handleReadReceipt(data);
+            } else if (data.type === 'user_typing') {
+                handleTypingIndicator(data);
+            }
+        };
+
+        chatSocket.onerror = function (e) {
+            console.error('Chat socket error:', e);
+        };
+
+        chatSocket.onclose = function (e) {
+            console.error('Chat socket closed unexpectedly:', e.code, e.reason);
+        };
+    }
+
+    function handleReadReceipt(data) {
+        const readerId = parseInt(data.user_id);
+        console.log("Read receipt from:", readerId, "My ID:", currentUserId);
+
+        if (readerId === currentUserId) {
+            console.log("I am the one who read the messages. Ignoring.");
+            return;
+        }
+
+        // The OTHER person read my messages
+        console.log("Updating all my sent messages to 'Visto'...");
+        const sentMessages = document.querySelectorAll('.message-status.status-sent');
+        console.log("Found sent messages:", sentMessages.length);
+
+        sentMessages.forEach(el => {
+            const isImage = el.closest('.message-bubble').style.background === 'transparent';
+            el.innerHTML = '<i class="fas fa-check-double"></i> Visto';
+            el.style.color = isImage ? '#0084ff' : '#d1f2ff';
+            el.style.fontWeight = 'bold';
+        });
+
+        if (typeof updateLastSentStatus === 'function') {
+            updateLastSentStatus();
+        }
+    }
+
+    function handleTypingIndicator(data) {
+        // Implement typing indicator logic here if needed
+    }
+
+    function renderIncomingMessage(data) {
+        const container = document.getElementById('messages-container');
+        if (!container) {
+            console.warn('WARN: messages-container no encontrado');
+            return;
+        }
+
+        // Remove 'no messages' placeholder if exists
+        const noMsg = document.getElementById('no-messages-placeholder');
+        if (noMsg) noMsg.remove();
+
+        const senderId = parseInt(data.user_id);
+        const isMe = (senderId === currentUserId);
+        console.log(`Render message: sender=${senderId}, current=${currentUserId}, isMe=${isMe}`);
+
+        let bubbleContent = '';
+        if (data.tipo === 'imagen') {
+            bubbleContent = `<img src="${data.image_url}" class="img-fluid rounded-2 mb-1" style="max-height: 250px; cursor: pointer; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);" onclick="window.open('${data.image_url}', '_blank')">`;
+        } else {
+            bubbleContent = `<div class="message-text" style="word-wrap: break-word;">${data.message}</div>`;
+        }
+
+        const msgHtml = `
+            <div class="message mb-2 d-flex ${isMe ? 'justify-content-end' : ''}">
+                <div class="message-bubble p-2 rounded-3 shadow-sm" 
+                     style="max-width: 80%; ${data.tipo === 'imagen' ? 'background: transparent; box-shadow: none !important;' : (isMe ? 'background: #0084ff; color: white;' : 'background: white; color: #1c1e21;')}">
+                    ${bubbleContent}
+                    <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.7rem; opacity: 0.9; ${data.tipo === 'imagen' ? 'color: #666;' : ''}">
+                        ${isMe ? `
+                        <div class="message-status status-sent me-2" style="color: ${data.tipo === 'imagen' ? '#666' : '#e0e0e0'}">
+                            <i class="fas fa-check"></i> Enviado
+                        </div>` : ''}
+                        <div>${data.timestamp}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        try {
+            // Insert logic similar to htmx-swap="beforeend"
+            // If there's a typing indicator, insert before it
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) {
+                indicator.insertAdjacentHTML('beforebegin', msgHtml);
+            } else {
+                container.insertAdjacentHTML('beforeend', msgHtml);
+            }
+            container.scrollTop = container.scrollHeight;
+        } catch (error) {
+            console.error('ERROR al renderizar mensaje:', error);
+        }
+
+        if (typeof updateLastSentStatus === 'function') {
+            updateLastSentStatus();
+        }
+
+        // --- REAL-TIME SIDEBAR UPDATE ---
+        // 1. Find the other user (if I'm receiving, it's the sender; if I'm sending, it's the recipient)
+        // Note: For now, let's assume we can find the sidebar item by some attribute.
+        // This part requires access to the contact list DOM which is outside this loop scope usually
+        // But we can trigger a refresh via HTMX if needed or modify DOM directly
+        const otherId = isMe ? window.currentChatOtherUserId : senderId;
+        const contactItem = document.querySelector(`.contact-list-item[data-user-id="${otherId}"]`);
+
+        if (contactItem) {
+            // Move to top
+            const listContainer = document.getElementById('contact-list-container');
+            if (listContainer) {
+                listContainer.prepend(contactItem);
+            }
+
+            // Update preview text
+            const previewEl = contactItem.querySelector('.small.text-truncate');
+            if (previewEl) {
+                previewEl.innerText = isMe ? `Tú: ${data.message || 'Imagen'}` : (data.message || 'Imagen');
+                previewEl.style.fontWeight = 'bold';
+                previewEl.style.color = '#1f2937';
+            }
+
+            // Update time
+            const timeEl = contactItem.querySelector('.time-badge'); // Assuming we add a class for time
+            if (timeEl) {
+                timeEl.innerText = data.timestamp;
+            }
+        }
+    }
+
+    // Init presence
+    if (document.getElementById('current-user-id')) {
+        connectToPresence();
+    }
+
+    function highlightContact(el, userId) {
+        // Only visual highlight, actual load is handled by HTMX
+        // Remove notification badge if present
+        const badge = el.querySelector('.badge');
+        if (badge) {
+            badge.remove();
+        }
+        // Reset preview font weight
+        const previewEl = el.querySelector('.small.text-truncate');
+        if (previewEl) {
+            previewEl.style.fontWeight = 'normal';
+            previewEl.style.color = '#6b7280';
+        }
+
+        // Update active class in list items
+        document.querySelectorAll('.contact-list-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
+        // Store current user ID for reordering logic
+        window.currentChatOtherUserId = userId;
+    }
+</script>

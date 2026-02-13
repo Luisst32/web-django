@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión | Milanesa</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'users/css/login.css' %}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-5 col-xl-4">
+                <div class="card login-card p-4">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <!-- Logo -->
+                            <img src="{% static 'logo/logo.png' %}" alt="Milanesa Logo" class="mb-3"
+                                style="max-height: 80px; width: auto; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
+
+                            <div class="brand-title text-uppercase mb-2">RED SOCIAL</div>
+                            <h2 class="fw-bold page-title">Milanesa</h2>
+                        </div>
+
+                        {% if messages %}
+                        <div class="alert alert-danger animate-fade-in mb-3" role="alert">
+                            {% for message in messages %}
+                            {{ message }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <form method="POST" id="loginForm" autocomplete="off">
+                            {% csrf_token %}
+
+                            <div id="userSection" class="mb-3">
+                                <label for="id_username" class="form-label fw-medium">Usuario</label>
+                                <input type="text" class="form-control form-control-lg" id="id_username" name="username"
+                                    placeholder="Ingresa tu usuario" required autofocus>
+                            </div>
+
+                            <div id="passwordSection" class="mb-4 d-none">
+                                <label for="id_password" class="form-label fw-medium">Contraseña</label>
+                                <input type="password" class="form-control form-control-lg" id="id_password"
+                                    name="password" placeholder="••••••••" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingresa tu contraseña.
+                                </div>
+                            </div>
+
+                            <div class="d-grid mb-4">
+                                <button type="button" class="btn btn-black btn-lg" id="nextButton" disabled>
+                                    Siguiente
+                                </button>
+                            </div>
+
+                            <div class="text-center">
+                                <a href="{% url 'register' %}" class="text-decoration-none text-muted small">
+                                    ¿Aún no tienes cuenta? <span class="text-black fw-medium">Únete a Milanesa</span>
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (optional but good for components) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'users/js/login.js' %}"></script>
+</body>
+
+</html>

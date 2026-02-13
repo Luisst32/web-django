@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+{% load static %}
+{% load webpush_notifications %}
+<html lang="es">
+
+<head>
+    {% webpush_header %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Milanesa{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="{% static 'logo/logo.png' %}" type="image/png">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'publications/comments/css/comments.css' %}?v=11">
+
+    <style>
+        body {
+            background-color: #f3f4f6;
+            /* Matching login background */
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* --- Navbar Premium --- */
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 0.75rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand img {
+            max-height: 40px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .nav-link {
+            color: #1f2937 !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background-color: #f3f4f6;
+            color: #000 !important;
+        }
+
+        /* --- Search Bar --- */
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 991.98px) {
+            .navbar {
+                position: sticky !important;
+                top: 0;
+                z-index: 1030;
+            }
+
+            .navbar .container {
+                flex-wrap: nowrap;
+                gap: 8px;
+                position: static;
+                /* Let absolute search relate to .navbar */
+            }
+
+            .search-container {
+                display: none;
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                /* Increased height for better alignment */
+                background: #fff;
+                z-index: 1001;
+                padding: 10px 12px 0 12px;
+                /* Pushes content down */
+                align-items: center;
+                margin: 0 !important;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            }
+
+            .navbar.search-active .search-container {
+                display: flex;
+            }
+
+            .navbar.search-active .navbar-brand,
+            .navbar.search-active #rightActions {
+                display: none !important;
+            }
+
+            .btn-back-search {
+                border: none;
+                background: transparent;
+                margin-right: 8px;
+                color: #1f2937;
+                font-size: 1.1rem;
+                display: flex;
+                align-items: center;
+                padding: 4px;
+            }
+
+            .search-container .position-relative {
+                flex: 1;
+            }
+
+            #userSearch {
+                width: 100%;
+                height: 38px;
+                font-size: 0.95rem;
+                border: 1px solid #e5e7eb;
+                background: #f9fafb;
+                border-radius: 20px;
+                padding: 0 15px;
+            }
+
+            .navbar-brand {
+                flex: 0 1 auto;
+                min-width: 0;
+            }
+
+            .navbar-brand img {
+                max-height: 32px;
+            }
+
+            .nav-user-img,
+            .nav-user-fallback {
+                width: 32px;
+                height: 32px;
+            }
+
+            .btn-profile {
+                padding: 2px;
+            }
+
+        }
+
+        /* Small Desktop / Desktop */
+        @media (min-width: 992.01px) {
+
+            .btn-search-mobile,
+            .btn-back-search {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+        }
+
+        #userSearch {
+            background-color: #f3f4f6;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        #userSearch:focus {
+            background-color: #fff;
+            border-color: #000;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+            outline: none;
+        }
+
+        /* --- Custom Buttons --- */
+        .btn-black {
+            background-color: #000;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-black:hover {
+            background-color: #333;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn-light-custom {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 12px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-light-custom:hover {
+            background-color: #e5e7eb;
+            color: #000;
+        }
+
+        .btn-nav-icon {
+            border: none;
+            background: transparent;
+            color: #1f2937;
+            font-size: 1.2rem;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .btn-nav-icon:hover {
+            background-color: #f3f4f6;
+            color: #000;
+        }
+
+        /* --- Profile Button Refined --- */
+        .btn-profile {
+            display: flex;
+            align-items: center;
+            background: transparent;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+            color: #1f2937;
+            transition: all 0.2s ease;
+        }
+
+        .btn-profile:hover {
+            background-color: #f3f4f6;
+            color: #000;
+        }
+
+        .nav-user-img {
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-user-fallback {
+            width: 32px;
+            height: 32px;
+            background: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1.2rem;
+        }
+
+        #userList {
+            max-height: 300px;
+            overflow-y: auto;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+
+        .search-result-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .search-result-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .search-result-img {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-right: 15px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-result-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-result-name {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 0.95rem;
+            line-height: 1.2;
+        }
+
+        .search-result-user {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        /* Estilos del Modal */
+        .modal-overlay {
+            /* ... (keep existing modal styles if any) ... */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-container {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            border-radius: 12px;
+            /* overflow-y: auto;  <-- REMOVED to prevent full modal scrolling */
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            /* ADDED for Sticky Footer support */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #contenido-modal-comentarios {
+            flex: 1;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .btn-cerrar-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: none;
+            background: transparent;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* --- Animación de Destello (Flash) Espacioso --- */
+        @keyframes highlight-destello {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+                filter: brightness(1);
+            }
+
+            20% {
+                transform: scale(1.04);
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+                filter: brightness(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+                filter: brightness(1);
+            }
+        }
+
+        .post-highlight {
+            animation: highlight-destello 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+            z-index: 10;
+            position: relative;
+            padding: 25px !important;
+            /* Más aire interno */
+            margin: 20px 0 35px 0 !important;
+            /* Más separación */
+            background-color: #fff;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+        }
+    </style>
+
+    <script>
+        function searchUsers() {
+            var input = document.getElementById("userSearch");
+            var filter = input.value.toUpperCase();
+            var ul = document.getElementById("userList");
+
+            if (filter === "") { ul.style.display = "none"; return; }
+
+            $.ajax({
+                url: "{% url 'search_users' %}",
+                data: { 'q': filter },
+                dataType: 'json',
+                success: function (data) {
+                    ul.innerHTML = '';
+                    if (data.results.length > 0) {
+                        data.results.forEach(function (user) {
+                            var li = document.createElement('li');
+                            li.classList.add('search-result-item');
+                            li.onclick = function () { window.location.href = '/perfil/' + user.username; };
+
+                            // Image
+                            var img = document.createElement('img');
+                            img.src = user.profile_picture ? user.profile_picture : '{% static "images/default.jpg" %}';
+                            img.classList.add('search-result-img');
+
+                            // Text Container
+                            var textContainer = document.createElement('div');
+                            textContainer.classList.add('search-result-info');
+
+                            var full_name = document.createElement('div');
+                            full_name.classList.add('search-result-name');
+                            full_name.textContent = user.full_name;
+
+                            if (user.verification_badge) {
+                                var badge = document.createElement('img');
+                                badge.src = user.verification_badge.icon;
+                                badge.title = user.verification_badge.name;
+                                badge.style.width = '20px';
+                                badge.style.height = '20px';
+                                badge.style.marginLeft = '4px';
+                                full_name.appendChild(badge);
+                            }
+
+                            var username = document.createElement('div');
+                            username.classList.add('search-result-user');
+                            username.textContent = '@' + user.username;
+
+                            textContainer.appendChild(full_name);
+                            textContainer.appendChild(username);
+
+                            li.appendChild(img);
+                            li.appendChild(textContainer);
+                            ul.appendChild(li);
+                        });
+                        ul.style.display = "block";
+                    } else { ul.style.display = "none"; }
+                },
+                error: function () { console.log('Error al realizar la búsqueda'); }
+            });
+        }
+
+        function toggleMobileSearch(active) {
+            const nav = document.querySelector('.navbar');
+            if (active) {
+                nav.classList.add('search-active');
+                setTimeout(() => document.getElementById('userSearch').focus(), 100);
+            } else {
+                nav.classList.remove('search-active');
+                document.getElementById('userSearch').value = '';
+                document.getElementById('userList').style.display = 'none';
+            }
+        }
+
+        // Close search when clicking outside
+        $(document).click(function (event) {
+            if (!$(event.target).closest('.search-container, .btn-search-mobile').length) {
+                if ($('.navbar').hasClass('search-active')) {
+                    toggleMobileSearch(false);
+                }
+            }
+        });
+    </script>
+</head>
+
+<body>
+    {# 1. BLOQUE NAVBAR #}
+    {% block navbar %}
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <!-- Brand / Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'top_seguidores' %}">
+                <img src="{% static 'logo/logo.png' %}" alt="Milanesa" class="me-2" style="max-height: 40px;">
+                <span class="fw-bold text-dark">MILANESA</span>
+            </a>
+
+            <!-- Search Bar -->
+            <div class="search-container" id="searchContainer">
+                <button class="btn-back-search" onclick="toggleMobileSearch(false)">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="position-relative">
+                    <input type="text" class="form-control" id="userSearch" onkeyup="searchUsers()"
+                        placeholder="Buscar en Milanesa..." aria-label="Buscar">
+                    <ul id="userList" class="dropdown-menu w-100 position-absolute shadow border-0 text-dark"
+                        style="border-radius: 12px; margin-top: 10px;"></ul>
+                </div>
+            </div>
+
+            <!-- Right Actions -->
+            <div class="d-flex align-items-center ms-auto ms-lg-0" id="rightActions">
+                <!-- Mobile Search Toggle -->
+                <button class="btn-nav-icon btn-search-mobile d-lg-none" onclick="toggleMobileSearch(true)">
+                    <i class="fas fa-search"></i>
+                </button>
+
+                <!-- Notifications -->
+                <div class="dropdown me-2">
+                    <button class="btn-nav-icon position-relative" title="Notificaciones" id="notiDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false" hx-get="{% url 'notificaciones_dropdown' %}"
+                        hx-target="#notiList" hx-trigger="click">
+                        <i class="fas fa-bell"></i>
+                        <span id="noti-badge"
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                            style="font-size: 0.6rem; padding: 0.35em 0.5em; transform: translate(-50%, -10%) !important;">
+                            0
+                        </span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow border-0 p-0" aria-labelledby="notiDropdown"
+                        style="border-radius: 12px; width: 320px; margin-top: 10px;" id="notiList">
+                        <div class="p-3 text-center">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="me-2 position-relative" style="z-index: 10;">
+                    <button class="btn-nav-icon" title="Mensajes" onclick="toggleMessagePanel()">
+                        <i class="fas fa-comment-dots"></i>
+                    </button>
+                    <span id="chat-badge"
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {% if total_chat_unread == 0 %}d-none{% endif %}"
+                        style="font-size: 0.6rem; padding: 0.35em 0.5em; pointer-events: none;">
+                        {{ total_chat_unread }}
+                    </span>
+                </div>
+
+                <!-- Hidden Webpush (Background) -->
+                <div style="display: none;">
+                    {% webpush_button %}
+                    <div id="webpush-message" style="display: none;"></div>
+                </div>
+
+                <!-- User Menu -->
+                <div class="dropdown">
+                    <button class="btn-profile" type="button" id="userMenu" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        {% if user.foto_perfil %}
+                        <img src="{{ user.foto_perfil.url }}" alt="{{ user.username }}" class="nav-user-img me-2">
+                        {% else %}
+                        <div class="nav-user-fallback me-2">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        {% endif %}
+                        <span class="d-none d-sm-inline">{{ user.username|truncatechars:12 }}</span>
+                        <i class="fas fa-chevron-down ms-2 small opacity-50"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userMenu"
+                        style="border-radius: 12px; margin-top: 10px;">
+                        {% if user.is_authenticated %}
+                        <li>
+                            <a class="dropdown-item py-2" href="{% url 'perfil_detalle' username=user.username %}">
+                                <i class="fas fa-user-circle me-2 text-muted"></i> Mi Perfil
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form action="{% url 'logout' %}" method="POST" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item py-2 text-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
+                                </button>
+                            </form>
+                        </li>
+                        {% else %}
+                        <li><a class="dropdown-item py-2" href="{% url 'login' %}">Iniciar Sesión</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% endblock navbar %}
+
+
+    {# 2. BLOQUE CONTENIDO #}
+    {# 2. BLOQUE CONTENIDO #}
+    {% block content %}
+    <div class="container mt-4 mb-4" style="max-width: 1400px;">
+        <div class="row">
+            <!-- COLUMNA IZQUIERDA (Menú + Sugerencias) -->
+            <!-- COLUMNA IZQUIERDA (Menú + Sugerencias) -->
+            <div class="col-lg-3 d-none d-lg-block ps-0"
+                style="position: sticky; top: 100px; height: calc(100vh - 100px); overflow-y: visible; scrollbar-width: none; z-index: 1000;">
+
+                <!-- Contenedor Deslizable (Incluye Botón + Contenido) -->
+                <div id="sidebar-container"
+                    style="position: relative; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(0);">
+
+                    <!-- Toggle Button (Centrado en la línea) -->
+                    <div id="toggle-btn-container"
+                        style="position: absolute; right: -20px; top: 80px; z-index: 1001; transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);">
+                        <button onclick="toggleSidebar()"
+                            class="btn btn-light rounded-circle border shadow-sm p-0 d-flex align-items-center justify-content-center"
+                            title="Ocultar/Mostrar Menú" style="width: 40px; height: 40px; color: #333;">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+
+                    <!-- Contenido del Sidebar con Borde -->
+                    <div class="bg-white h-100"
+                        style="border-right: 1px solid #e0e0e0; min-height: calc(100vh - 100px); position: relative; margin-left: -100px; width: calc(100% + 100px); padding-left: 100px; margin-top: -50px; padding-top: 50px;">
+                        <!-- MENÚ DE NAVEGACIÓN -->
+                        <div class="d-flex flex-column gap-1 mb-3 pt-2">
+                            <a href="{% url 'index' %}" class="nav-link d-flex align-items-center gap-3 fs-5 px-3">
+                                <i class="fas fa-home fa-fw"></i> <span>Home</span>
+                            </a>
+                            <a href="{% url 'top_seguidores' %}"
+                                class="nav-link d-flex align-items-center gap-3 fs-5 px-3">
+                                <i class="fas fa-trophy fa-fw"></i> <span>Top</span>
+                            </a>
+                            <a href="{% url 'publications:crear_publicacion' %}"
+                                class="nav-link d-flex align-items-center gap-3 fs-5 px-3">
+                                <i class="fas fa-music fa-fw"></i> <span>Agregar música</span>
+                            </a>
+                        </div>
+
+                        <hr class="my-4 text-muted opacity-25">
+
+                        <!-- SUGERENCIAS -->
+                        <div class="px-3">
+                            {% if user.is_authenticated %}
+                            {% include 'recommendations/suggestions_sidebar.html' %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function toggleSidebar() {
+                    const container = document.getElementById('sidebar-container');
+                    const btnContainer = document.getElementById('toggle-btn-container'); // Get Button Container
+                    const menu = document.getElementById('sidebar-menu');
+                    const suggestions = document.getElementById('sidebar-suggestions');
+                    const currentTransform = container.style.transform;
+
+                    // Si está en 0 (visible) -> Ocultar (-100%)
+                    if (currentTransform.includes('translateX(0') || currentTransform === '') {
+                        // Ocultar MÁS ALLÁ del borde (-100% - 50px) para matar el "bordecito" blanco
+                        container.style.transform = 'translateX(calc(-100% - 50px))';
+                        // Compensar el botón hacia la derecha para que se quede quieto/visible (-20 - 50 = -70)
+                        if (btnContainer) btnContainer.style.right = '-70px';
+
+                        setTimeout(() => {
+                            if (menu) menu.style.display = 'none';
+                            if (suggestions) suggestions.style.display = 'none';
+                        }, 500);
+
+                    } else {
+                        // Si está oculto -> Mostrar (0)
+                        if (menu) menu.style.display = 'flex';
+                        if (suggestions) suggestions.style.display = 'block';
+
+                        // Restaurar
+                        setTimeout(() => {
+                            container.style.transform = 'translateX(0)';
+                            if (btnContainer) btnContainer.style.right = '-20px'; // Volver a posición original
+                        }, 10);
+                    }
+                }
+            </script>
+
+            <!-- COLUMNA CENTRAL (Feed) -->
+            <div id="main-content-col" class="{{ main_col_class|default:'col-lg-6' }}">
+                {% block main_content %}
+                {% if user.is_authenticated %}
+                {% if is_from_notifications %}
+                <div class="alert alert-light border shadow-sm d-flex justify-content-between align-items-center mb-3 py-2 px-3"
+                    style="max-width: 600px; margin: 0 auto 20px auto; border-radius: 12px; background: #ffffff; border-left: 4px solid #000 !important;">
+                    <span class="small fw-bold text-dark">
+                        <i class="fas fa-bell me-2 text-muted"></i> De notificaciones
+                    </span>
+                    <a href="{% url 'index' %}"
+                        class="btn btn-sm btn-link text-decoration-none text-muted p-0 small fw-bold">
+                        Cerrar <i class="fas fa-times ms-1"></i>
+                    </a>
+                </div>
+                {% endif %}
+                <div class="publicaciones-container" id="publicaciones-feed-container" {% if feed_full_width %}style="max-width: 100%;" {% endif %}>
+                    
+
+
+
+                    {% include 'publications/lista_publicaciones.html' %}
+                </div>
+                <!-- HTMX Indicator -->
+                <div class="htmx-indicator text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+                {% endif %}
+                {% endblock main_content %}
+            </div>
+
+            {% if not hide_right_sidebar %}
+            <!-- COLUMNA LATERAL (AI & Espaciador) -->
+            <div id="right-sidebar-container" class="col-lg-3 d-none d-lg-block"
+                style="position: sticky; top: 100px; height: fit-content;">
+                {% if user.is_authenticated %}
+                <div hx-get="{% url 'trending_analysis' %}" hx-trigger="load" hx-swap="innerHTML">
+                    <!-- Placeholder animation if desired, or just empty -->
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body p-3 text-center">
+                            <div class="spinner-border text-primary spinner-border-sm" role="status">
+                                <span class="visually-hidden">Cargando análisis...</span>
+                            </div>
+                            <small class="text-muted ms-2">Analizando...</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endblock content %}
+
+
+    <div id="modal-comentarios-global" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <button class="btn-cerrar-modal" onclick="cerrarModalComentarios()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div id="contenido-modal-comentarios">
+                <div style="padding: 20px; text-align: center;">Cargando...</div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'chat/floating_chat.html' %}
+
+    <!-- MODAL DE IMAGEN (LightBox) -->
+    <div id="modal-imagen-global" class="modal-overlay" style="display: none; z-index: 10000;"
+        onclick="cerrarModalImagen()">
+        <span class="btn-cerrar-modal" style="color: white; font-size: 2rem;">&times;</span>
+        <img id="img-modal-contenido" class="modal-content"
+            style="max-width: 90%; max-height: 90%; object-fit: contain; background: transparent; box-shadow: none;">
+    </div>
+
+    <script>
+        function mostrarImagen(url) {
+            var modal = document.getElementById("modal-imagen-global");
+            var modalImg = document.getElementById("img-modal-contenido");
+            if (modal && modalImg) {
+                modal.style.display = "flex";
+                modalImg.src = url;
+            }
+        }
+        function cerrarModalImagen() {
+            var modal = document.getElementById("modal-imagen-global");
+            if (modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+
+
+    {# 3. BLOQUE SCRIPTS #}
+    {% block scripts %}
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="{% static 'js/websocket_manager.js' %}"></script>
+    <script src="{% static 'js/feed_managers.js' %}"></script>
+    <script src="{% static 'publications/comments/js/comments.js' %}?v=11"></script>
+    </script>
+    {% include 'users/scripts_vinculacion.html' %}
+
+    {% include 'notificacion/scripts_notificaciones.html' %}
+
+    {% endblock scripts %}
+
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    <style>
+        /* Force Plyr to respect max-height and fit like images */
+        .plyr {
+            height: 100%;
+            max-height: 500px;
+            /* Match image max-height */
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .plyr__video-wrapper {
+            height: 100%;
+        }
+
+        .plyr video {
+            object-fit: contain;
+            /* Ensure video is fully visible */
+            height: 100% !important;
+        }
+
+        /* Make the container rounded */
+        .plyr-wrapper {
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 5px;
+            background: #000;
+        }
+    </style>
+    <script>
+        const plyrOptions = {
+            controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'pip', 'fullscreen'],
+            settings: ['quality', 'speed', 'loop'],
+            ratio: '16:9', // Default ratio, but CSS will override
+            quality: { default: 576, options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240] },
+            resetOnEnd: true,
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const players = Plyr.setup('.js-player', plyrOptions);
+        });
+
+        // Global Plyr Observer - The nuclear option for dynamic content
+        const plyrObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.addedNodes.length) {
+                    mutation.addedNodes.forEach((node) => {
+                        // Check if node itself is a player
+                        if (node.nodeType === 1 && node.classList && node.classList.contains('js-player') && !node.classList.contains('plyr--setup')) {
+                            Plyr.setup(node, plyrOptions);
+                        }
+                        // Check children of added node
+                        if (node.nodeType === 1 && node.querySelectorAll) {
+                            const players = node.querySelectorAll('.js-player:not(.plyr--setup)');
+                            if (players.length > 0) {
+                                Plyr.setup(players, plyrOptions);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        // Start observing body for changes
+        plyrObserver.observe(document.body, { childList: true, subtree: true });
+    </script>
+</body>
+
+</html>
+
+{% load static %}
+{% load static %}
+{% load static %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // La librería django-webpush siempre usa este ID
+        var btn = document.getElementById("webpush-subscribe-button");
+
+        // --- CLAVES Y UTILIDADES ---
+        const VAPID_PUBLIC_KEY = "{{ WEBPUSH_SETTINGS.VAPID_PUBLIC_KEY }}";
+        const urlBase64ToUint8Array = (base64String) => {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+        };
+
+        // --- ICONOS (Bootstrap Icons) ---
+        const iconActivado = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bell-fill" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901"/></svg>`;
+        const iconDesactivado = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bell-slash-fill" viewBox="0 0 16 16"><path d="M5.164 14H15c-1.5-1-2-5.902-2-7q0-.396-.06-.776zm6.288-10.617A5 5 0 0 0 8.995 2.1a1 1 0 1 0-1.99 0A5 5 0 0 0 3 7c0 .898-.335 4.342-1.278 6.113zM10 15a2 2 0 1 1-4 0zm-9.375.625a.53.53 0 0 0 .75.75l14.75-14.75a.53.53 0 0 0-.75-.75z"/></svg>`;
+        // --- FIN ICONOS ---
+
+        // --- 1. FUNCIÓN DE SUSCRIPCIÓN (ACTIVAR) ---
+        async function suscribirDispositivo() {
+            if (!('serviceWorker' in navigator) || !VAPID_PUBLIC_KEY) return;
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+
+                // Obtener el token de Webpush del navegador
+                const sub = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: applicationServerKey
+                });
+
+                const subscription_data = sub.toJSON();
+
+                // 1. Enviar la suscripción a Django (vincular_dispositivo)
+                await fetch("{% url 'vincular_dispositivo' %}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ endpoint: subscription_data.endpoint, keys: subscription_data.keys })
+                });
+
+                console.log("✅ Suscripción Webpush guardada en BD.");
+
+            } catch (e) {
+                console.error("Fallo en el proceso de suscripción:", e);
+            }
+            // Retraso para evitar el flickering después de la acción.
+            setTimeout(actualizarIconoVisual, 100);
+        }
+
+        // --- 2. FUNCIÓN DE DESUSCRIPCIÓN (DESACTIVAR Y LIMPIAR BD) ---
+        async function desuscribirDispositivo(sub) {
+            try {
+                // 1. Borramos del Navegador (Esto es prioritario)
+                await sub.unsubscribe();
+
+                // 2. Borramos del Servidor (Llama a la vista de Django: eliminar_suscripcion_webpush)
+                await fetch("{% url 'eliminar_suscripcion_webpush' %}", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+                    body: JSON.stringify({ endpoint: sub.endpoint })
+                });
+
+                console.log("✅ Desvinculación de suscripción exitosa.");
+
+            } catch (e) {
+                console.error("❌ Fallo en la desuscripción:", e);
+            }
+            // CRÍTICO: Usamos setTimeout para que el navegador termine de limpiar
+            // el estado de la suscripción antes de que el control visual lo revise.
+            setTimeout(actualizarIconoVisual, 1000);
+        }
+
+        // --- 3. GESTOR DE EVENTO CLICK (INTERRUPTOR) - CORREGIDO PARA INDEPENDENCIA ---
+        function manejarInterruptor(e) {
+            e.preventDefault(); // Detiene la lógica automática de la librería
+
+            navigator.serviceWorker.ready.then(reg => {
+                return reg.pushManager.getSubscription();
+            }).then(sub => {
+                const currentPermission = Notification.permission;
+
+                if (sub) {
+                    // CASO A: SUSCRITO -> DESUSCRIBIRSE
+                    if (confirm("¿Desactivar notificaciones para esta cuenta en este dispositivo?")) {
+                        desuscribirDispositivo(sub);
+                    }
+                }
+                // CASO B: NO SUSCRITO (sub=null) -> Proceder a (re)suscribir
+                else {
+                    if (currentPermission === "granted") {
+                        // B.1: Permiso ACTIVO pero token borrado. El clic fuerza la RESUSCRIPCIÓN inmediata.
+                        suscribirDispositivo();
+
+                    } else if (currentPermission === "default") {
+                        // B.2: Permiso no dado. Pedimos permiso al usuario.
+                        Notification.requestPermission().then(permission => {
+                            if (permission === "granted") {
+                                // Si acaba de dar el permiso, suscribimos
+                                suscribirDispositivo();
+                            } else {
+                                alert("Permiso denegado. No se pueden recibir notificaciones.");
+                            }
+                        });
+                    }
+                    // Si el permiso es 'denied', no hacemos nada.
+                }
+            });
+        }
+
+        // --- 4. CONTROL VISUAL ---
+        function actualizarIconoVisual() {
+            if (!btn) return;
+
+            navigator.serviceWorker.ready.then(reg => {
+                return reg.pushManager.getSubscription();
+            }).then(sub => {
+                // Limpiamos contenido antes de inyectar
+                btn.innerHTML = btn.innerHTML.replace(/<svg.*<\/svg>/g, '');
+
+                const estaSuscrito = sub !== null;
+
+                if (estaSuscrito) {
+                    btn.innerHTML = iconActivado + btn.innerHTML;
+                    btn.classList.add('btn-success');
+                    btn.classList.remove('btn-primary');
+                } else {
+                    btn.innerHTML = iconDesactivado + btn.innerHTML;
+                    btn.classList.add('btn-primary');
+                    btn.classList.remove('btn-success');
+                }
+            });
+        }
+
+
+        // ----------------------------------------------------
+        // INICIALIZACIÓN
+        // ----------------------------------------------------
+        if (btn) {
+            // 1. Reemplazamos el evento de click de la librería por nuestro interruptor
+            btn.addEventListener('click', manejarInterruptor);
+
+            // 2. Inicializamos el icono al cargar
+            actualizarIconoVisual();
+
+            // 3. Vigilante: Mantiene el ícono si la librería lo toca
+            var observer = new MutationObserver(function (mutations) {
+                if (!btn.innerHTML.includes('<svg')) {
+                    // Retraso ligero para evitar el "flicker"
+                    setTimeout(actualizarIconoVisual, 100);
+                }
+            });
+            observer.observe(btn, { childList: true, characterData: true, subtree: true });
+        }
+    });
+</script>
+
+<style>
+    #webpush-subscribe-button {
+        background: transparent !important;
+        /* Sin fondo */
+        border: none !important;
+        /* Sin bordes */
+        padding: 0 !important;
+        /* Sin relleno */
+        font-size: 0 !important;
+        /* Ocultamos el texto "Subscribe" */
+        cursor: pointer;
+        /* Manito al pasar el mouse */
+        line-height: 0;
+        display: inline-block;
+        color: #555;
+        /* Color por defecto (Gris) */
+        transition: color 0.3s ease;
+    }
+
+    #webpush-subscribe-button:hover {
+        color: #000;
+        /* Color al pasar el mouse */
+    }
+
+    /* --- NOTIFICATION BADGE --- */
+    #noti-badge {
+        font-weight: bold;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .noti-unread {
+        background-color: #f0f7ff !important;
+    }
+
+    /* Animation for new notification */
+    @keyframes pulse-bell {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.2);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .bell-animate {
+        animation: pulse-bell 0.5s ease;
+    }
+
+    /* Estilo para cuando está activo (Suscrito) */
+    #webpush-subscribe-button.suscrito {
+        color: #ffffff;
+        /* Azul o el color que quieras para "Activado" */
+    }
+
+    /* Aseguramos que tus SVGs se vean bien */
+    #webpush-subscribe-button svg {
+        font-size: 20px !important;
+        /* Tamaño del ícono */
+        width: 20px !important;
+        height: 20px !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const notiSocket = new WebSocket(
+            protocol + window.location.host + '/ws/notifications/'
+        );
+
+        notiSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+            if (data.type === 'notification') {
+                updateNotiBadge(1);
+                const bell = document.querySelector('#notiDropdown i');
+                if (bell) {
+                    bell.classList.add('bell-animate');
+                    setTimeout(() => bell.classList.remove('bell-animate'), 500);
+                }
+                const notiList = document.getElementById('notiList');
+                if (notiList && notiList.classList.contains('show')) {
+                    htmx.trigger('#notiDropdown', 'click');
+                }
+            } else if (data.type === 'chat_count_update') {
+                // 1. Badge Global
+                updateChatBadge(data.count);
+
+                // 2. Badge Individual (Si existe en la lista)
+                if (data.sender_id) {
+                    updateUserBadge(data.sender_id);
+                }
+            }
+        };
+
+        function updateChatBadge(count) {
+            const panel = document.getElementById('message-panel');
+            // Si el panel está abierto, ignoramos la actualización visual del globo global
+            if (panel && panel.classList.contains('active')) {
+                return;
+            }
+
+            const badge = document.getElementById('chat-badge');
+            if (badge) {
+                badge.textContent = count;
+                if (count > 0) badge.classList.remove('d-none');
+                else badge.classList.add('d-none');
+            }
+        }
+
+        function updateUserBadge(senderId) {
+            // Buscar badge específico del usuario en la lista de contactos
+            const userBadge = document.getElementById('unread-badge-' + senderId);
+            const userMsgPreview = document.getElementById('msg-preview-' + senderId);
+
+            if (userBadge) {
+                // Incrementar visualmente
+                let current = parseInt(userBadge.textContent) || 0;
+                userBadge.textContent = current + 1;
+                userBadge.classList.remove('d-none');
+            }
+
+            if (userMsgPreview) {
+                userMsgPreview.classList.add('fw-bold', 'text-dark');
+                userMsgPreview.classList.remove('text-muted');
+                userMsgPreview.textContent = "Nuevo mensaje..."; // Opcional: cambiar texto momentáneamente
+            }
+        }
+
+        function updateNotiBadge(count) {
+            const badge = document.getElementById('noti-badge');
+            if (badge) {
+                let current = parseInt(badge.textContent) || 0;
+                let total = current + count;
+                badge.textContent = total;
+                if (total > 0) {
+                    badge.classList.remove('d-none');
+                } else {
+                    badge.classList.add('d-none');
+                }
+            }
+        }
+
+        // Clear badge when opening dropdown
+        const notiBtn = document.getElementById('notiDropdown');
+        if (notiBtn) {
+            notiBtn.addEventListener('click', function () {
+                const badge = document.getElementById('noti-badge');
+                if (badge) {
+                    badge.textContent = '0';
+                    badge.classList.add('d-none');
+                }
+            });
+        }
+    });
+
+    function toggleMessagePanel() {
+        const panel = document.getElementById('message-panel');
+        const trigger = document.getElementById('chat-compact-trigger');
+        const badge = document.getElementById('chat-badge');
+
+        // Determinar si estamos cerrando
+        const closing = panel && panel.classList.contains('active');
+
+        // Toggle Visual
+        if (closing) {
+            panel.classList.remove('active');
+            if (trigger) trigger.classList.remove('hidden');
+        } else {
+            if (panel) panel.classList.add('active');
+            if (trigger) trigger.classList.add('hidden');
+
+            // LIMPIAR BADGE Y LLAMAR BACKEND
+            if (badge) {
+                badge.classList.add('d-none');
+                badge.innerText = '0';
+
+                // Intento robusto de obtener CSRF
+                let token = '';
+                const input = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (input) token = input.value;
+
+                if (token) {
+                    fetch("{% url 'update_messages_check_time' %}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': token,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(r => {
+                            if (r.ok) console.log('✅ Badge reset OK');
+                            else console.error('❌ Badge reset failed', r.status);
+                        })
+                        .catch(console.error);
+                } else {
+                    console.error('⚠️ CSRF Token not found for badge reset');
+                }
+            }
+        }
+    }
+
+    function clearUserBadgeAndBold(userId) {
+        // 3. Clear Badge & Bold
+        const badge = document.getElementById('unread-badge-' + userId);
+        const msgPreview = document.getElementById('msg-preview-' + userId);
+
+        if (badge) {
+            badge.classList.add('d-none');
+            badge.textContent = '0';
+        }
+        if (msgPreview) {
+            // Remover negrita y color oscuro
+            msgPreview.classList.remove('fw-bold', 'text-dark');
+            // Agregar color gris (leído)
+            msgPreview.classList.add('text-muted');
+        }
+    }
+</script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+
+</html>

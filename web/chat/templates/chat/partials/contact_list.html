@@ -1,0 +1,101 @@
+{% load static %}
+
+<div id="contact-list-container" class="list-group list-group-flush h-100 overflow-auto">
+    <!-- Case 1: Load Chat Panel (contactos list of dicts) -->
+    {% if contactos %}
+    {% for info in contactos %}
+    <a href="#" class="list-group-item list-group-item-action contact-list-item d-flex align-items-center p-3 border-0"
+        onclick="event.preventDefault(); highlightContact(this, {{ info.usuario.id }});"
+        hx-get="{% url 'get_chat_history' info.usuario.id %}" hx-target="#chat-column" hx-swap="innerHTML"
+        data-user-id="{{ info.usuario.id }}">
+
+        <div class="position-relative">
+            {% if info.usuario.foto_perfil %}
+            <img src="{{ info.usuario.foto_perfil.url }}" class="rounded-circle object-fit-cover" width="48" height="48"
+                alt="{{ info.usuario.username }}">
+            {% else %}
+            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+                style="width: 48px; height: 48px;">
+                <i class="fas fa-user fa-lg text-secondary"></i>
+            </div>
+            {% endif %}
+            <span
+                class="status-indicator position-absolute bottom-0 end-0 p-1 rounded-circle border border-white {% if info.usuario.is_online %}bg-success{% else %}bg-secondary{% endif %}"
+                style="width: 12px; height: 12px;"></span>
+        </div>
+
+        <div class="ms-3 flex-grow-1 overflow-hidden">
+            <div class="d-flex justify-content-between align-items-baseline">
+                <h6 class="mb-0 text-truncate text-dark">{{ info.usuario.username }}</h6>
+                {% if info.last_time %}
+                <small class="text-muted ms-2 time-badge" style="font-size: 0.7rem;">
+                    {{ info.last_time|date:"H:i"}}</small>
+
+                {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="mb-0 small text-truncate {% if info.has_unread %}fw-bold text-dark{% else %}text-muted{% endif %}"
+                    id="msg-preview-{{ info.usuario.id }}">
+                    {{ info.last_message|default:"Empezar conversación" }}
+                </p>
+
+                <span id="unread-badge-{{ info.usuario.id }}"
+                    class="badge rounded-pill bg-danger ms-2 {% if not info.has_unread %}d-none{% endif %}"
+                    style="font-size: 0.6rem;">
+                    {{ info.unread_count }}
+                </span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+
+    <!-- Case 2: Get Mutual Followers (amigos list of Users) -->
+    {% elif amigos %}
+    {% for amigo in amigos %}
+    <a href="#" class="list-group-item list-group-item-action contact-list-item d-flex align-items-center p-3 border-0"
+        onclick="event.preventDefault(); highlightContact(this, {{ amigo.id }});"
+        hx-get="{% url 'get_chat_history' amigo.id %}" hx-target="#chat-column" hx-swap="innerHTML"
+        data-user-id="{{ amigo.id }}">
+
+        <div class="position-relative">
+            {% if amigo.foto_perfil %}
+            <img src="{{ amigo.foto_perfil.url }}" class="rounded-circle object-fit-cover" width="48" height="48"
+                alt="{{ amigo.username }}">
+            {% else %}
+            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+                style="width: 48px; height: 48px;">
+                <i class="fas fa-user fa-lg text-secondary"></i>
+            </div>
+            {% endif %}
+            <span
+                class="status-indicator position-absolute bottom-0 end-0 p-1 rounded-circle border border-white {% if amigo.is_online %}bg-success{% else %}bg-secondary{% endif %}"
+                style="width: 12px; height: 12px;"></span>
+        </div>
+
+        <div class="ms-3 flex-grow-1 overflow-hidden">
+            <h6 class="mb-0 text-truncate">{{ amigo.username }}</h6>
+            <p class="mb-0 small text-truncate text-muted">
+                Nuevo contacto
+            </p>
+        </div>
+    </a>
+    {% endfor %}
+    {% else %}
+    <div class="text-center p-4 text-muted">
+        <small>No hay contactos disponibles.</small>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .contact-list-item.active {
+        background-color: #eef2ff !important;
+        /* Light Indigo */
+        border-left: 3px solid #6366f1;
+    }
+
+    .contact-list-item:hover {
+        background-color: #f9fafb;
+    }
+</style>

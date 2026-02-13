@@ -1,0 +1,40 @@
+<div class="d-flex h-100 position-relative overflow-hidden">
+    <!-- Sidebar / Contact List -->
+    <div id="sidebar-column" class="d-flex flex-column border-end bg-white"
+        style="width: 320px; transition: all 0.3s; z-index: 1010;">
+        <div class="hide-scrollbar h-100">
+            {% include 'chat/partials/contact_list.html' %}
+        </div>
+    </div>
+
+    <!-- Chat Window (Placeholder initially) -->
+    <div id="chat-column" class="flex-grow-1 bg-light position-relative d-none d-md-block h-100">
+        {% if chat %}
+        {% include 'chat/partials/chat_window.html' %}
+        {% else %}
+        <div class="h-100 d-flex flex-column align-items-center justify-content-center text-muted">
+            <i class="fas fa-comments fa-3x mb-3 opacity-50"></i>
+            <p>Selecciona un chat para comenzar</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Responsive overrides */
+    @media (max-width: 767.98px) {
+        #sidebar-column {
+            width: 100% !important;
+            border-right: none !important;
+        }
+
+        #chat-column {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1030;
+        }
+    }
+</style>

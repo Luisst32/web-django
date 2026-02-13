@@ -1,0 +1,47 @@
+{% load static %}
+<div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center bg-light">
+    <span class="fw-bold small">Notificaciones</span>
+    {% if unread_count > 0 %}
+    <span class="badge bg-danger rounded-pill" style="font-size: 0.7rem;">{{ unread_count }} nuevas</span>
+    {% endif %}
+</div>
+
+<div class="notification-scroll" style="max-height: 350px; overflow-y: auto;">
+    {% for noti in notificaciones %}
+    <a hx-get="{% url 'marcar_como_leida' noti.id %}" hx-target="#publicaciones-feed-container"
+        hx-swap="innerHTML show:window:top" hx-push-url="true"
+        class="dropdown-item py-2 px-3 border-bottom d-flex align-items-center {% if not noti.leida %}bg-light{% endif %}"
+        style="white-space: normal; cursor: pointer;">
+        <div class="me-3">
+            {% if noti.usuario_origen.foto_perfil %}
+            <img src="{{ noti.usuario_origen.foto_perfil.url }}" class="rounded-circle" width="35" height="35"
+                style="object-fit: cover;">
+            {% else %}
+            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
+                style="width: 35px; height: 35px;">
+                <i class="fas fa-user small"></i>
+            </div>
+            {% endif %}
+        </div>
+        <div class="flex-grow-1">
+            <p class="mb-0 small text-dark">{{ noti.mensaje }}</p>
+            <small class="text-muted" style="font-size: 0.7rem;">{{ noti.fecha_creacion|timesince }} ago</small>
+        </div>
+        {% if not noti.leida %}
+        <div class="ms-2">
+            <span class="badge bg-primary rounded-circle p-1" style="width: 8px; height: 8px; display: block;"></span>
+        </div>
+        {% endif %}
+    </a>
+    {% empty %}
+    <div class="px-3 py-4 text-center text-muted">
+        <i class="fas fa-bell-slash mb-2 fs-4"></i>
+        <p class="mb-0 small">No tienes notificaciones aún.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="p-2 text-center">
+    <a href="{% url 'notificaciones' %}" class="btn btn-link btn-sm text-primary text-decoration-none fw-bold small">Ver
+        todas</a>
+</div>
