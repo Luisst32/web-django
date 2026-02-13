@@ -40,8 +40,7 @@ def get_trending_analysis(request):
             pid = item.get('post_id')
             post = posts_relacionados.get(pid)
             if post:
-                img = post.imagenes.first()
-                resultado.append({'post': post, 'comentario': item.get('analisis'), 'first_image': img})
+                resultado.append({'post': post, 'comentario': item.get('analisis')})
 
         # Calcular minutos para el siguiente update (Cada 60 mins)
         ahora = timezone.now()
@@ -74,7 +73,7 @@ def get_trending_analysis(request):
     # Traemos candidatos aleatorios de TODA la base de datos
     # Como ya no existe 'imagen' en Post, filtramos por si tiene PostImagen asociado
     # Y excluimos videos revisando la extensión en el modelo relacionado
-    candidates = list(Post.objects.filter(estado=True, imagenes__isnull=False).exclude(
+    candidates = list(Post.objects.filter(estado=True).exclude(
         Q(imagenes__imagen__icontains='.mp4') | 
         Q(imagenes__imagen__icontains='.mov') | 
         Q(imagenes__imagen__icontains='.avi') |
@@ -147,8 +146,7 @@ def get_trending_analysis(request):
             # Buscamos en la lista original (que ya tenemos en memoria)
             post = next((p for p in trending_posts if p.id == pid), None)
             if post:
-                 img = post.imagenes.first()
-                 resultado.append({'post': post, 'comentario': item.get('analisis'), 'first_image': img})
+                 resultado.append({'post': post, 'comentario': item.get('analisis')})
 
         return render(request, 'ai_assistant/partials/sidebar_ai.html', {
             'resultados': resultado,
