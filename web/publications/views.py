@@ -4,7 +4,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST, require_http_methods # <--- Importante para la subida AJAX
 from .forms import PostForm, MusicaForm ,ComentarioForm# <--- Agregamos MusicaForm
-from .models import Post, Comentario, Reaccion, Musica # <--- Agregamos Musica
+from .models import Post, Comentario, Reaccion, Musica, PostImagen # <--- Agregamos PostImagen
 from users.models import Usuarios
 from django.http import JsonResponse
 from django.db.models import Prefetch
@@ -46,6 +46,11 @@ def crear_publicacion(request):
     username = request.user.username
 
     if request.method == 'POST':
+        print("--- DEBUG CREAR PUBLICACION ---")
+        print("POST:", request.POST)
+        print("FILES keys:", request.FILES.keys())
+        print("FILES list 'imagenes':", len(request.FILES.getlist('imagenes')))
+        
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
@@ -56,8 +61,21 @@ def crear_publicacion(request):
             # porque están incluidos en el PostForm que modificamos antes.
             post.save()
 
+            # --- GUARGAR IMÁGENES MÚLTIPLES ---
+            imagenes = request.FILES.getlist('imagenes')
+            for i, imagen in enumerate(imagenes):
+                PostImagen.objects.create(
+                    post=post,
+                    imagen=imagen,
+                    orden=i
+                )
+            # ----------------------------------
+
             form.save_m2m()
             return redirect(f'/perfil/{username}/')
+        else:
+            print("--- ERRORES EN EL FORMULARIO ---")
+            print(form.errors)
 
     else:
         form = PostForm()

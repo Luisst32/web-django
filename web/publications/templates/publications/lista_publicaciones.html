@@ -106,25 +106,47 @@
 
         <p class="publicacion-texto">{{ publicacion.descripcion }}</p>
 
-        {% if publicacion.imagen %}
-        <div class="media-wrapper">
-            {% with ext=publicacion.imagen.name|lower|slice:'-4:' ext_long=publicacion.imagen.name|lower|slice:'-5:' %}
-
-            {% if ext == '.jpg' or ext == '.png' or ext == '.gif' or ext_long == '.jpeg' or ext_long == '.webp' %}
-            <img src="{{ publicacion.imagen.url }}" alt="Imagen de la publicación" class="publicacion-imagen"
-                loading="lazy" onclick="mostrarImagen(this)" />
-
-            {% elif ext == '.mp4' or ext == '.mov' or ext == '.avi' or ext == '.mkv' or ext_long == '.webm' %}
-
-            {% include 'publications/partials/video_player.html' with video_url=publicacion.imagen.url is_muted=publicacion.musica %}
-
+        {% if publicacion.imagenes.all %}
+        <div class="media-wrapper position-relative" style="background: #000;">
             
+            <div id="carousel-{{ publicacion.id }}" class="carousel-container d-flex" style="overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; width: 100%; scrollbar-width: none; -ms-overflow-style: none;">
+                {% for media in publicacion.imagenes.all %}
+                <div class="carousel-item-custom position-relative" style="scroll-snap-align: center; min-width: 100%; width: 100%;">
+                    {% with ext=media.imagen.name|lower|slice:'-4:' ext_long=media.imagen.name|lower|slice:'-5:' %}
+                        
+                        {% if ext == '.mp4' or ext == '.mov' or ext == '.avi' or ext == '.mkv' or ext_long == '.webm' %}
+                            {% include 'publications/partials/video_player.html' with video_url=media.imagen.url is_muted=publicacion.musica %}
+                        {% else %}
+                            {# Por defecto, tratamos todo lo que no sea video como imagen (soporte para jpg, png, gif, webp, svg, bmp, etc) #}
+                            <img src="{{ media.imagen.url }}" alt="Imagen {{ forloop.counter }}" class="publicacion-imagen"
+                                style="width: 100%; height: auto; max-height: 500px; object-fit: contain; display: block;"
+                                 loading="lazy" onclick="mostrarImagen(this.src)" />
+                        {% endif %}
 
+                    {% endwith %}
+                </div>
+                {% endfor %}
+            </div>
 
-
+            {% if publicacion.imagenes.count > 1 %}
+            <div class="carousel-indicators-custom position-absolute start-50 translate-middle-x d-flex gap-1" style="bottom: 15px; z-index: 10;">
+                {% for media in publicacion.imagenes.all %}
+                <span class="indicator-dot d-block rounded-circle bg-white opacity-50" 
+                      style="width: 8px; height: 8px; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(0,0,0,0.1);"
+                      data-target="carousel-{{ publicacion.id }}" 
+                      data-slide-to="{{ forloop.counter0 }}"
+                      onclick="scrollToSlide('carousel-{{ publicacion.id }}', {{ forloop.counter0 }})">
+                </span>
+                {% endfor %}
+            </div>
             {% endif %}
 
-            {% endwith %}
+            <script>
+                // Script inline para inicializar el observador de este carrusel específico
+                // Nota: En un entorno productivo idealmente esto iría en un archivo JS externo delegando eventos,
+                // pero para mantener la simplicidad y el contexto de 'publicacion.id', lo dejamos aquí o usamos un script global.
+                // Para evitar duplicar lógica, definiremos la función globalmente una sola vez en el bloque principal.
+            </script>
 
             {% if publicacion.musica %}
             <div class="music-tag-overlay">
@@ -206,6 +228,73 @@
         <img class="modal-contenido" id="imagen-ampliada" />
     </div>
 
+    <script>
+        // Funciones Globales para el Carrusel
+        function scrollToSlide(carouselId, index) {
+            console.log("Scrolling to slide", index);
+            const container = document.getElementById(carouselId);
+            if (container) {
+                const width = container.offsetWidth;
+                container.scrollTo({
+                    left: width * index,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupCarouselObservers();
+        });
+
+        function setupCarouselObservers() {
+            // console.log("Setting up carousel observers...");
+            const carousels = document.querySelectorAll('.carousel-container');
+            
+            carousels.forEach(container => {
+                if (container.dataset.observed === 'true') return;
+                container.dataset.observed = 'true';
+
+                container.addEventListener('scroll', function() {
+                    const index = Math.round(container.scrollLeft / container.offsetWidth);
+                    const dotsContainer = container.parentElement.querySelector('.carousel-indicators-custom');
+                    
+                    if (dotsContainer) {
+                        const dots = dotsContainer.querySelectorAll('.indicator-dot');
+                        dots.forEach((dot, i) => {
+                            if (i === index) {
+                                dot.classList.remove('opacity-50', 'bg-white');
+                                dot.classList.add('opacity-100', 'bg-primary'); 
+                                dot.style.transform = 'scale(1.2)';
+                            } else {
+                                dot.classList.add('opacity-50', 'bg-white');
+                                dot.classList.remove('opacity-100', 'bg-primary');
+                                dot.style.transform = 'scale(1)';
+                            }
+                        });
+                    }
+                }, { passive: true });
+                
+                // Trigger inicial
+                // setTimeout(() => container.dispatchEvent(new Event('scroll')), 100);
+                 const dotsContainer = container.parentElement.querySelector('.carousel-indicators-custom');
+                 if (dotsContainer) {
+                     const firstDot = dotsContainer.querySelector('.indicator-dot');
+                     if(firstDot) {
+                         firstDot.classList.remove('opacity-50', 'bg-white');
+                         firstDot.classList.add('opacity-100', 'bg-primary');
+                         firstDot.style.transform = 'scale(1.2)';
+                     }
+                 }
+            });
+        }
+        
+        if (typeof htmx !== 'undefined') {
+            document.body.addEventListener('htmx:load', function(evt) {
+                setupCarouselObservers();
+            });
+        }
+    </script>
+
     <style>
         /* Contenedor Principal */
         .publicaciones-container {
@@ -215,6 +304,11 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Ocultar scrollbar en carrusel */
+        .carousel-container::-webkit-scrollbar {
+            display: none; 
         }
 
         .publicacion {

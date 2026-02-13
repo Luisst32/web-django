@@ -23,6 +23,21 @@
                     {{ form.musica }}{{ form.musica_inicio }}{{ form.musica_fin }}
                 </div>
 
+                <!-- ERRORES DEL FORMULARIO -->
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <strong>Error al publicar:</strong>
+                    <ul>
+                    {% for field, errors in form.errors.items %}
+                        <li>{{ field }}: {{ errors|join:", " }}</li>
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                         <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
                 <!-- 1. DESCRIPCIÓN (Clean, no label) -->
                 <div class="mb-3">
                     <div class="d-flex gap-3 align-items-start">
@@ -44,12 +59,14 @@
                 <!-- 2. MEDIOS & PREVIEW CON OVERLAYS -->
                 <div class="media-section mb-4 position-relative">
                     <!-- Input oculto -->
+                    <!-- Input oculto -->
                     <div class="d-none">
-                        {{ form.imagen }}
+                        <!-- {{ form.imagenes }} REEMPLAZADO POR INPUT MANUAL -->
+                        <input type="file" name="imagenes" multiple class="form-control" id="id_imagenes">
                     </div>
 
                     <!-- Trigger (Big Box) -->
-                    <div id="media-trigger" class="media-upload-box" onclick="$('#id_imagen').click();">
+                    <div id="media-trigger" class="media-upload-box" onclick="$('#id_imagenes').click();">
                         <div class="text-center">
                             <i class="bi bi-images display-6 text-muted mb-2"></i>
                             <span class="d-block text-muted fw-medium small">Agregar Fotos/Videos</span>
@@ -57,12 +74,14 @@
                     </div>
 
                     <!-- PREVIEW CONTAINER -->
-                    <div id="media-preview-container" class="preview-container" style="display:none;">
-                        <img id="image-preview" src="" class="media-fit">
-                        <video id="video-preview" controls class="media-fit" style="display: none;"></video>
+                    <div id="media-preview-container" class="preview-container position-relative" style="display:none; overflow-x: auto; white-space: nowrap;">
+                         <!-- Container for multiple slides -->
+                        <div id="carousel-preview" class="d-flex align-items-center gap-2 p-2">
+                             <!-- JS will append images here -->
+                        </div>
 
-                        <!-- ACTION OVERLAYS (Icons on top of image) -->
-                        <div class="media-actions-overlay">
+                         <!-- ACTION OVERLAYS (Icons on top of image) -->
+                        <div class="media-actions-overlay" style="position: absolute; top: 10px; right: 10px;">
                             <!-- Botón Música -->
                             <button type="button" id="btn-trigger-music" class="action-btn" title="Agregar Música">
                                 <i class="bi bi-music-note-beamed"></i>
@@ -75,12 +94,12 @@
 
                             <!-- Botón Eliminar -->
                             <button type="button" id="btn-remove-media" class="action-btn btn-danger-soft">
-                                <i class="bi bi-x-lg"></i>
+                                <i class="bi bi-trash"></i>
                             </button>
                         </div>
-
-                        <!-- Music Status Indicator (Overlay Bottom) -->
-                        <div id="music-indicator-overlay" class="music-indicator glass-effect" style="display: none;">
+                        
+                         <!-- Music Status Indicator (Overlay Bottom) -->
+                        <div id="music-indicator-overlay" class="music-indicator glass-effect" style="display: none; position: absolute; bottom: 10px; left: 10px;">
                             <i class="bi bi-soundwave wave-anim"></i>
                             <span id="overlay-song-name" class="text-truncate" style="max-width: 150px;">Canción</span>
                             <button type="button" id="btn-clean-music-overlay" class="reset-btn">&times;</button>
@@ -187,54 +206,78 @@
             let tempId, tempName, tempUrl;
             let usuariosEtiquetadosIds = [];
 
+            // ESTADO DE ARCHIVOS ACUMULADOS
+            // Usamos DataTransfer para manipular el FileList del input
+            let dataTransfer = new DataTransfer(); 
+
             // 1. SUBIDA DE ARCHIVO (FOTO/VIDEO)
-            $('#id_imagen').change(function (e) {
-                if (e.target.files && e.target.files[0]) {
-                    let file = e.target.files[0];
-                    let reader = new FileReader();
+            $('#id_imagenes').change(function (e) {
+                if (e.target.files && e.target.files.length > 0) {
+                    $('#media-trigger').hide();
+                    $('#media-preview-container').fadeIn();
 
-                    reader.onload = function (evt) {
-                        // Resetear vistas
-                        $('#media-trigger').hide();
-                        $('#media-preview-container').fadeIn();
-
-                        // Detectar tipo
-                        if (file.type.startsWith('image/')) {
-                            // ES IMAGEN
-                            $('#image-preview').attr('src', evt.target.result).show();
-                            $('#video-preview').hide();
-                            $('#editor-bg-image').attr('src', evt.target.result); // Poner en editor mus
-
-                            // Mostrar botones de overlay
-                            $('#btn-trigger-music').show();
-                            $('#btn-trigger-tag').show();
-                        } else if (file.type.startsWith('video/')) {
-                            // ES VIDEO
-                            $('#image-preview').hide();
-                            $('#video-preview').attr('src', URL.createObjectURL(file)).show();
-
-                            // Ocultar botones no soportados en video por ahora
-                            $('#btn-trigger-music').hide(); // No musica en videos
-                            $('#btn-trigger-tag').show(); // Etiquetar si se podría (pero el user pidió musica 'si imagen')
-
-                            // Resetear música si había
-                            resetMusic();
-                        }
+                    // Asegurar que el botón de "Agregar más" exista
+                    if ($('#btn-add-more-visual').length === 0) {
+                         let addBtnHtml = `
+                            <div id="btn-add-more-visual" class="d-inline-flex align-items-center justify-content-center rounded shadow-sm border border-secondary ms-2" 
+                                 style="min-width: 100px; height: 300px; background: rgba(255,255,255,0.1); cursor: pointer; border-style: dashed !important; border-width: 2px !important;" 
+                                 onclick="$('#id_imagenes').click();" title="Agregar más">
+                                <i class="bi bi-plus-lg fs-1 text-white"></i>
+                            </div>`;
+                         $('#carousel-preview').append(addBtnHtml);
                     }
-                    reader.readAsDataURL(file);
+
+                    // Iterar sobre los NUEVOS archivos seleccionados
+                    Array.from(e.target.files).forEach(file => {
+                        // Agregar al acumulador
+                        dataTransfer.items.add(file);
+
+                        // Renderizar Preview
+                        let reader = new FileReader();
+                        reader.onload = function (evt) {
+                             let mediaHtml = '';
+                             // Lógica permisiva: Si es video, tag video. Si NO es video (o comienza con image/), intentamos mostrar como imagen.
+                             if (file.type.startsWith('video/')) {
+                                 mediaHtml = `<div class="position-relative d-inline-block">
+                                                <video src="${URL.createObjectURL(file)}" controls class="rounded shadow-sm border border-secondary" style="height: 300px; width: auto; max-width: 100%;"></video>
+                                              </div>`;
+                             } else {
+                                 // Asumimos imagen por defecto para permitir formatos raros (webp, svg, etc)
+                                 // Si el navegador no puede renderizarlo, mostrará el icono de imagen rota, pero lo intentará.
+                                 mediaHtml = `<div class="position-relative d-inline-block">
+                                                <img src="${evt.target.result}" class="rounded shadow-sm border border-secondary" style="height: 300px; width: auto; max-width: 100%; object-fit: contain;">
+                                              </div>`;
+                             }
+                             // Insertar ANTES del botón de agregar
+                             $(mediaHtml).insertBefore('#btn-add-more-visual');
+                        }
+                        reader.readAsDataURL(file);
+                    });
+                    
+                    // ACTUALIZAR EL INPUT CON TODOS LOS ARCHIVOS ACUMULADOS
+                    // Esto es crucial: reemplaza la selección actual del input con la suma de todo lo anterior + lo nuevo
+                    document.getElementById('id_imagenes').files = dataTransfer.files;
+
+                    // Mostrar botones
+                    $('#btn-trigger-music').show();
+                    $('#btn-trigger-tag').show();
                 }
             });
 
-            // 2. ELIMINAR MEDIA
+            // 2. ELIMINAR MEDIA (TODOS)
+            // Nota: Para eliminar uno por uno se requeriría más lógica de UI vincular el índice del archivo con el elemento visual.
+            // Por ahora mantenemos "Eliminar Todo" o podríamos implementar "Eliminar Último"
             $('#btn-remove-media').click(function (e) {
                 e.preventDefault();
-                $('#id_imagen').val('');
+                
+                // Limpiar acumulador
+                dataTransfer = new DataTransfer();
+                document.getElementById('id_imagenes').files = dataTransfer.files; // Input vacío
+
                 $('#media-preview-container').hide();
+                $('#carousel-preview').empty(); // Esto borra también el botón, lo cual está bien, se regenera al volver a subir.
                 $('#media-trigger').fadeIn();
-                $('#image-preview').attr('src', '');
-                $('#video-preview').attr('src', '');
                 resetMusic();
-                // Limpiar etiquetas también?
             });
 
             // 3. LOGICA MUSICA (Bottom Sheet)

@@ -22,16 +22,8 @@ def analyze_trending_posts(posts_data):
     model = genai.GenerativeModel('gemini-3-flash-preview')
 
     prompt_parts = [
-        "Eres un crítico de redes sociales 'Guayaco' (de Guayaquil), EXTREMADAMENTE TÓXICO, MAL HABLADO, BURLÓN Y CRUEL.",
-        "Usa jerga callejera guayaca pesada (webada, verga, chucha tu madre, bagrero, maricon, gordo, cabeza de mis bolas,cara de troll face, fracasado, etc).",
-        "Tu misión es DESTRUIR VISUALMENTE la foto. Búrlate de la ropa, la cara, el fondo, la calidad de la foto, todo.",
-        "No te limites. Sé extenso y detallado en tu insulto.",
-        "Analiza CADA publicación por separado.",
-        "Si en la foto tiene gorra blanca dile que es un bagrero ",
-        "IMPORTANTE: Debes responder ESTRICTAMENTE en formato JSON válido. Una lista de objetos.",
-        "Ejemplo de formato de respuesta: [{'index': 0, 'analisis': 'Texto tóxico y detallado...'}, {'index': 1, 'analisis': '...'}]",
-        "El análisis debe tener un MÁXIMO de 300 caracteres.",
-        "Si te pasas, corta el texto de forma agresiva."
+        "Eres un crítico de redes sociales 'Guayaco' (de Guayaquil)."
+
     ]
 
     import PIL.Image
@@ -60,10 +52,16 @@ def analyze_trending_posts(posts_data):
             except Exception as e:
                 prompt_parts.append(f"[Error cargando imagen: {str(e)}]")
         
-    prompt_parts.append("\n¡Suelta el veneno en JSON, mmvrga! Si hay foto, búrlate de lo que ves.")
+    prompt_parts.append("\nResponde SOLAMENTE en JSON con este formato exacto: [{\"index\": 0, \"analisis\": \"...\"}, ...]. Si hay foto, comenta sobre ella con tu estilo guayaco pero en nota suave, nada de ser grosero.")
 
     try:
         response = model.generate_content(prompt_parts)
+        
+        # Check if response is valid (not blocked by safety)
+        if not response.parts:
+             print(f"⚠️ Gemini Safety Block or Empty Response: {response.prompt_feedback}")
+             return '[{"index": 0, "analisis": "La IA se puso tímida (Contenido bloqueado por seguridad)."}]'
+
         # Limpieza básica por si el modelo devuelve bloques de código markdown
         clean_text = response.text.replace('```json', '').replace('```', '').strip()
         print("✅ Respuesta Gemini recibida:", clean_text[:100]) # Debug

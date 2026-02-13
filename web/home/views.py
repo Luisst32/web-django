@@ -31,11 +31,12 @@ from django.urls import reverse
 @login_required
 def index(request):
     # 1. QUERYSET BASE
-    posts_list = Post.objects.all().select_related(
+    posts_list = Post.objects.filter(estado=True).select_related(
         'usuario', 'usuario__perfil'
     ).prefetch_related(
         'usuarios_etiquetados', 
-        'reacciones'
+        'reacciones',
+        'imagenes'
     ).order_by('-fecha_publicacion')
 
     # --- LÓGICA DE RESALTAR POST ---
@@ -55,7 +56,8 @@ def index(request):
                     'usuario', 'usuario__perfil'
                 ).prefetch_related(
                     'usuarios_etiquetados', 
-                    'reacciones'
+                    'reacciones',
+                    'imagenes'
                 ).annotate(
                     is_highlighted=Case(
                         When(id=highlight_id, then=Value(1)),

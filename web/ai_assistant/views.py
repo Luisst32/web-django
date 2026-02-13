@@ -40,7 +40,8 @@ def get_trending_analysis(request):
             pid = item.get('post_id')
             post = posts_relacionados.get(pid)
             if post:
-                resultado.append({'post': post, 'comentario': item.get('analisis')})
+                img = post.imagenes.first()
+                resultado.append({'post': post, 'comentario': item.get('analisis'), 'first_image': img})
 
         # Calcular minutos para el siguiente update (Cada 60 mins)
         ahora = timezone.now()
@@ -70,28 +71,29 @@ def get_trending_analysis(request):
     # Fallback
     # SELECCIÓN ALEATORIA PURA (Random)
     # Traemos candidatos aleatorios de TODA la base de datos
-    candidates = list(Post.objects.filter(estado=True).exclude(
-        Q(imagen__icontains='.mp4') | 
-        Q(imagen__icontains='.mov') | 
-        Q(imagen__icontains='.avi') |
-        Q(imagen__icontains='.mkv') | 
+    # Traemos candidatos aleatorios de TODA la base de datos
+    # Como ya no existe 'imagen' en Post, filtramos por si tiene PostImagen asociado
+    # Y excluimos videos revisando la extensión en el modelo relacionado
+    candidates = list(Post.objects.filter(estado=True, imagenes__isnull=False).exclude(
+        Q(imagenes__imagen__icontains='.mp4') | 
+        Q(imagenes__imagen__icontains='.mov') | 
+        Q(imagenes__imagen__icontains='.avi') |
+        Q(imagenes__imagen__icontains='.mkv') | 
         Q(id__in=ids_excluir)
-    ).order_by('?')[:5]) # Tomamos 5 al azar
+    ).order_by('?')[:5]) 
 
-    # Si no hay suficientes (por exclusiones), relajamos el filtro de ID
+    # Fallback
     if len(candidates) < 1:
          candidates = list(Post.objects.filter(estado=True).exclude(
-            Q(imagen__icontains='.mp4') | 
-            Q(imagen__icontains='.mov') | 
-            Q(imagen__icontains='.avi') | 
-            Q(imagen__icontains='.mkv')
+            Q(imagenes__imagen__icontains='.mp4') | 
+            Q(imagenes__imagen__icontains='.mov') | 
+            Q(imagenes__imagen__icontains='.avi') | 
+            Q(imagenes__imagen__icontains='.mkv')
         ).order_by('?')[:5])
     
     trending_posts = []
     if candidates:
-        # Seleccionamos k=1
         try:
-             # Como ya vinieron ordenados al azar por la DB order_by('?'), tomamos el primero
              trending_posts = candidates[:1]
         except IndexError:
              pass
@@ -100,11 +102,16 @@ def get_trending_analysis(request):
     posts_data = []
     for post in trending_posts:
         comentarios = list(post.comentarios.all().order_by('-fecha_publicacion')[:3].values_list('descripcion', flat=True))
+        
+        # Obtener la primera imagen si existe
+        first_img = post.imagenes.first()
+        img_url = first_img.imagen.url if first_img else None
+        
         post_info = {
             'descripcion': post.descripcion,
             'likes': post.reacciones.count(),
             'comentarios': comentarios,
-            'imagen_url': post.imagen.url if post.imagen else None
+            'imagen_url': img_url
         }
         posts_data.append(post_info)
 
@@ -140,7 +147,8 @@ def get_trending_analysis(request):
             # Buscamos en la lista original (que ya tenemos en memoria)
             post = next((p for p in trending_posts if p.id == pid), None)
             if post:
-                 resultado.append({'post': post, 'comentario': item.get('analisis')})
+                 img = post.imagenes.first()
+                 resultado.append({'post': post, 'comentario': item.get('analisis'), 'first_image': img})
 
         return render(request, 'ai_assistant/partials/sidebar_ai.html', {
             'resultados': resultado,

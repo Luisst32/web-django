@@ -42,9 +42,9 @@
                     </div>
                     {% endif %}
 
-                    {% if item.post.imagen %}
+                    {% if item.first_image %}
                     <div class="w-100 position-relative bg-dark" style="height: 270px; overflow: hidden;">
-                        <img src="{{ item.post.imagen.url }}" alt="Post img" class="w-100 h-100"
+                        <img src="{{ item.first_image.imagen.url }}" alt="Post img" class="w-100 h-100"
                             style="object-fit: contain;">
                         <!-- Badge de tiempo (Rojo un poco más discreto pero visible) -->
                         <div class="position-absolute bottom-0 end-0 m-2 px-2 py-1 bg-dark bg-opacity-75 text-white rounded d-flex align-items-center shadow-sm"

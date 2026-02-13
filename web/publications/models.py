@@ -22,7 +22,6 @@ class Musica(models.Model):
 class Post(models.Model):
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name="posts")
     perfil = models.ForeignKey(Perfil, on_delete=models.CASCADE, related_name="posts")
-    imagen = models.FileField(upload_to='posts/', blank=True, null=True)
     
     # Relación con música
     musica = models.ForeignKey(Musica, on_delete=models.SET_NULL, null=True, blank=True, related_name="posts_asociados")
@@ -43,19 +42,17 @@ class Post(models.Model):
     def __str__(self):
         return f"Post de {self.usuario.username} - {self.fecha_publicacion}"
 
-    # Lógica original intacta (usando self.archivo)
-    def es_imagen(self):
-      if self.archivo:
-          try:
-              with Image.open(self.archivo) as img:
-                  return True 
-          except Exception:
-             return False 
-      return False
 
-    # Lógica original intacta (usando self.archivo)
-    def es_video(self):
-        return self.archivo and self.archivo.name.endswith(('mp4', 'mov', 'avi', 'mkv'))
+
+
+class PostImagen(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='imagenes')
+    imagen = models.FileField(upload_to='posts/imagenes/')
+    orden = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'post_imagen'
+        ordering = ['orden']
 
 
 class Comentario(models.Model):

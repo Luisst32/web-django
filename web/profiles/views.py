@@ -17,8 +17,8 @@ def perfil_detalle(request, username):
     
     # 1. QUERYSET
     publicaciones_qs = Post.objects.filter(
-        Q(usuario=usuario) | Q(usuarios_etiquetados=usuario)
-    ).distinct().order_by('-fecha_publicacion')
+        (Q(usuario=usuario) | Q(usuarios_etiquetados=usuario)) & Q(estado=True)
+    ).select_related('usuario', 'usuario__perfil').prefetch_related('imagenes', 'reacciones', 'usuarios_etiquetados').distinct().order_by('-fecha_publicacion')
 
     # 2. CONTEXTO DE PERFIL (Para la carga inicial)
     esta_siguiendo = Seguidores.objects.filter(usuario=request.user, seguido=usuario).exists()
