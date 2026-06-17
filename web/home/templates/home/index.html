@@ -493,7 +493,7 @@
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <!-- Brand / Logo -->
-            <a class="navbar-brand d-flex align-items-center" href="{% url 'top_seguidores' %}">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'index' %}">
                 <img src="{% static 'logo/logo.png' %}" alt="Milanesa" class="me-2" style="max-height: 40px;">
                 <span class="fw-bold text-dark">MILANESA</span>
             </a>
@@ -637,7 +637,7 @@
                                 class="nav-link d-flex align-items-center gap-3 fs-5 px-3">
                                 <i class="fas fa-trophy fa-fw"></i> <span>Top</span>
                             </a>
-                            <a href="{% url 'publications:crear_publicacion' %}"
+                            <a href="#" onclick="abrirModalSubirMusica(event)"
                                 class="nav-link d-flex align-items-center gap-3 fs-5 px-3">
                                 <i class="fas fa-music fa-fw"></i> <span>Agregar música</span>
                             </a>
@@ -705,11 +705,34 @@
                     </a>
                 </div>
                 {% endif %}
+
+                <!-- COMPOSER (Home Feed) -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 mx-auto" style="max-width: 600px; background: #fff;">
+                    <div class="card-body p-3 d-flex align-items-center gap-2">
+                        {% if user.foto_perfil %}
+                        <img src="{{ user.foto_perfil.url }}" class="rounded-circle object-fit-cover"
+                            style="width: 36px; height: 36px;" alt="Avatar">
+                        {% else %}
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+                            style="width: 36px; height: 36px;">
+                            <i class="fas fa-user text-muted"></i>
+                        </div>
+                        {% endif %}
+                        <a href="{% url 'publications:crear_publicacion' %}" class="flex-grow-1 text-decoration-none"
+                            style="display: block;">
+                            <div class="form-control rounded-pill bg-light border-0 px-3 py-2 text-muted small"
+                                style="cursor: pointer;">
+                                ¿Qué estás pensando, {{ user.first_name|default:user.username }}?
+                            </div>
+                        </a>
+                        <a href="{% url 'publications:crear_publicacion' %}" class="text-success">
+                            <i class="fas fa-image fa-lg"></i>
+                        </a>
+                    </div>
+                </div>
+
                 <div class="publicaciones-container" id="publicaciones-feed-container" {% if feed_full_width %}style="max-width: 100%;" {% endif %}>
                     
-
-
-
                     {% include 'publications/lista_publicaciones.html' %}
                 </div>
                 <!-- HTMX Indicator -->
@@ -767,6 +790,43 @@
             style="max-width: 90%; max-height: 90%; object-fit: contain; background: transparent; box-shadow: none;">
     </div>
 
+    <!-- MODAL DE SUBIR MÚSICA -->
+    <div id="modal-subir-musica-global" class="modal-overlay" style="display: none; z-index: 10000;" data-user-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}">
+        <div class="modal-container" style="max-width: 450px; padding: 25px; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.08);">
+            <button class="btn-cerrar-modal" onclick="cerrarModalSubirMusica()" style="top: 15px; right: 15px; border: none; background: transparent; font-size: 1.25rem;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="modal-header-custom mb-4">
+                <h4 class="fw-bold text-dark m-0 d-flex align-items-center gap-2" style="font-size: 1.35rem;">
+                    <i class="fas fa-music text-primary" style="font-size: 1.1rem;"></i>
+                    <span>Subir música</span>
+                </h4>
+                <p class="text-muted small m-0 mt-1" style="font-size: 0.85rem;">Sube tus archivos de audio para usarlos en tus publicaciones.</p>
+            </div>
+            <form id="form-subir-musica-global" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="music-name-global" class="form-label fw-semibold text-secondary small" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Nombre de la canción</label>
+                    <input type="text" name="nombre" id="music-name-global" class="form-control py-2 px-3 border" placeholder="Ej: Mi canción favorita" required style="border-radius: 10px; font-size: 0.95rem; border-color: #e2e8f0;">
+                </div>
+                <div class="mb-3">
+                    <label for="music-file-global" class="form-label fw-semibold text-secondary small" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Archivo de audio</label>
+                    <input type="file" name="archivo_musica" id="music-file-global" class="form-control py-2 px-3 border" accept="audio/*" required style="border-radius: 10px; font-size: 0.95rem; border-color: #e2e8f0;">
+                </div>
+                <div id="upload-music-errors" class="alert alert-danger d-none small py-2 px-3 mb-3" style="border-radius: 8px;"></div>
+                <div id="upload-music-success" class="alert alert-success d-none small py-2 px-3 mb-3" style="border-radius: 8px;"></div>
+                
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+                    <button type="button" class="btn btn-light-custom px-4 py-2" onclick="cerrarModalSubirMusica()" style="border-radius: 10px; font-size: 0.9rem; font-weight: 500;">Cancelar</button>
+                    <button type="submit" class="btn btn-black px-4 py-2 d-flex align-items-center gap-2" id="btn-submit-music-global" style="border-radius: 10px; font-size: 0.9rem; font-weight: 600;">
+                        <span>Subir</span>
+                        <div class="spinner-border spinner-border-sm text-light d-none" role="status" id="spinner-submit-music" style="width: 1rem; height: 1rem;"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function mostrarImagen(url) {
             var modal = document.getElementById("modal-imagen-global");
@@ -795,6 +855,79 @@
     {% include 'users/scripts_vinculacion.html' %}
 
     {% include 'notificacion/scripts_notificaciones.html' %}
+
+    <script>
+        function abrirModalSubirMusica(e) {
+            if (e) {
+                e.preventDefault();
+            }
+            var isAuth = $('#modal-subir-musica-global').attr('data-user-authenticated') === 'true';
+            if (!isAuth) {
+                window.location.href = "{% url 'login' %}";
+                return;
+            }
+            $('#modal-subir-musica-global').fadeIn('fast').css('display', 'flex');
+        }
+
+        function cerrarModalSubirMusica() {
+            $('#modal-subir-musica-global').fadeOut('fast');
+            $('#form-subir-musica-global')[0].reset();
+            $('#upload-music-errors').addClass('d-none').text('');
+            $('#upload-music-success').addClass('d-none').text('');
+        }
+
+        $(document).ready(function() {
+            $('#form-subir-musica-global').on('submit', function(e) {
+                e.preventDefault();
+                
+                var formData = new FormData(this);
+                var btnSubmit = $('#btn-submit-music-global');
+                var spinner = $('#spinner-submit-music');
+                var errorDiv = $('#upload-music-errors');
+                var successDiv = $('#upload-music-success');
+                
+                // Disable button & show spinner
+                btnSubmit.prop('disabled', true);
+                spinner.removeClass('d-none');
+                errorDiv.addClass('d-none').text('');
+                successDiv.addClass('d-none').text('');
+                
+                $.ajax({
+                    url: "{% url 'publications:subir_musica' %}",
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        btnSubmit.prop('disabled', false);
+                        spinner.addClass('d-none');
+                        
+                        if (response.success) {
+                            successDiv.removeClass('d-none').text('¡Música subida con éxito!');
+                            setTimeout(function() {
+                                cerrarModalSubirMusica();
+                            }, 1500);
+                        } else {
+                            var errorMsg = 'Error al subir la música.';
+                            if (response.errors) {
+                                if (typeof response.errors === 'object') {
+                                    errorMsg = Object.values(response.errors).flat().join(' ');
+                                } else {
+                                    errorMsg = response.errors;
+                                }
+                            }
+                            errorDiv.removeClass('d-none').text(errorMsg);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        btnSubmit.prop('disabled', false);
+                        spinner.addClass('d-none');
+                        errorDiv.removeClass('d-none').text('Error de conexión o de servidor. Por favor, intente de nuevo.');
+                    }
+                });
+            });
+        });
+    </script>
 
     {% endblock scripts %}
 

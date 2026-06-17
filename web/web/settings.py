@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'webpush',
     'recommendations',
     'ai_assistant',
+    'emails',
 ]
 WEBPUSH_SETTINGS = {
     "VAPID_PUBLIC_KEY": os.getenv('VAPID_PUBLIC_KEY'),
@@ -163,8 +164,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CSRF_TRUSTED_ORIGINS = [
     'https://milanesa.shop',
     'https://www.milanesa.shop',
-
-    # Si usas más dominios o subdominios, añádelos aquí también
+    'https://milanesa.sbs',
+    'https://www.milanesa.sbs',
 ]
 
 
@@ -233,3 +234,17 @@ ASGI_APPLICATION = 'web.asgi.application'
 WEBSOCKET_ACCEPT_ALL = False  # Validar conexiones
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB para uploads
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+
+# Configuración de Correo Electrónico (SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', '')
+
+# Google Sign-In Settings
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
+
+

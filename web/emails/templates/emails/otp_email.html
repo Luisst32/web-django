@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Código de Verificación | Milanesa</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            -webkit-text-size-adjust: none;
+            -ms-text-size-adjust: none;
+        }
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f3f4f6;
+            padding-bottom: 40px;
+            padding-top: 40px;
+        }
+        .container {
+            max-width: 600px;
+            background-color: #ffffff;
+            margin: 0 auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #000000;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            font-size: 24px;
+            margin: 0;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        .content p {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+        }
+        .otp-container {
+            text-align: center;
+            margin: 30px 0;
+            background-color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px dashed #d1d5db;
+        }
+        .otp-code {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            color: #000000;
+            margin: 0;
+        }
+        .info-text {
+            font-size: 14px;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #6b7280;
+            border-top: 1px solid #f3f4f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Milanesa</h1>
+            </div>
+            <div class="content">
+                <p>Hola <strong>{{ user.username }}</strong>,</p>
+                <p>Has solicitado restablecer tu contraseña en la red social <strong>Milanesa</strong>.</p>
+                <p>Usa el siguiente código de un solo uso (OTP) para continuar con el proceso:</p>
+                
+                <div class="otp-container">
+                    <h2 class="otp-code">{{ otp_code }}</h2>
+                    <p class="info-text">Este código es válido por 10 minutos.</p>
+                </div>
+                
+                <p>Si no has solicitado este cambio, por favor ignora este correo de forma segura. Tu contraseña seguirá siendo la misma.</p>
+            </div>
+            <div class="footer">
+                &copy; 2026 Milanesa. Todos los derechos reservados.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

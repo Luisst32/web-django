@@ -11,6 +11,8 @@
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'users/css/login.css' %}">
+    <!-- Google Sign-In SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -60,9 +62,36 @@
                                 </button>
                             </div>
 
-                            <div class="text-center">
-                                <a href="{% url 'register' %}" class="text-decoration-none text-muted small">
-                                    ¿Aún no tienes cuenta? <span class="text-black fw-medium">Únete a Milanesa</span>
+                            <!-- Botón de Google Login -->
+                            <div class="text-center mb-4">
+                                <div class="text-muted small mb-2">— O —</div>
+                                <div class="d-flex justify-content-center">
+                                    <div id="g_id_onload"
+                                         data-client_id="{{ google_client_id }}"
+                                         data-context="signin"
+                                         data-ux_mode="redirect"
+                                         data-login_uri="{{ request.scheme }}://{{ request.get_host }}/users/google-login/"
+                                         data-auto_prompt="false">
+                                    </div>
+                                    <div class="g_id_signin"
+                                         data-type="standard"
+                                         data-shape="rectangular"
+                                         data-theme="outline"
+                                         data-text="signin_with"
+                                         data-size="large"
+                                         data-logo_alignment="left"
+                                         data-width="280">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center small mt-3">
+                                <a href="{% url 'register' %}" class="text-decoration-none text-muted">
+                                    ¿No tienes cuenta? <span class="text-black fw-medium">Regístrate</span>
+                                </a>
+                                <span class="text-muted mx-2">•</span>
+                                <a href="{% url 'password_reset_request' %}" class="text-decoration-none text-muted">
+                                    ¿Olvidaste tu contraseña? <span class="text-black fw-medium">Recupérala</span>
                                 </a>
                             </div>
                         </form>

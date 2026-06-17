@@ -10,6 +10,8 @@ urlpatterns = [
 
     path('api/vincular-dispositivo/', views.registrar_dispositivo_sesion, name='vincular_dispositivo'),
     path('api/eliminar-suscripcion-webpush/', views.eliminar_suscripcion_webpush, name='eliminar_suscripcion_webpush'), 
+    path('google-login/', views.google_login, name='google_login'),
+
     
 
 

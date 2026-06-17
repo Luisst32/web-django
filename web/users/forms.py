@@ -11,6 +11,13 @@ class UserRegisterForm(forms.ModelForm):
         model = Usuarios
         fields = {'first_name', 'last_name', 'fech_nacimiento', 'sexo', 'email','password','username'}
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if username:
+            if Usuarios.objects.filter(username__iexact=username).exists():
+                raise forms.ValidationError("Este nombre de usuario ya está registrado.")
+        return username
+
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")

@@ -128,7 +128,7 @@
                 <button type="submit"
                     class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm mt-3">PUBLICAR</button>
             </form>
-            <a href="{% url 'perfil_detalle' username=request.user.username %}"
+            <a href="#" data-fallback-url="{% url 'index' %}" onclick="window.history.length > 1 ? window.history.back() : window.location.href=this.getAttribute('data-fallback-url'); return false;"
                 class="btn btn-light w-100 rounded-pill mt-2 fw-bold text-secondary border-0">Cancelar</a>
             <!-- Backdrop for Bottom Sheet (Local) -->
             <div id="sheet-backdrop" class="sheet-backdrop"></div>

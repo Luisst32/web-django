@@ -24,8 +24,17 @@ function toggleAudio(btn, postId, start, end) {
         audio.dataset.end = end;
 
         // Ajustar tiempo si es necesario
-        if (audio.currentTime < start || audio.currentTime >= end) {
-            audio.currentTime = start;
+        if (audio.readyState === 0) {
+            audio.addEventListener('loadedmetadata', function onLoaded() {
+                if (audio.currentTime < start || audio.currentTime >= end) {
+                    audio.currentTime = start;
+                }
+                audio.removeEventListener('loadedmetadata', onLoaded);
+            });
+        } else {
+            if (audio.currentTime < start || audio.currentTime >= end) {
+                audio.currentTime = start;
+            }
         }
 
         audio.play().then(() => {

@@ -32,6 +32,17 @@ def user_login(request):
          
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
+            
+            # Buscar el usuario ignorando mayúsculas y minúsculas
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            try:
+                user_obj = User.objects.filter(username__iexact=username).first()
+                if user_obj:
+                    username = user_obj.username
+            except Exception:
+                pass
+
             user = authenticate(request, username=username, password=password)
             if user is not None:
                
@@ -42,7 +53,11 @@ def user_login(request):
     else:
         form = LoginForm()
 
-    return render(request, 'users/login.html', {'form': form})
+    from django.conf import settings
+    return render(request, 'users/login.html', {
+        'form': form,
+        'google_client_id': settings.GOOGLE_CLIENT_ID
+    })
 
 
 
@@ -197,8 +212,84 @@ def eliminar_suscripcion_webpush(request):
                 return JsonResponse({'status': 'ok', 'mensaje': 'Suscripción eliminada con éxito'})
         
         except Exception as e:
-            # Es bueno registrar este error en los logs de Django
-            print(f"Error en eliminar_suscripcion_webpush: {e}")
             return JsonResponse({'status': 'error', 'error': str(e)}, status=400)
 
     return JsonResponse({'status': 'error', 'mensaje': 'No autorizado'}, status=403)
+
+
+
+import requests
+from django.utils.crypto import get_random_string
+
+@csrf_exempt
+def google_login(request):
+    """
+    Handles Google One Tap / Google Sign-In redirect POST request.
+    Verifies JWT token with Google API, logs in or registers user.
+    """
+    if request.method == 'POST':
+        token = request.POST.get('credential')
+        if not token:
+            messages.error(request, "No se recibieron credenciales de Google.")
+            return redirect('login')
+            
+        # Verify token with Google API
+        try:
+            response = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={token}', timeout=10)
+            if response.status_code != 200:
+                messages.error(request, "La verificación con Google falló.")
+                return redirect('login')
+                
+            user_info = response.json()
+        except Exception as e:
+            messages.error(request, f"Error de conexión con Google: {str(e)}")
+            return redirect('login')
+            
+        # Verify audience/client_id
+        from django.conf import settings
+        aud = user_info.get('aud')
+        expected_aud = settings.GOOGLE_CLIENT_ID
+        if aud != expected_aud:
+            messages.error(request, "Credenciales de Google no válidas para esta aplicación.")
+            return redirect('login')
+            
+        email = user_info.get('email')
+        if not email:
+            messages.error(request, "No se pudo obtener el correo de tu cuenta de Google.")
+            return redirect('login')
+            
+        # Check if user already exists
+        user = Usuarios.objects.filter(email=email).first()
+        
+        if not user:
+            # Generate a unique username
+            base_username = email.split('@')[0][:8]  # Limit base to 8 chars
+            username = base_username
+            while Usuarios.objects.filter(username=username).exists():
+                username = f"{base_username[:7]}_{get_random_string(3)}"
+            
+            first_name = user_info.get('given_name', 'Google')[:50]
+            last_name = user_info.get('family_name', 'User')[:50]
+            
+            try:
+                # Create user with default TipoUser (1) and default sexo (3 - Otro)
+                user = Usuarios.objects.create_user(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    password=get_random_string(16),
+                    sexo=3 # Default to "Otro"
+                )
+                messages.success(request, f"¡Te has registrado con éxito con Google, {first_name}!")
+            except Exception as e:
+                messages.error(request, f"Error al registrar tu cuenta: {str(e)}")
+                return redirect('login')
+        else:
+            messages.success(request, f"¡Hola de nuevo, {user.first_name or user.username}!")
+            
+        # Log the user in
+        login(request, user)
+        return redirect('index')
+        
+    return redirect('login')

@@ -33,6 +33,7 @@ urlpatterns = [
 
     path('webpush/', include('webpush.urls')),
     path('ai/', include('ai_assistant.urls')),
+    path('emails/', include('emails.urls')),
 
 path('sw.js', TemplateView.as_view(
         # AQUÍ APUNTAS A TU UBICACIÓN REAL EN LA APP
