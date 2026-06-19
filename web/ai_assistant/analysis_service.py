@@ -19,10 +19,11 @@ def analyze_trending_posts(posts_data):
     genai.configure(api_key=api_key)
     
     # Modelo a usar (Gemini 1.5 Flash es el estándar actual y rápido)
-    model = genai.GenerativeModel('gemini-3-flash-preview')
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
     prompt_parts = [
-        "Eres un crítico de redes sociales 'Guayaco' (de Guayaquil)."
+        "Eres un crítico de redes sociales 'Guayaco' (de Guayaquil)  ",
+        "se como la verga batracio y arrogante critica dura."
 
     ]
 

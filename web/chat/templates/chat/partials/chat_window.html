@@ -61,22 +61,38 @@
         }
     </style>
 
-    <div id="messages-container" class="flex-grow-1 p-3 overflow-auto d-flex flex-column"
+    <div id="messages-container" class="flex-grow-1 p-3 overflow-auto d-flex flex-column-reverse"
         style="background: #f0f2f5; height: 330px;">
 
-        <!-- Pagination Sentinel -->
-        {% if has_next %}
-        <div id="pagination-sentinel" hx-get="{% url 'get_chat_history' otro_usuario.id %}?page={{ next_page }}"
-            hx-trigger="intersect once" hx-target="#pagination-sentinel" hx-swap="outerHTML" class="text-center p-2">
-            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-        </div>
-        {% endif %}
+        <!-- Placeholder for real-time messages -->
+        <div id="typing-indicator" class="w-100"></div>
 
         {% for mensaje in mensajes %}
-        <div class="message mb-2 d-flex {% if mensaje.user == request.user %}justify-content-end{% endif %}">
+        <div class="message mb-2 d-flex {% if mensaje.user == request.user %}justify-content-end{% endif %} w-100">
             <div class="message-bubble p-2 rounded-3 shadow-sm"
                 style="max-width: 80%; {% if mensaje.tipo == 'imagen' %}background: transparent; box-shadow: none !important;{% elif mensaje.user == request.user %}background: #0084ff; color: white;{% else %}background: white; color: #1c1e21;{% endif %}">
-                {% if mensaje.tipo == 'imagen' %}
+                {% if mensaje.tipo == 'story_reply' %}
+                    <div class="story-reply-preview mb-2 p-2 rounded" style="background: rgba(0,0,0,0.1); border-left: 3px solid {% if mensaje.user == request.user %}#fff{% else %}#0084ff{% endif %};">
+                        <small class="d-block mb-1" style="opacity: 0.8; font-size: 0.75rem;"><i class="fas fa-reply"></i> Respondió a la historia</small>
+                        {% if mensaje.story %}
+                            <div class="d-flex align-items-center gap-2" style="cursor: pointer;" onclick="if(typeof abrirVisorStories === 'function') abrirVisorStories('{{ mensaje.story.usuario.id }}', '{{ mensaje.story.id }}');">
+                                {% if mensaje.story.imagen %}
+                                    <img src="{{ mensaje.story.imagen.url }}" style="width: 40px; height: 60px; object-fit: cover; border-radius: 4px;">
+                                {% else %}
+                                    <div style="width: 40px; height: 60px; background: {{ mensaje.story.color_fondo|default:'#4f46e5' }}; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                        <span class="text-white text-center" style="font-size: 0.4rem; padding: 2px;">{{ mensaje.story.texto|truncatechars:20 }}</span>
+                                    </div>
+                                {% endif %}
+                                <div class="text-truncate small flex-grow-1" style="max-width: 150px; opacity: 0.9;">
+                                    Historia de {{ mensaje.story.usuario.username }}
+                                </div>
+                            </div>
+                        {% else %}
+                            <small class="fst-italic" style="opacity: 0.7;">Historia no disponible</small>
+                        {% endif %}
+                    </div>
+                    <div class="message-text" style="word-wrap: break-word;">{{ mensaje.descripcion }}</div>
+                {% elif mensaje.tipo == 'imagen' %}
                 <img src="{{ mensaje.imagen.url }}" class="img-fluid rounded-2 mb-1"
                     style="max-height: 250px; cursor: pointer; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"
                     onclick="window.open('{{ mensaje.imagen.url }}', '_blank')">
@@ -88,9 +104,11 @@
                     style="font-size: 0.7rem; opacity: 0.9;">
                     {% if mensaje.user.id == request.user.id %}
                     <div class="message-status status-sent me-2"
-                        style="{% if mensaje.es_leido %}color: {% if mensaje.imagen %}#0084ff{% else %}#d1f2ff{% endif %}; font-weight: bold;{% else %}color: {% if mensaje.imagen %}#666{% else %}#e0e0e0{% endif %};{% endif %}">
+                        style="{% if mensaje.es_leido %}color: {% if mensaje.imagen %}#0084ff{% else %}#d1f2ff{% endif %}; font-weight: bold;{% elif mensaje.es_recibido %}color: {% if mensaje.imagen %}#666{% else %}#a0a0a0{% endif %};{% else %}color: {% if mensaje.imagen %}#666{% else %}#e0e0e0{% endif %};{% endif %}">
                         {% if mensaje.es_leido %}
                         <i class="fas fa-check-double"></i> Visto
+                        {% elif mensaje.es_recibido %}
+                        <i class="fas fa-check-double"></i> Recibido
                         {% else %}
                         <i class="fas fa-check"></i> Enviado
                         {% endif %}
@@ -101,14 +119,19 @@
             </div>
         </div>
         {% empty %}
-        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+        <div id="no-messages-placeholder" class="d-flex flex-column align-items-center justify-content-center h-100 w-100">
             <i class="fas fa-comments fa-3x mb-3 text-secondary"></i>
             <p class="text-secondary fw-bold">Empezar conversación</p>
         </div>
         {% endfor %}
 
-        <!-- Placeholder for real-time messages -->
-        <div id="typing-indicator"></div>
+        <!-- Pagination Sentinel (Al final del DOM, visualmente arriba) -->
+        {% if has_next %}
+        <div id="pagination-sentinel" hx-get="{% url 'get_chat_history' otro_usuario.id %}?page={{ next_page }}"
+            hx-trigger="intersect once" hx-target="#pagination-sentinel" hx-swap="outerHTML" class="text-center p-2 w-100">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        </div>
+        {% endif %}
 
     </div>
 
@@ -176,20 +199,6 @@
         window.currentChatOtherUserId = parseInt(uid);
     } catch (e) { console.error(e); }
 
-    // Scroll to bottom
-    window.scrollToBottom = function () {
-        const container = document.getElementById('messages-container');
-        if (!container) return;
-
-        container.scrollTop = container.scrollHeight + 5000;
-
-        const messages = container.querySelectorAll('.message');
-        if (messages.length > 0) {
-            const lastMessage = messages[messages.length - 1];
-            lastMessage.scrollIntoView({ block: "end", behavior: "auto" });
-        }
-    };
-
     // Scroll listener for "Mark as Read" behavior
     var messagesContainerVar = document.getElementById('messages-container');
     var initialScrollCompleted = false;
@@ -198,8 +207,8 @@
         messagesContainerVar.addEventListener('scroll', function () {
             if (!initialScrollCompleted) return; // Ignorar el scroll automático inicial
 
-            // Check if user is near bottom (e.g., within 50px)
-            const isNearBottom = messagesContainerVar.scrollHeight - messagesContainerVar.scrollTop - messagesContainerVar.clientHeight < 100;
+            // Con flex-direction: column-reverse, el bottom tiene scrollTop 0
+            const isNearBottom = Math.abs(messagesContainerVar.scrollTop) < 100;
 
             if (isNearBottom) {
                 window.markChatAsRead();
@@ -207,15 +216,15 @@
         });
     }
 
-    // Scroll immediately
-    setTimeout(() => { window.scrollToBottom(); initialScrollCompleted = true; }, 500); // Activar listener después del auto-scroll
-    setTimeout(window.scrollToBottom, 200);
+    setTimeout(() => { initialScrollCompleted = true; }, 500);
 
-    // Connect WebSocket - Con manejo de errores
-    const chatId = {{ chat.id|default:"null" }};
+    // Notificar a floating_chat.html qué chat conectar vía evento del DOM.
+    // Esto garantiza que floating_chat.html (que controla el WebSocket) cierre
+    // correctamente el socket anterior antes de abrir el nuevo.
+    var chatId = {{ chat.id|default:"null" }};
     if (chatId) {
-        console.log('Conectando a chat:', chatId);
-        connectToChat(chatId);
+        console.log('[chat_window] Disparando evento chat:connect para chatId:', chatId);
+        document.dispatchEvent(new CustomEvent('chat:connect', { detail: { chatId: chatId } }));
     } else {
         console.error('ERROR: Chat ID no disponible');
     }
@@ -224,7 +233,8 @@
         document.querySelectorAll('.message-status.status-sent').forEach(el => el.classList.remove('last-sent-status'));
         const sentStatuses = document.querySelectorAll('.message-status.status-sent');
         if (sentStatuses.length > 0) {
-            sentStatuses[sentStatuses.length - 1].classList.add('last-sent-status');
+            // Con column-reverse y el DOM invertido, el primer elemento (índice 0) es el más reciente.
+            sentStatuses[0].classList.add('last-sent-status');
         }
     };
     window.updateLastSentStatus();
@@ -266,7 +276,9 @@
             }));
             input.value = '';
         } else {
-            console.error('WebSocket not connected');
+            console.warn('WebSocket reconnecting... please wait');
+            // No borramos el texto para que el usuario no lo pierda
+            // La reconexión automática en background lo levantará pronto.
         }
     };
 

@@ -45,13 +45,27 @@ def perfil_detalle(request, username):
     from chat.services import ChatService
     total_chat_unread = ChatService.get_unread_count(request.user)
 
+    # AMIGOS MUTUOS (Seguidores mutuos)
+    todos_amigos_mutuos = Usuarios.objects.filter(
+        seguidores__usuario=usuario,
+        siguiendo__seguido=usuario
+    ).distinct()
+    amigos_mutuos = todos_amigos_mutuos[:9]
+    total_amigos = todos_amigos_mutuos.count()
+
+    # TODOS LOS SEGUIDORES
+    todos_seguidores = Usuarios.objects.filter(siguiendo__seguido=usuario).distinct()
+
     # 3. EXTRA CONTEXT PARA LAYOUT EXPANDIDO
     extra_context.update({
-        'main_col_class': 'col-lg-9',  # Expande columna central
+        'main_col_class': 'col-lg-10 mx-auto',  # Feed takes wider space for the split layout internally
         'hide_right_sidebar': True,    # Oculta sidebar derecho
         'feed_full_width': True,       # Quita restricción max-width
-        'suggestions': suggestions,    # Sugerencias para el sidebar izquierdo
         'total_chat_unread': total_chat_unread, # Badge mensajes
+        'amigos_mutuos': amigos_mutuos,
+        'total_amigos': total_amigos,
+        'todos_amigos_mutuos': todos_amigos_mutuos,
+        'todos_seguidores': todos_seguidores,
     })
 
     # 4. USAR SERVICIO (Maneja paginación y reacciones)

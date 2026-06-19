@@ -35,11 +35,13 @@ class Chat(models.Model):
 class Mensaje(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="mensajes")
     user = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name="mensajes_enviados")
+    story = models.ForeignKey('stories.Story', on_delete=models.SET_NULL, null=True, blank=True, related_name='respuestas')
     fecha_mensaje = models.DateTimeField(auto_now_add=True)
     descripcion = models.TextField(null=True, blank=True)
     imagen = models.ImageField(upload_to='chat_images/', null=True, blank=True)
     es_leido = models.BooleanField(default=False)
-    tipo = models.CharField(max_length=50, default='texto') # 'texto' o 'imagen'
+    es_recibido = models.BooleanField(default=False)
+    tipo = models.CharField(max_length=50, default='texto') # 'texto' o 'imagen' o 'story_reply'
 
     class Meta:
         db_table = 'mensaje'

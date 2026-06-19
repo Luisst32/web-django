@@ -8,4 +8,5 @@ urlpatterns = [
     path('mark_read/<int:user_id>/', views.mark_messages_read, name='mark_messages_read'),
     path('update_check_time/', views.update_messages_check_time, name='update_messages_check_time'),
     path('upload_image/', views.upload_chat_image, name='upload_chat_image'),
+    path('responder-historia/', views.responder_historia, name='responder_historia'),
 ]

@@ -73,6 +73,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 )
                 return
 
+            if action == 'message_received':
+                msg_id = data.get('message_id')
+                if msg_id:
+                    await self.mark_message_as_received(msg_id)
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            'type': 'chat_delivered_receipt',
+                            'message_id': msg_id,
+                            'user_id': user.id
+                        }
+                    )
+                return
+
             # Default action: message
             message = data.get('message', '').strip()
             if not message:
@@ -120,6 +134,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
 
     async def chat_read_receipt(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def chat_delivered_receipt(self, event):
         await self.send(text_data=json.dumps(event))
 
     async def chat_user_status(self, event):
@@ -174,6 +191,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Marcar como leídos los mensajes que NO son del usuario actual
         count = Mensaje.objects.filter(chat=chat, es_leido=False).exclude(user=user).update(es_leido=True)
         print(f"DEBUG: Updated {count} messages as read for user {user.id} in chat {self.chat_id}")
+
+    @database_sync_to_async
+    def mark_message_as_received(self, msg_id):
+        Mensaje.objects.filter(id=msg_id).update(es_recibido=True)
 
 class PresenceConsumer(AsyncWebsocketConsumer):
     async def connect(self):

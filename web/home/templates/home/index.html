@@ -539,13 +539,13 @@
                 </div>
 
                 <!-- Messages -->
-                <div class="me-2 position-relative" style="z-index: 10;">
+                <div class="me-2" style="position: relative; display: inline-block;">
                     <button class="btn-nav-icon" title="Mensajes" onclick="toggleMessagePanel()">
                         <i class="fas fa-comment-dots"></i>
                     </button>
                     <span id="chat-badge"
-                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {% if total_chat_unread == 0 %}d-none{% endif %}"
-                        style="font-size: 0.6rem; padding: 0.35em 0.5em; pointer-events: none;">
+                        class="badge rounded-pill bg-danger {% if total_chat_unread == 0 %}d-none{% endif %}"
+                        style="position: absolute; top: -4px; right: -6px; font-size: 0.6rem; padding: 0.3em 0.5em; pointer-events: none; min-width: 18px; text-align: center; z-index: 20;">
                         {{ total_chat_unread }}
                     </span>
                 </div>
@@ -607,6 +607,8 @@
     <div class="container mt-4 mb-4" style="max-width: 1400px;">
         <div class="row">
             <!-- COLUMNA IZQUIERDA (Menú + Sugerencias) -->
+            {% block left_sidebar %}
+            {% if not hide_left_sidebar %}
             <!-- COLUMNA IZQUIERDA (Menú + Sugerencias) -->
             <div class="col-lg-3 d-none d-lg-block ps-0"
                 style="position: sticky; top: 100px; height: calc(100vh - 100px); overflow-y: visible; scrollbar-width: none; z-index: 1000;">
@@ -627,7 +629,7 @@
 
                     <!-- Contenido del Sidebar con Borde -->
                     <div class="bg-white h-100"
-                        style="border-right: 1px solid #e0e0e0; min-height: calc(100vh - 100px); position: relative; margin-left: -100px; width: calc(100% + 100px); padding-left: 100px; margin-top: -50px; padding-top: 50px;">
+                        style="border-right: 1px solid #e0e0e0; min-height: calc(100vh - 100px); position: relative; margin-left: -100vw; width: calc(100% + 100vw); padding-left: 100vw; margin-top: -50px; padding-top: 50px;">
                         <!-- MENÚ DE NAVEGACIÓN -->
                         <div class="d-flex flex-column gap-1 mb-3 pt-2">
                             <a href="{% url 'index' %}" class="nav-link d-flex align-items-center gap-3 fs-5 px-3">
@@ -661,14 +663,19 @@
                     const btnContainer = document.getElementById('toggle-btn-container'); // Get Button Container
                     const menu = document.getElementById('sidebar-menu');
                     const suggestions = document.getElementById('sidebar-suggestions');
-                    const currentTransform = container.style.transform;
+                    
+                    const isHidden = container.getAttribute('data-hidden') === 'true';
 
-                    // Si está en 0 (visible) -> Ocultar (-100%)
-                    if (currentTransform.includes('translateX(0') || currentTransform === '') {
-                        // Ocultar MÁS ALLÁ del borde (-100% - 50px) para matar el "bordecito" blanco
-                        container.style.transform = 'translateX(calc(-100% - 50px))';
-                        // Compensar el botón hacia la derecha para que se quede quieto/visible (-20 - 50 = -70)
-                        if (btnContainer) btnContainer.style.right = '-70px';
+                    if (!isHidden) {
+                        const colRect = container.closest('.col-lg-3').getBoundingClientRect();
+                        const hideDistance = colRect.right;
+
+                        // Ocultar MÁS ALLÁ del borde (-hideDistance)
+                        container.style.transform = `translateX(-${hideDistance}px)`;
+                        // Compensar el botón hacia la derecha para que se quede visible
+                        if (btnContainer) btnContainer.style.right = '-50px';
+
+                        container.setAttribute('data-hidden', 'true');
 
                         setTimeout(() => {
                             if (menu) menu.style.display = 'none';
@@ -676,7 +683,7 @@
                         }, 500);
 
                     } else {
-                        // Si está oculto -> Mostrar (0)
+                        // Mostrar
                         if (menu) menu.style.display = 'flex';
                         if (suggestions) suggestions.style.display = 'block';
 
@@ -685,9 +692,23 @@
                             container.style.transform = 'translateX(0)';
                             if (btnContainer) btnContainer.style.right = '-20px'; // Volver a posición original
                         }, 10);
+                        
+                        container.setAttribute('data-hidden', 'false');
                     }
                 }
+
+                // Asegurar que el sidebar se mantenga oculto correctamente si se redimensiona la ventana
+                window.addEventListener('resize', () => {
+                    const container = document.getElementById('sidebar-container');
+                    if (container && container.getAttribute('data-hidden') === 'true') {
+                        const colRect = container.closest('.col-lg-3').getBoundingClientRect();
+                        const hideDistance = colRect.right;
+                        container.style.transform = `translateX(-${hideDistance}px)`;
+                    }
+                });
             </script>
+            {% endif %}
+            {% endblock %}
 
             <!-- COLUMNA CENTRAL (Feed) -->
             <div id="main-content-col" class="{{ main_col_class|default:'col-lg-6' }}">
@@ -705,6 +726,9 @@
                     </a>
                 </div>
                 {% endif %}
+
+                <!-- HISTORIAS DE USUARIOS -->
+                {% include 'stories/stories_feed.html' %}
 
                 <!-- COMPOSER (Home Feed) -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4 mx-auto" style="max-width: 600px; background: #fff;">
@@ -755,9 +779,9 @@
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-body p-3 text-center">
                             <div class="spinner-border text-primary spinner-border-sm" role="status">
-                                <span class="visually-hidden">Cargando análisis...</span>
+                                <span class="visually-hidden">Cargando panel IA...</span>
                             </div>
-                            <small class="text-muted ms-2">Analizando...</small>
+                            <small class="text-muted ms-2">Cargando...</small>
                         </div>
                     </div>
                 </div>

@@ -6,7 +6,7 @@
 {% endif %}
 
 {% for mensaje in mensajes %}
-<div class="message mb-2 d-flex {% if mensaje.user == request.user %}justify-content-end{% endif %}">
+<div class="message mb-2 d-flex {% if mensaje.user == request.user %}justify-content-end{% endif %} w-100">
     <div class="message-bubble p-2 rounded-3 shadow-sm"
         style="max-width: 80%; {% if mensaje.tipo == 'imagen' %}background: transparent; box-shadow: none !important;{% elif mensaje.user == request.user %}background: #0084ff; color: white;{% else %}background: white; color: #1c1e21;{% endif %}">
         {% if mensaje.tipo == 'imagen' %}
@@ -20,9 +20,11 @@
         <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.7rem; opacity: 0.9;">
             {% if mensaje.user.id == request.user.id %}
             <div class="message-status status-sent me-2"
-                style="{% if mensaje.es_leido %}color: {% if mensaje.imagen %}#0084ff{% else %}#d1f2ff{% endif %}; font-weight: bold;{% else %}color: {% if mensaje.imagen %}#666{% else %}#e0e0e0{% endif %};{% endif %}">
+                style="{% if mensaje.es_leido %}color: {% if mensaje.imagen %}#0084ff{% else %}#d1f2ff{% endif %}; font-weight: bold;{% elif mensaje.es_recibido %}color: {% if mensaje.imagen %}#666{% else %}#a0a0a0{% endif %};{% else %}color: {% if mensaje.imagen %}#666{% else %}#e0e0e0{% endif %};{% endif %}">
                 {% if mensaje.es_leido %}
                 <i class="fas fa-check-double"></i> Visto
+                {% elif mensaje.es_recibido %}
+                <i class="fas fa-check-double"></i> Recibido
                 {% else %}
                 <i class="fas fa-check"></i> Enviado
                 {% endif %}

@@ -1,0 +1,1882 @@
+{% load static %}
+
+<!-- Carrusel de Historias -->
+<div class="stories-wrapper mb-4 mx-auto" style="max-width: 600px;">
+    <div class="stories-container d-flex gap-3 pb-2 pt-1 overflow-x-auto align-items-center" style="scrollbar-width: none; -ms-overflow-style: none;">
+        
+        <!-- Tarjeta: Crear Historia -->
+        <div class="story-card add-story-card flex-shrink-0" onclick="abrirCrearStoryModal()" style="width: 105px; height: 165px; border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid rgba(0,0,0,0.06); display: flex; flex-direction: column; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); transition: transform 0.2s ease;">
+            <div class="add-story-avatar-container flex-grow-1 d-flex align-items-center justify-content-center bg-light overflow-hidden">
+                {% if user.foto_perfil %}
+                <img src="{{ user.foto_perfil.url }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+                {% else %}
+                <div class="w-100 h-100 bg-secondary-subtle d-flex align-items-center justify-content-center">
+                    <i class="fas fa-user text-muted fs-3"></i>
+                </div>
+                {% endif %}
+            </div>
+            <div class="add-story-info bg-white text-center pb-2 pt-3 position-relative" style="height: 50px;">
+                <div class="add-story-btn position-absolute top-0 start-50 translate-middle rounded-circle bg-primary border border-2 border-white d-flex align-items-center justify-content-center shadow-sm" style="width: 30px; height: 30px;">
+                    <i class="fas fa-plus text-white" style="font-size: 0.85rem;"></i>
+                </div>
+                <span class="fw-semibold text-dark" style="font-size: 0.72rem; display: block; margin-top: -2px;">Crear historia</span>
+            </div>
+        </div>
+
+        <!-- Lista de Historias de otros Usuarios -->
+        {% for item in stories_grouped %}
+        <div class="story-card active-story-card flex-shrink-0 position-relative" onclick="abrirVisorStories('{{ item.usuario.id }}')" style="width: 105px; height: 165px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); transition: transform 0.2s ease;">
+            <!-- Portada de la historia: imagen o fondo de color -->
+            {% if item.latest_story.imagen %}
+            <img src="{{ item.latest_story.imagen.url }}" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85); transition: transform 0.3s ease;">
+            {% else %}
+            <div class="w-100 h-100 d-flex align-items-center justify-content-center px-2 py-3" style="background: {{ item.latest_story.color_fondo|default:'#4f46e5' }}; filter: brightness(0.85); transition: transform 0.3s ease;">
+                <span class="text-white text-center fw-medium small" style="display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; font-size: 0.7rem; line-height: 1.2;">
+                    {{ item.latest_story.texto }}
+                </span>
+            </div>
+            {% endif %}
+
+            <!-- Avatar del usuario con anillo flotando arriba-izquierda (azul si no visto, gris si visto) -->
+            <div class="position-absolute top-0 start-0 m-2 rounded-circle overflow-hidden shadow-sm" style="width: 36px; height: 36px; border: 2.5px solid {% if item.unseen_count > 0 %}#0d6efd{% else %}#ced4da{% endif %}; padding: 1px; background: white; z-index: 5;">
+                {% if item.usuario.foto_perfil %}
+                <img src="{{ item.usuario.foto_perfil.url }}" class="rounded-circle w-100 h-100" style="object-fit: cover;">
+                {% else %}
+                <div class="w-100 h-100 bg-secondary-subtle rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="fas fa-user text-muted" style="font-size: 0.7rem;"></i>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Nombre de usuario abajo overlay -->
+            <div class="position-absolute bottom-0 start-0 end-0 p-2 text-start" style="background: linear-gradient(transparent, rgba(0,0,0,0.8)); z-index: 5;">
+                <span class="text-white fw-bold d-block text-truncate" style="font-size: 0.72rem; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                    {{ item.usuario.first_name|default:item.usuario.username }}
+                </span>
+            </div>
+        </div>
+        {% empty %}
+        <!-- Si no hay historias, solo mostramos la de Crear Historia -->
+        {% endfor %}
+
+    </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- MODAL: CREAR HISTORIA                      -->
+<!-- ========================================== -->
+<div id="crear-story-modal" class="modal-overlay-custom" style="display: none; background: rgba(0,0,0,0.85); z-index: 99999; backdrop-filter: blur(8px);">
+    <div class="story-phone-container" id="story-creator-phone-container" style="position: relative; overflow: hidden; background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 4px solid #333;">
+        
+        <!-- BOTÓN CERRAR GENERAL (ARRIBA DERECHA) -->
+        <button class="btn text-white bg-transparent border-0 fs-3 p-0" onclick="cerrarCrearStoryModal()" style="position: absolute; top: 15px; right: 15px; z-index: 150; text-shadow: 0 1px 3px rgba(0,0,0,0.5); line-height: 1;">&times;</button>
+
+        <!-- FORMULARIO DE ENVÍO -->
+        <form id="form-crear-story" enctype="multipart/form-data" class="w-100 h-100 d-flex flex-column justify-content-between">
+            {% csrf_token %}
+            <input type="hidden" name="tipo_historia" id="input-tipo-historia" value="">
+            <input type="hidden" name="color_fondo" id="input-color-fondo" value="linear-gradient(135deg, #6366f1 0%, #a855f7 100%)">
+            
+            <!-- Entrada de archivo oculta para la imagen de la historia -->
+            <input type="file" name="imagen" id="story-file" accept="image/*" style="display: none;">
+
+            <!-- Entrada de archivo oculta para la música -->
+            <input type="file" name="audio" id="story-audio-file" accept="audio/*" style="display: none;">
+
+            <!-- PANTALLA 1: SELECCIÓN INICIAL -->
+            <div id="creator-screen-selection" class="w-100 h-100 d-flex flex-column align-items-center justify-content-center px-4" style="z-index: 100;">
+                <h4 class="text-white fw-bold mb-4 text-center" style="font-size: 1.25rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Crear historia</h4>
+                
+                <div class="d-flex gap-3 justify-content-center w-100">
+                    <!-- Caja Foto/Imagen -->
+                    <div class="creator-select-card" onclick="iniciarCreador('imagen')">
+                        <div class="select-card-icon-wrapper photo-gradient">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <span class="fw-bold text-white small">Foto / Imagen</span>
+                        <span class="text-white-50 text-center" style="font-size: 0.65rem; line-height: 1.2; margin-top: 4px;">Sube una foto y añade música</span>
+                    </div>
+
+                    <!-- Caja Texto Puro -->
+                    <div class="creator-select-card" onclick="iniciarCreador('texto')">
+                        <div class="select-card-icon-wrapper text-gradient">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <span class="fw-bold text-white small">Texto Puro</span>
+                        <span class="text-white-50 text-center" style="font-size: 0.65rem; line-height: 1.2; margin-top: 4px;">Escribe un estado con fondo de color</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANTALLA 2: LIENZO DE EDICIÓN -->
+            <div id="creator-screen-canvas" class="w-100 h-100 position-absolute top-0 start-0 d-none flex-column justify-content-between" style="z-index: 110;">
+                
+                <!-- Barra superior de herramientas del editor celular -->
+                <div class="d-flex align-items-center justify-content-between ps-3 pe-5 py-2 text-white" style="background: linear-gradient(rgba(0,0,0,0.6), transparent); z-index: 130; width: 100%;">
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Botón de regresar al selector -->
+                        <button type="button" class="btn text-white p-0 bg-transparent border-0" onclick="regresarAlSelector()" style="font-size: 1.1rem; line-height: 1;">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <span class="small fw-semibold" id="creator-mode-title">Editor</span>
+                    </div>
+
+                    <!-- Botones flotantes de stickers/música/paleta de colores -->
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Ciclar color (Solo visible en modo texto) -->
+                        <button type="button" class="btn text-white p-1 bg-transparent border-0" id="btn-cycle-color" style="display: none;" onclick="ciclarColorBackground()">
+                            <i class="fas fa-palette fs-5" style="text-shadow: 0 1px 3px rgba(0,0,0,0.5);"></i>
+                        </button>
+                        
+                        <!-- Añadir música (Solo visible en modo imagen) -->
+                        <button type="button" class="btn text-white p-1 bg-transparent border-0" id="btn-add-music-sticker" onclick="toggleMusicPanel()">
+                            <i class="fas fa-music fs-5" style="text-shadow: 0 1px 3px rgba(0,0,0,0.5);"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cuerpo Central del Lienzo -->
+                <div class="flex-grow-1 w-100 h-100 position-relative d-flex align-items-center justify-content-center" id="creator-canvas-container" style="overflow: hidden;">
+                    <!-- Imagen de fondo (Contain sin zoom absurdo, igual que historia creada) -->
+                    <img id="creator-img-preview" class="w-100 h-100 position-absolute top-0 start-0" style="object-fit: contain; background-color: #0b0b0b; display: none; z-index: 10;">
+                    
+                    <!-- Fondo de color para texto -->
+                    <div id="creator-text-background" class="w-100 h-100 position-absolute top-0 start-0" style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); display: none; z-index: 10;"></div>
+
+                    <!-- Editor de texto en el centro (Modo Texto) -->
+                    <div id="creator-text-only-container" class="position-relative w-100 px-4 text-center" style="display: none; z-index: 20;">
+                        <textarea name="texto_puro" id="story-text-only" class="form-control bg-transparent text-white border-0 text-center fw-bold fs-3" placeholder="Escribe aquí tu historia..." style="resize: none; box-shadow: none; text-shadow: 0 2px 8px rgba(0,0,0,0.4); min-height: 150px; line-height: 1.3; overflow: hidden; padding: 0;"></textarea>
+                    </div>
+
+                    <!-- Overlay de pie de foto en el fondo (Modo Imagen) -->
+                    <div id="creator-caption-container" class="position-absolute bottom-0 start-0 end-0 p-3 text-center" style="display: none; z-index: 20; background: linear-gradient(transparent, rgba(0,0,0,0.85));">
+                        <input type="text" name="texto" id="story-caption" class="form-control bg-transparent text-white border-0 text-center small fw-semibold" placeholder="Añade un pie de foto..." style="box-shadow: none; text-shadow: 0 1px 3px rgba(0,0,0,0.5); font-size: 0.9rem; padding: 5px 0;">
+                    </div>
+
+                    <!-- BOTTOM SHEET DE MÚSICA (Selector) -->
+                    <div id="sheet-backdrop-stories" class="sheet-backdrop" style="border-radius: 16px;"></div>
+                    <div id="dropdown-library-stories" class="dropdown-menu-custom">
+                        <div class="d-flex justify-content-center pt-2 pb-3" onclick="cerrarSelectorMusica()" style="cursor: pointer;">
+                            <div class="sheet-handle"></div>
+                        </div>
+                        <input type="text" id="search-library-stories" placeholder="Buscar música..." class="form-control form-control-sm mb-2 rounded-pill bg-light border-0 px-3">
+                        <ul id="library-list-stories" class="list-unstyled mb-0" style="overflow-y: auto; flex: 1;"></ul>
+                        <div class="mt-2 text-center border-top pt-2">
+                            <button type="button" class="btn btn-link text-decoration-none btn-sm" onclick="triggerMusicUpload()"><i class="fas fa-upload me-1"></i> Subir archivo nuevo</button>
+                        </div>
+                    </div>
+
+                    <!-- WIDGET DE MÚSICA SUPERPUESTO (ESTILO INSTAGRAM) -->
+                    <div id="music-sticker-widget" class="music-instagram-sticker" style="display: none;">
+                        <!-- Botón de eliminar sticker arriba a la derecha -->
+                        <button type="button" class="sticker-delete-btn" onclick="eliminarMusicaCargada(event)" title="Eliminar música">
+                            <i class="fas fa-times"></i>
+                        </button>
+
+                        <!-- PANTALLA B: TIMELINE Y CONTROL (Solo visible cuando se carga música) -->
+                        <div id="sticker-music-controls-sec" style="display: none;">
+                            <!-- Handle bar -->
+                            <div style="width: 40px; height: 4px; background: rgba(255, 255, 255, 0.2); margin: 0 auto 20px auto; border-radius: 10px;"></div>
+
+                            <!-- Cover & Info -->
+                            <div class="text-center mb-3">
+                                <div class="album-art-placeholder mx-auto mb-2" style="width: 60px; height: 60px; background: #222; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);">
+                                    <i class="fas fa-music"></i>
+                                </div>
+                                <h6 id="music-sticker-filename" class="fw-bold mb-0 text-white" style="font-size: 0.95rem;">Nombre Canción</h6>
+                                <small id="music-start-sec-lbl" class="text-white fw-bold fs-5 d-block mt-1">0:00</small>
+                            </div>
+
+                            <!-- Controls Row: 30s - Slider - Play -->
+                            <div class="d-flex align-items-center gap-3 mb-4 px-1">
+                                <button type="button" class="btn-circle-small text-white border border-secondary" style="background: #222; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; pointer-events: none;">30</button>
+
+                                <!-- Waveform Slider -->
+                                <div class="waveform-container flex-grow-1 position-relative" style="height: 40px; display: flex; align-items: center;">
+                                    <div class="waveform-track-line" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 100%; height: 2px; background: rgba(255, 255, 255, 0.2);"></div>
+                                    <div id="progress-fill" class="waveform-active" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 32px; width: 25%; background: linear-gradient(90deg, #ff9a44, #fc6076, #b95ce4); border-radius: 6px; box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); pointer-events: none;"></div>
+                                    <input type="range" class="form-range editor-range-input" id="story-audio-start-slider" value="0" min="0" max="100" step="0.5" oninput="onAudioSliderInput(this.value)" onchange="onAudioSliderChange(this.value)" style="-webkit-appearance: none; width: 100%; background: transparent; position: absolute; top: 0; left: 0; height: 40px; margin: 0; z-index: 10; cursor: grab;">
+                                </div>
+
+                                <button type="button" id="sticker-play-pause" class="btn-circle-small bg-white text-dark border-0" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                    <i class="fas fa-pause" id="sticker-play-icon"></i>
+                                </button>
+                            </div>
+
+                            <!-- Bottom Actions -->
+                            <div class="d-flex justify-content-between align-items-center w-100 mt-2 px-2">
+                                <button type="button" onclick="regresarAlSelectorMusica()" class="btn btn-link text-white text-decoration-none fw-medium p-0" style="font-size: 0.85rem;">Cancelar</button>
+                                <span class="text-white fw-bold" style="font-size: 0.9rem;">Audio</span>
+                                <button type="button" onclick="toggleMusicPanel()" class="btn btn-link text-white text-decoration-none fw-medium p-0" style="font-size: 0.85rem;">Listo</button>
+                            </div>
+
+                            <!-- Hidden inputs needed for form -->
+                            <input type="hidden" name="audio_inicio" id="story-audio-start" value="0">
+                            <input type="hidden" name="musica_id" id="story-audio-musica-id" value="">
+                            <input type="hidden" name="duracion" id="story-duration" value="30">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas de error/éxito en la parte inferior del editor -->
+                <div class="position-absolute px-3 w-100" style="bottom: 75px; z-index: 140;">
+                    <div id="story-errors" class="alert alert-danger d-none small py-2 px-3 shadow" style="border-radius: 10px; font-size: 0.78rem;"></div>
+                    <div id="story-success" class="alert alert-success d-none small py-2 px-3 shadow" style="border-radius: 10px; font-size: 0.78rem;"></div>
+                </div>
+
+                <!-- Barra inferior de acciones (Publicar) -->
+                <div class="d-flex align-items-center justify-content-end px-3 py-3 text-white" style="background: linear-gradient(transparent, rgba(0,0,0,0.7)); z-index: 130; width: 100%;">
+                    <button type="submit" class="btn btn-primary btn-sm px-4 py-1.5 d-flex align-items-center gap-1.5 shadow" id="btn-submit-story" style="border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: #0d6efd; border: 0;">
+                        <span>Compartir</span>
+                        <div class="spinner-border spinner-border-sm text-light d-none" role="status" id="spinner-submit-story" style="width: 0.8rem; height: 0.8rem;"></div>
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- VISOR DE HISTORIAS (FORMATO CELULAR)        -->
+<!-- ========================================== -->
+<div id="story-viewer-modal" class="story-viewer-overlay" style="display: none;" onclick="manejarFondoVisorClick(event)">
+    
+    <!-- Panel Lateral Izquierdo (Estilo Facebook/Milanesa) -->
+    <div class="story-viewer-sidebar d-none d-lg-flex flex-column bg-white border-end h-100 position-absolute start-0 top-0 bottom-0 shadow-sm" style="width: 340px; z-index: 10200;">
+        <!-- Cabecera Sidebar -->
+        <div class="p-4 pb-3 border-bottom d-flex align-items-center justify-content-between">
+            <h3 class="fw-bold text-dark m-0" style="font-size: 1.4rem; letter-spacing: -0.5px;">Historias</h3>
+            <button class="btn btn-light rounded-circle border shadow-sm p-0 d-flex align-items-center justify-content-center" onclick="cerrarVisorStories()" style="width: 36px; height: 36px; color: #333;" title="Cerrar visor">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="flex-grow-1 overflow-y-auto p-3" style="scrollbar-width: thin;">
+            <!-- Tu historia -->
+            <div class="mb-4">
+                <span class="text-secondary fw-semibold small px-2 d-block mb-2" style="text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.72rem;">Tu historia</span>
+                <div class="d-flex align-items-center gap-3 p-2 rounded-3 cursor-pointer hover-bg-light" onclick="cerrarVisorStories(); abrirCrearStoryModal();">
+                    <div class="position-relative">
+                        {% if user.foto_perfil %}
+                        <img src="{{ user.foto_perfil.url }}" class="rounded-circle" style="width: 44px; height: 44px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-secondary-subtle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="fas fa-user text-muted"></i>
+                        </div>
+                        {% endif %}
+                        <div class="position-absolute bottom-0 end-0 rounded-circle bg-primary border border-2 border-white d-flex align-items-center justify-content-center" style="width: 18px; height: 18px;">
+                            <i class="fas fa-plus text-white" style="font-size: 0.55rem;"></i>
+                        </div>
+                    </div>
+                    <div class="text-start">
+                        <span class="fw-semibold d-block text-dark" style="font-size: 0.85rem;">Crear una historia</span>
+                        <span class="text-muted" style="font-size: 0.72rem;">Comparte fotos o texto</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Todas las historias -->
+            <div>
+                <span class="text-secondary fw-semibold small px-2 d-block mb-2" style="text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.72rem;">Todas las historias</span>
+                
+                <div class="d-flex flex-column gap-1">
+                    {% for item in stories_grouped %}
+                    <div class="story-sidebar-item d-flex align-items-center gap-3 p-2 rounded-3 cursor-pointer hover-bg-light" id="sidebar-user-{{ item.usuario.id }}" onclick="seleccionarUsuarioHistoria('{{ item.usuario.id }}')">
+                        <div class="rounded-circle overflow-hidden shadow-sm" style="width: 44px; height: 44px; border: 2.5px solid {% if item.unseen_count > 0 %}#0d6efd{% else %}#ced4da{% endif %}; padding: 1px; background: white;">
+                            {% if item.usuario.foto_perfil %}
+                            <img src="{{ item.usuario.foto_perfil.url }}" class="rounded-circle w-100 h-100" style="object-fit: cover;">
+                            {% else %}
+                            <div class="w-100 h-100 bg-secondary-subtle rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="fas fa-user text-muted" style="font-size: 0.8rem;"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="text-start flex-grow-1">
+                            <span class="fw-semibold d-block text-dark" style="font-size: 0.85rem; line-height: 1.2;">{{ item.usuario.first_name|default:item.usuario.username }}</span>
+                            <span class="text-muted font-monospace" style="font-size: 0.65rem;">{{ item.count }} nuevas · {{ item.latest_story.created_at|timesince|truncatechars:15 }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Área Principal del Visor (Derecha del panel lateral en desktop) -->
+    <div class="story-viewer-main-area">
+        <!-- Botón Cerrar Global (Desktop) -->
+        <button class="viewer-close-btn-desktop d-lg-none" onclick="cerrarVisorStories()">&times;</button>
+        
+        <!-- Flecha Izquierda -->
+        <button class="story-arrow-btn arrow-left" onclick="anteriorStory(event); event.stopPropagation();">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <!-- Contenedor en Formato Celular -->
+        <div class="story-phone-container" id="story-phone-container">
+            
+            <!-- Líneas de Progreso Superiores -->
+            <div class="story-viewer-progress-wrapper d-flex p-2 gap-1" id="story-viewer-progress-container">
+                <!-- Rellenado dinámicamente en JS -->
+            </div>
+
+            <!-- Cabecera: Autor y Fecha -->
+            <div class="story-viewer-header d-flex align-items-center justify-content-between px-3 py-2 text-white">
+                <div class="d-flex align-items-center gap-2">
+                    <img id="story-viewer-avatar" src="#" class="rounded-circle border border-white" style="width: 34px; height: 34px; object-fit: cover; display: none;">
+                    <div id="story-viewer-avatar-placeholder" class="rounded-circle bg-secondary align-items-center justify-content-center" style="width: 34px; height: 34px; display: none;">
+                        <i class="fas fa-user text-white" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="d-flex flex-column text-start">
+                        <span id="story-viewer-name" class="fw-bold small text-white m-0" style="line-height: 1.2;"></span>
+                        <span id="story-viewer-time" class="text-white-50 font-monospace" style="font-size: 0.65rem;"></span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Botón Pausar/Reanudar -->
+                    <button class="btn text-white p-1 bg-transparent border-0" type="button" id="story-pause-btn" style="z-index: 105; box-shadow: none;" onclick="togglePausaStory(event)">
+                        <i class="fas fa-pause fs-5" style="text-shadow: 0 1px 3px rgba(0,0,0,0.5);" id="story-pause-icon"></i>
+                    </button>
+                    <!-- Botón Eliminar: Basurero (Solo visible para el propietario) -->
+                    <button class="btn text-white p-1 bg-transparent border-0" type="button" id="story-delete-btn" style="display: none; z-index: 105; box-shadow: none;" onclick="abrirConfirmarEliminarModal(event)">
+                        <i class="fas fa-trash-alt fs-5" style="text-shadow: 0 1px 3px rgba(0,0,0,0.5);"></i>
+                    </button>
+                    <button class="viewer-close-btn-mobile text-white bg-transparent border-0 fs-4 p-0 ms-1" onclick="cerrarVisorStories()">&times;</button>
+                </div>
+            </div>
+
+            <!-- Contenido Central de la Historia -->
+            <div class="story-viewer-content" id="story-viewer-content">
+                <!-- Cargado por AJAX dinámicamente -->
+            </div>
+
+            <!-- Etiqueta de música en la esquina inferior izquierda -->
+            <div id="story-viewer-music-label" class="position-absolute d-none align-items-center gap-2 text-white fw-semibold px-3 py-2 shadow-sm" style="bottom: 24px; left: 16px; font-size: 0.8rem; background: rgba(0,0,0,0.6); border-radius: 12px; z-index: 105; backdrop-filter: blur(4px);">
+                <i class="fas fa-music" style="font-size: 0.75rem;"></i>
+                <span id="story-viewer-music-name" class="music-name-marquee text-truncate" style="max-width: 150px;">Nombre de la canción</span>
+            </div>
+
+            <!-- Área de Clics Invisibles de Navegación Lateral (Táctil en Mobile) -->
+            <div class="story-nav-tap-left" onclick="anteriorStory(event); event.stopPropagation();"></div>
+            <div class="story-nav-tap-right" onclick="siguienteStory(event); event.stopPropagation();"></div>
+
+            <!-- Contenedor de Respuesta a Historia -->
+            <div id="story-reply-container" class="position-absolute start-0 end-0 p-3 pb-4 d-none" style="bottom: 15px; z-index: 999999 !important; background: linear-gradient(transparent, rgba(0,0,0,0.85));">
+                <form id="story-reply-form" onsubmit="enviarRespuestaHistoria(event)" class="d-flex align-items-center gap-2">
+                    <input type="text" id="story-reply-input" class="form-control rounded-pill bg-dark bg-opacity-50 text-white border-secondary border-opacity-50" placeholder="Responder a esta historia..." style="backdrop-filter: blur(5px); box-shadow: none; font-size: 0.9rem; padding-left: 20px;" autocomplete="off" onfocus="pausarHistoriaParaEscribir()" onblur="reanudarHistoriaAlSalir()">
+                    <button type="submit" id="story-reply-submit" class="btn btn-light rounded-circle border-0" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #1c1e21;">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Modal de Confirmación de Borrado Custom (Formato Celular) -->
+            <div id="delete-confirm-overlay" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center px-4" style="display: none !important; background: rgba(0,0,0,0.75); z-index: 200; backdrop-filter: blur(2px);">
+                <div class="bg-white p-4 text-center rounded-4 shadow-lg w-100" style="max-width: 290px; animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+                    <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 56px; height: 56px;">
+                        <i class="fas fa-exclamation-triangle fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2" style="font-size: 1.1rem;">¿Eliminar historia?</h5>
+                    <p class="text-muted mb-4" style="font-size: 0.82rem; line-height: 1.4;">Esta acción no se puede deshacer y tu historia desaparecerá permanentemente.</p>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-light w-50 py-2 border-0 fw-semibold text-secondary" onclick="cerrarConfirmarEliminarModal(event)" style="border-radius: 10px; font-size: 0.85rem;">Cancelar</button>
+                        <button type="button" class="btn btn-danger w-50 py-2 border-0 fw-semibold text-white" onclick="ejecutarEliminarStoryActual(event)" style="border-radius: 10px; font-size: 0.85rem;">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Flecha Derecha -->
+        <button class="story-arrow-btn arrow-right" onclick="siguienteStory(event); event.stopPropagation();">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- ESTILOS CSS                                -->
+<!-- ========================================== -->
+<style>
+    /* Efecto Hover en las Tarjetas del Carrusel */
+    .story-card:hover {
+        transform: scale(1.03);
+    }
+    .story-card:hover img {
+        transform: scale(1.05);
+    }
+
+    /* Estilos del Creador de Historias Celular Premium */
+    .creator-select-card {
+        width: 140px;
+        height: 180px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 12px;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 105;
+    }
+    .creator-select-card:hover {
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .select-card-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: white;
+        margin-bottom: 12px;
+    }
+    .photo-gradient {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .text-gradient {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    /* Sticker de música estilo Instagram */
+    .music-instagram-sticker {
+        position: absolute;
+        z-index: 30;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 16px;
+        width: 290px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22), 0 8px 10px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        top: 35%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: stickerPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes stickerPop {
+        0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    .sticker-delete-btn {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        width: 26px;
+        height: 26px;
+        background: #e11d48;
+        border: 2px solid white;
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        transition: transform 0.2s;
+        padding: 0;
+        z-index: 35;
+    }
+    .sticker-delete-btn:hover {
+        transform: scale(1.15);
+        background: #be123c;
+    }
+
+    .music-disc-animation {
+        animation: rotateDisc 3s linear infinite;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    @keyframes rotateDisc {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .music-sticker-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1f2937;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
+    }
+
+    .music-sticker-subtitle {
+        font-size: 0.65rem;
+        color: #6b7280;
+        display: block;
+        text-align: left;
+    }
+
+    .editor-range-input::-webkit-slider-runnable-track {
+        background: transparent;
+        height: 40px;
+        border: none;
+    }
+
+    .editor-range-input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        background: #fff;
+        border-radius: 4px;
+        width: 16px;
+        height: 32px;
+        margin-top: 4px;
+        cursor: grab;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    .music-instagram-sticker {
+        transition: all 0.3s ease;
+    }
+    .music-instagram-sticker.dark-mode {
+        background: #121212 !important;
+        padding: 20px !important;
+        border-radius: 20px !important;
+        color: white !important;
+    }
+
+    /* Modal Overlay Común */
+    .modal-overlay-custom {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 99999 !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-container-custom {
+        background: white;
+        width: 92%;
+        max-width: 480px;
+        border-radius: 16px;
+        position: relative;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow: hidden;
+    }
+
+    @keyframes modalFadeIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .btn-close-custom {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        border: none;
+        background: transparent;
+        font-size: 1.8rem;
+        color: #718096;
+        cursor: pointer;
+        z-index: 10;
+        transition: color 0.2s ease;
+    }
+    .btn-close-custom:hover {
+        color: #1a202c;
+    }
+
+    /* Selector de pestañas */
+    .creator-mode-active {
+        overflow: hidden !important;
+    }
+
+    /* Bottom Sheet Styles */
+    .dropdown-menu-custom {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60%;
+        max-width: 100%;
+        background: #fff;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        display: none;
+    }
+    .dropdown-menu-custom.active {
+        transform: translateY(0);
+    }
+    .sheet-handle {
+        width: 40px;
+        height: 5px;
+        background: #e0e0e0;
+        border-radius: 10px;
+    }
+    .sheet-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 90;
+        display: none;
+        backdrop-filter: blur(1px);
+    }
+    #library-list-stories li {
+        padding: 15px;
+        border-bottom: 1px solid #f8f8f8;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+    #library-list-stories li:hover {
+        background: #f0f0f0;
+        border-radius: 12px;
+    }
+
+    .btn-tab-active {
+        background-color: white !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        color: #0d6efd !important;
+    }
+
+    /* Preset de círculos de color */
+    .color-preset-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: transform 0.2s ease;
+    }
+    .color-preset-circle:hover {
+        transform: scale(1.15);
+    }
+    .color-preset-circle.active {
+        border-color: #000;
+        transform: scale(1.15);
+    }
+
+    /* Vista previa interna */
+    .shadow-inner {
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    /* ========================================== */
+    /* ESTILOS DEL VISOR (FORMATO CELULAR)        */
+    /* ========================================== */
+    .story-viewer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.94);
+        backdrop-filter: blur(8px);
+        z-index: 99999 !important;
+        display: flex;
+        user-select: none;
+    }
+
+    /* Panel lateral de historias */
+    .story-viewer-sidebar {
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        background-color: #ffffff;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+
+    .hover-bg-light:hover {
+        background-color: #f3f4f6;
+    }
+
+    .story-sidebar-item {
+        transition: background-color 0.2s ease;
+    }
+
+    .story-sidebar-item.bg-light {
+        background-color: #f3f4f6 !important;
+    }
+
+    /* Área principal del visor (derecha) */
+    .story-viewer-main-area {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        height: 100%;
+        background-color: transparent;
+        gap: 30px;
+    }
+
+    @media (min-width: 992px) {
+        .story-viewer-main-area {
+            margin-left: 340px;
+            width: calc(100% - 340px);
+        }
+    }
+
+    /* Contenedor formato Celular */
+    .story-phone-container {
+        width: 375px;
+        height: 667px; /* Aspecto celular 9:16 clásico */
+        max-width: 92vw;
+        max-height: 92vh;
+        background-color: #000;
+        position: relative;
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* Ajustes para pantalla móvil pura */
+    @media (max-width: 991px) {
+        .story-viewer-main-area {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .story-phone-container {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            border-radius: 0;
+        }
+        .viewer-close-btn-desktop {
+            display: none !important;
+        }
+        .story-arrow-btn {
+            display: none !important;
+        }
+    }
+
+    .story-viewer-progress-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 102;
+    }
+
+    .story-viewer-header {
+        position: absolute;
+        top: 15px;
+        left: 0;
+        right: 0;
+        z-index: 101;
+        background: linear-gradient(rgba(0,0,0,0.6), transparent);
+    }
+
+    .story-viewer-content {
+        flex-grow: 1;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    /* Botón Cerrar Desktop */
+    .viewer-close-btn-desktop {
+        position: absolute;
+        top: 25px;
+        right: 30px;
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 2.5rem;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        z-index: 10102;
+    }
+    .viewer-close-btn-desktop:hover {
+        opacity: 1;
+    }
+
+    /* Botones de navegación transparentes laterales (Mobile) */
+    .story-nav-tap-left, .story-nav-tap-right {
+        position: absolute;
+        top: 60px;
+        bottom: 0;
+        width: 25%;
+        z-index: 99;
+        cursor: pointer;
+    }
+    .story-nav-tap-left { left: 0; }
+    .story-nav-tap-right { right: 0; }
+
+    /* Flechas Desktop flotantes a los lados (ahora no clipadas por overflow hidden) */
+    .story-arrow-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.15);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        z-index: 10101;
+        font-size: 1.2rem;
+    }
+    .story-arrow-btn:hover {
+        background: rgba(255,255,255,0.3);
+        transform: scale(1.1);
+    }
+</style>
+
+
+<!-- ========================================== -->
+<!-- JAVASCRIPT LOGIC                           -->
+<!-- ========================================== -->
+<script>
+    // --- Lógica del Creador Celular de Historias ---
+    let creatorPreviewAudio = null;
+    const presetsGradientes = [
+        "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+        "linear-gradient(135deg, #f43f5e 0%, #fb923c 100%)",
+        "linear-gradient(135deg, #0ea5e9 0%, #22c55e 100%)",
+        "linear-gradient(135deg, #1e1b4b 0%, #311042 100%)",
+        "linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)",
+        "#000000"
+    ];
+    let activeGradientIdx = 0;
+
+    function abrirCrearStoryModal() {
+        $('#crear-story-modal').css('display', 'flex').fadeIn('fast');
+        
+        // Resetear a la pantalla de selección inicial
+        $('#form-crear-story')[0].reset();
+        $('#creator-screen-canvas').addClass('d-none').removeClass('d-flex');
+        $('#creator-screen-selection').removeClass('d-none').addClass('d-flex');
+        $('#creator-img-preview').hide().attr('src', '');
+        $('#creator-text-background').hide();
+        $('#creator-text-only-container').hide();
+        $('#creator-caption-container').hide();
+        
+        // Resetear musica completamente
+        eliminarMusicaCargada();
+        
+        // Cargar biblioteca de música
+        cargarBibliotecaMusica();
+        
+        $('#story-errors').addClass('d-none').text('');
+        $('#story-success').addClass('d-none').text('');
+    }
+
+    function cerrarCrearStoryModal() {
+        // Resetear musica completamente para parar la reproducción del audio
+        eliminarMusicaCargada();
+        
+        $('#crear-story-modal').fadeOut('fast');
+        $('#form-crear-story')[0].reset();
+    }
+
+    function iniciarCreador(tipo) {
+        $('#input-tipo-historia').val(tipo);
+        
+        // Ocultar selección, mostrar lienzo
+        $('#creator-screen-selection').removeClass('d-flex').addClass('d-none');
+        $('#creator-screen-canvas').removeClass('d-none').addClass('d-flex');
+        
+        if (tipo === 'imagen') {
+            $('#creator-mode-title').text('Crear historia con Foto');
+            $('#btn-cycle-color').hide();
+            $('#btn-add-music-sticker').show();
+            $('#creator-text-background').hide();
+            $('#creator-text-only-container').hide();
+            
+            // Simular clic en el input de archivo
+            document.getElementById('story-file').click();
+        } else {
+            $('#creator-mode-title').text('Crear historia de Texto');
+            $('#btn-cycle-color').show();
+            $('#btn-add-music-sticker').hide(); // Sin opcion de musica en modo texto
+            
+            // Asegurarse de que no haya musica previa cargada
+            eliminarMusicaCargada();
+            
+            // Preparar fondo de texto inicial
+            activeGradientIdx = 0;
+            const color = presetsGradientes[activeGradientIdx];
+            $('#input-color-fondo').val(color);
+            $('#creator-text-background').css('background', color).show();
+            
+            $('#creator-img-preview').hide();
+            $('#creator-caption-container').hide();
+            
+            $('#creator-text-only-container').show();
+            $('#story-text-only').val('').focus();
+        }
+    }
+
+    function regresarAlSelector() {
+        // Resetear musica completamente
+        eliminarMusicaCargada();
+        
+        // Resetear estados
+        $('#form-crear-story')[0].reset();
+        $('#creator-screen-canvas').removeClass('d-flex').addClass('d-none');
+        $('#creator-screen-selection').removeClass('d-none').addClass('d-flex');
+        
+        // Ocultar capas
+        $('#creator-img-preview').hide().attr('src', '');
+        $('#creator-text-background').hide();
+        $('#creator-text-only-container').hide();
+        $('#creator-caption-container').hide();
+        
+        $('#story-errors').addClass('d-none').text('');
+        $('#story-success').addClass('d-none').text('');
+    }
+
+    function ciclarColorBackground() {
+        activeGradientIdx = (activeGradientIdx + 1) % presetsGradientes.length;
+        const color = presetsGradientes[activeGradientIdx];
+        $('#input-color-fondo').val(color);
+        $('#creator-text-background').css('background', color);
+    }
+
+    function toggleMusicPanel() {
+        if ($('#input-tipo-historia').val() !== 'imagen') {
+            $('#story-errors').removeClass('d-none').text('Solo puedes añadir música a las historias con foto o video.');
+            return;
+        }
+        
+        if (creatorPreviewAudio) {
+            $('#music-sticker-widget').fadeToggle('fast');
+        } else {
+            abrirSelectorMusica();
+        }
+    }
+
+    function abrirSelectorMusica() {
+        $('#sheet-backdrop-stories').fadeIn();
+        $('#dropdown-library-stories').show();
+        setTimeout(() => $('#dropdown-library-stories').addClass('active'), 10);
+        
+        if ($('#library-list-stories').children().length === 0) {
+            cargarBibliotecaMusica();
+        }
+    }
+
+    function cerrarSelectorMusica() {
+        $('#dropdown-library-stories').removeClass('active');
+        setTimeout(() => {
+            $('#dropdown-library-stories').hide();
+            $('#sheet-backdrop-stories').fadeOut();
+        }, 300);
+    }
+
+    function triggerMusicUpload() {
+        document.getElementById('story-audio-file').click();
+    }
+
+    function cargarBibliotecaMusica() {
+        $.getJSON('/stories/musica/list/', function(response) {
+            if (response.success) {
+                const ul = $('#library-list-stories');
+                ul.empty();
+                response.musicas.forEach(function(m) {
+                    ul.append(`<li data-id="${m.id}" data-url="${m.url}" data-nombre="${m.nombre}" class="text-truncate"><i class="fas fa-music me-2 text-muted"></i> ${m.nombre}</li>`);
+                });
+            }
+        });
+    }
+
+    $(document).on('click', '#library-list-stories li', function() {
+        const id = $(this).data('id');
+        const url = $(this).data('url');
+        const nombre = $(this).data('nombre');
+        
+        cerrarSelectorMusica();
+        
+        $('#story-audio-musica-id').val(id);
+        const audioInput = document.getElementById('story-audio-file');
+        if (audioInput) {
+            audioInput.value = "";
+        }
+        
+        setTimeout(() => {
+            cargarAudioParaTimeline(url, nombre);
+        }, 300);
+    });
+
+    $(document).on('keyup', '#search-library-stories', function () {
+        var val = $(this).val().toLowerCase();
+        $('#library-list-stories li').filter(function () { 
+            $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1) 
+        });
+    });
+
+    function regresarAlSelectorMusica() {
+        if (creatorPreviewAudio) {
+            creatorPreviewAudio.pause();
+        }
+        
+        $('#sticker-music-controls-sec').hide();
+        $('#music-sticker-widget').hide();
+        $('#music-sticker-widget').removeClass('dark-mode');
+        abrirSelectorMusica();
+    }
+
+    function eliminarMusicaCargada(e) {
+        if (e) {
+            e.stopPropagation();
+        }
+        
+        if (creatorPreviewAudio) {
+            creatorPreviewAudio.pause();
+            creatorPreviewAudio = null;
+        }
+        
+        const audioInput = document.getElementById('story-audio-file');
+        if (audioInput) {
+            audioInput.value = "";
+        }
+        
+        $('#story-audio-select').val('');
+        $('#story-audio-musica-id').val('');
+        $('#story-audio-start').val(0);
+        const slider = $('#story-audio-start-slider');
+        if (slider.length) {
+            slider.val(0);
+        }
+        $('#music-start-sec-lbl').text('0:00');
+        
+        $('#sticker-music-controls-sec').hide();
+        $('#music-sticker-widget').fadeOut('fast', function() {
+            $(this).removeClass('dark-mode');
+        });
+    }
+
+    function cargarAudioParaTimeline(url, nombre) {
+        $('#music-sticker-filename').text(nombre.substring(0, 25) + (nombre.length > 25 ? '...' : ''));
+        
+        if (creatorPreviewAudio) {
+            creatorPreviewAudio.pause();
+            creatorPreviewAudio = null;
+        }
+        
+        creatorPreviewAudio = new Audio(url);
+        creatorPreviewAudio.addEventListener('loadedmetadata', function() {
+            const duration = creatorPreviewAudio.duration;
+            const slider = $('#story-audio-start-slider');
+            slider.attr('max', duration);
+            slider.val(0);
+            $('#story-audio-start').val(0);
+            $('#music-start-sec-lbl').text('0:00');
+            $('#progress-fill').css('left', '0%');
+            $('#sticker-play-icon').removeClass('fa-play').addClass('fa-pause');
+            
+            // Mostrar los controles y ocultar el selector en el sticker
+            $('#sticker-music-controls-sec').show();
+            $('#music-sticker-widget').addClass('dark-mode');
+            $('#music-sticker-widget').fadeIn('fast');
+            
+            // Empezar reproducción
+            creatorPreviewAudio.currentTime = 0;
+            creatorPreviewAudio.play().catch(e => console.log("Audio play blocked:", e));
+        });
+    }
+
+    // Manejar archivo de foto seleccionado
+    document.getElementById('story-file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                $('#creator-img-preview').attr('src', event.target.result).show();
+                $('#creator-caption-container').show();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // Si cancela sin seleccionar archivo, regresar al selector
+            regresarAlSelector();
+        }
+    });
+
+    // Manejar archivo de audio seleccionado
+    $('#story-audio-file').on('change', function() {
+        const file = this.files[0];
+        if (file) {
+            // Resetear el select de biblioteca y el id guardado
+            $('#story-audio-select').val('');
+            $('#story-audio-musica-id').val('');
+            
+            const objectUrl = URL.createObjectURL(file);
+            cargarAudioParaTimeline(objectUrl, file.name);
+        } else {
+            eliminarMusicaCargada();
+        }
+    });
+
+    function onAudioSliderInput(val) {
+        let s = parseInt(val);
+        let formatStr = Math.floor(s / 60) + ":" + (Math.floor(s % 60) < 10 ? "0" : "") + Math.floor(s % 60);
+        $('#music-start-sec-lbl').text(formatStr);
+        $('#story-audio-start').val(val);
+
+        if (creatorPreviewAudio && creatorPreviewAudio.duration > 0) {
+            let pct = (val / creatorPreviewAudio.duration) * 100;
+            if (pct > 75) pct = 75; // Limit so window doesn't overflow
+            $('#progress-fill').css('left', pct + '%');
+        }
+    }
+
+    function onAudioSliderChange(val) {
+        if (creatorPreviewAudio) {
+            if (!creatorPreviewAudio.paused) {
+                creatorPreviewAudio.pause();
+                $('#sticker-play-icon').removeClass('fa-pause').addClass('fa-play');
+            }
+            creatorPreviewAudio.currentTime = parseFloat(val);
+        }
+    }
+
+    $(document).on('click', '#sticker-play-pause', function () {
+        if (creatorPreviewAudio) {
+            if (creatorPreviewAudio.paused) {
+                creatorPreviewAudio.currentTime = parseFloat($('#story-audio-start').val());
+                creatorPreviewAudio.play().catch(e => console.log(e));
+                $('#sticker-play-icon').removeClass('fa-play').addClass('fa-pause');
+            } else {
+                creatorPreviewAudio.pause();
+                $('#sticker-play-icon').removeClass('fa-pause').addClass('fa-play');
+            }
+        }
+    });
+
+    // Mover modals al body para evitar solapamiento de z-index y stacking context
+    $(document).ready(function() {
+        $('#crear-story-modal').appendTo('body');
+        $('#story-viewer-modal').appendTo('body');
+    });
+
+    // Form Submit Crear Story
+    $(document).ready(function() {
+        $('#form-crear-story').on('submit', function(e) {
+            e.preventDefault();
+            
+            const tipo = $('#input-tipo-historia').val();
+            if (!tipo) {
+                $('#story-errors').removeClass('d-none').text('Por favor, selecciona un tipo de historia.');
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append('csrfmiddlewaretoken', $('input[name=csrfmiddlewaretoken]').val());
+            formData.append('tipo_historia', tipo);
+            
+            if (tipo === 'imagen') {
+                const imgFile = document.getElementById('story-file').files[0];
+                if (!imgFile) {
+                    $('#story-errors').removeClass('d-none').text('Por favor, selecciona una foto.');
+                    return;
+                }
+                formData.append('imagen', imgFile);
+                formData.append('texto', $('#story-caption').val());
+            } else {
+                const textOnly = $('#story-text-only').val().trim();
+                if (!textOnly) {
+                    $('#story-errors').removeClass('d-none').text('Por favor, escribe un texto para tu historia.');
+                    return;
+                }
+                formData.append('texto', textOnly);
+                formData.append('color_fondo', $('#input-color-fondo').val());
+            }
+
+            // Añadir campos de audio y duración si se proveen
+            const audioFile = document.getElementById('story-audio-file').files[0];
+            const musicaId = $('#story-audio-musica-id').val();
+            
+            if (audioFile) {
+                formData.append('audio', audioFile);
+                formData.append('audio_inicio', $('#story-audio-start').val());
+            } else if (musicaId) {
+                formData.append('musica_id', musicaId);
+                formData.append('audio_inicio', $('#story-audio-start').val());
+            }
+            formData.append('duracion', $('#story-duration').val());
+
+            const btnSubmit = $('#btn-submit-story');
+            const spinner = $('#spinner-submit-story');
+            const errorDiv = $('#story-errors');
+            const successDiv = $('#story-success');
+
+            btnSubmit.prop('disabled', true);
+            spinner.removeClass('d-none');
+            errorDiv.addClass('d-none').text('');
+            successDiv.addClass('d-none').text('');
+
+            $.ajax({
+                url: "{% url 'stories:crear_story' %}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    btnSubmit.prop('disabled', false);
+                    spinner.addClass('d-none');
+
+                    if (response.success) {
+                        successDiv.removeClass('d-none').text('¡Historia publicada con éxito!');
+                        if (creatorPreviewAudio) {
+                            creatorPreviewAudio.pause();
+                            creatorPreviewAudio = null;
+                        }
+                        setTimeout(function() {
+                            cerrarCrearStoryModal();
+                            location.reload(); 
+                        }, 1200);
+                    } else {
+                        errorDiv.removeClass('d-none').text(response.errors || "Error al intentar crear la historia.");
+                    }
+                },
+                error: function() {
+                    btnSubmit.prop('disabled', false);
+                    spinner.addClass('d-none');
+                    errorDiv.removeClass('d-none').text('Error de conexión al enviar la historia.');
+                }
+            });
+        });
+    });
+
+
+    // --- Lógica del Visor de Historias ---
+    const loggedInUserId = "{{ user.id }}";
+    let storiesActuales = [];
+    let idxStoryActual = 0;
+    let storyAnimationId = null;
+    let storyTimeStart = 0;
+    let duracionStory = 30000; // Por defecto 30 segundos
+    let storyIsPaused = false;
+    let tiempoTranscurridoAntesPausa = 0;
+    let usuarioActualId = null;
+    let storyAudio = null;
+
+    function seleccionarUsuarioHistoria(userId) {
+        // Desmarcar todos los items y marcar el actual en la barra lateral
+        $('.story-sidebar-item').removeClass('bg-light');
+        $(`#sidebar-user-${userId}`).addClass('bg-light');
+        
+        // Cargar historias
+        abrirVisorStories(userId);
+    }
+
+    function abrirVisorStories(userId, startStoryId = null) {
+        usuarioActualId = userId;
+        
+        // Highlight en la barra lateral
+        $('.story-sidebar-item').removeClass('bg-light');
+        $(`#sidebar-user-${userId}`).addClass('bg-light');
+
+        $.getJSON(`/stories/usuario/${userId}/`, function(data) {
+            if (data.success) {
+                storiesActuales = data.stories;
+                idxStoryActual = 0;
+
+                if (startStoryId) {
+                    const foundIdx = storiesActuales.findIndex(s => s.id == startStoryId);
+                    if (foundIdx !== -1) {
+                        idxStoryActual = foundIdx;
+                    }
+                }
+
+                // Cargar datos de usuario (usando el nombre de usuario)
+                $('#story-viewer-username').text(data.usuario.username);
+                $('#story-viewer-name').text(data.usuario.username);
+                
+                if (data.usuario.foto_perfil) {
+                    $('#story-viewer-avatar').attr('src', data.usuario.foto_perfil).css('display', 'block');
+                    $('#story-viewer-avatar-placeholder').css('display', 'none');
+                } else {
+                    $('#story-viewer-avatar').css('display', 'none');
+                    $('#story-viewer-avatar-placeholder').css('display', 'flex');
+                }
+
+                // Generar barras de progreso
+                const containerProgreso = $('#story-viewer-progress-container');
+                containerProgreso.empty();
+                storiesActuales.forEach((story, idx) => {
+                    containerProgreso.append(`
+                        <div class="story-progress-bar-wrapper flex-grow-1 rounded-pill overflow-hidden mx-1" style="height: 3px; background-color: rgba(255,255,255,0.3) !important;">
+                            <div class="story-progress-bar-fill h-100 bg-white" id="bar-progreso-${idx}" style="width: 0%;"></div>
+                        </div>
+                    `);
+                });
+
+                // Mostrar u ocultar el botón eliminar basurero y contenedor de respuesta
+                if (data.usuario.id == loggedInUserId) {
+                    $('#story-delete-btn').show();
+                    $('#story-reply-container').addClass('d-none').removeClass('d-block');
+                } else {
+                    $('#story-delete-btn').hide();
+                    $('#story-reply-container').removeClass('d-none').addClass('d-block');
+                }
+
+                // Mostrar el visor modal
+                $('#story-viewer-modal').css('display', 'flex').fadeIn('fast');
+                
+                // Reproducir primer slide
+                reproducirStory(0);
+            } else {
+                alert(data.errors || 'Error al cargar las historias.');
+            }
+        });
+    }
+
+    function reproducirStory(idx) {
+        idxStoryActual = idx;
+        const story = storiesActuales[idx];
+
+        // Marcar historia como vista en el servidor
+        $.post(`/stories/ver/${story.id}/`, {
+            csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+        });
+
+        // Cancelar animación previa
+        cancelAnimationFrame(storyAnimationId);
+
+        // Iniciar audio si existe
+        if (storyAudio) {
+            storyAudio.pause();
+            storyAudio = null;
+        }
+
+        if (story.audio_url) {
+            storyAudio = new Audio(story.audio_url);
+            storyAudio.currentTime = story.audio_inicio || 0;
+            if (!storyIsPaused) {
+                storyAudio.play().catch(e => console.log("Audio play blocked/failed:", e));
+            }
+            
+            // Mostrar nombre de música
+            if (story.audio_nombre) {
+                $('#story-viewer-music-name').text(story.audio_nombre);
+                $('#story-viewer-music-label').removeClass('d-none').addClass('d-flex');
+            } else {
+                $('#story-viewer-music-name').text('Audio');
+                $('#story-viewer-music-label').removeClass('d-none').addClass('d-flex');
+            }
+        } else {
+            $('#story-viewer-music-label').removeClass('d-flex').addClass('d-none');
+        }
+
+        // Setear duración dinámica de la historia
+        duracionStory = (story.duracion || 30) * 1000;
+
+        // Resetear anchos de barras de progreso según el índice activo
+        storiesActuales.forEach((s, i) => {
+            const bar = $(`#bar-progreso-${i}`);
+            if (i < idx) {
+                bar.css('width', '100%');
+            } else if (i > idx) {
+                bar.css('width', '0%');
+            }
+        });
+
+        // Setear hora
+        $('#story-viewer-time').text(story.fecha);
+
+        // Renderizar multimedia en la caja de contenidos
+        const contentBox = $('#story-viewer-content');
+        contentBox.empty();
+
+        if (story.imagen_url) {
+            contentBox.append(`
+                <img src="${story.imagen_url}" class="w-100 h-100 object-fit-contain" style="background-color: #0b0b0b;">
+                ${story.texto ? `
+                <div class="position-absolute bottom-0 start-0 end-0 p-4 text-center" style="background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                    <p class="text-white m-0 fs-5 fw-semibold" style="text-shadow: 0 2px 5px rgba(0,0,0,0.8);">${story.texto}</p>
+                </div>` : ''}
+            `);
+        } else {
+            contentBox.append(`
+                <div class="w-100 h-100 d-flex align-items-center justify-content-center px-4" style="background: ${story.color_fondo || '#4f46e5'};">
+                    <p class="text-white text-center m-0 fs-3 fw-bold" style="white-space: pre-wrap; word-break: break-word; text-shadow: 0 2px 6px rgba(0,0,0,0.25);">${story.texto}</p>
+                </div>
+            `);
+        }
+
+        // Iniciar animación de barra de progreso
+        storyTimeStart = Date.now();
+        tiempoTranscurridoAntesPausa = 0;
+        storyIsPaused = false;
+        $('#story-pause-icon').removeClass('fa-play').addClass('fa-pause');
+
+        animarProgreso(idx);
+    }
+
+    function animarProgreso(idx) {
+        if (storyIsPaused) return;
+
+        const transcurrido = Date.now() - storyTimeStart + tiempoTranscurridoAntesPausa;
+        const porcentaje = Math.min((transcurrido / duracionStory) * 100, 100);
+
+        const bar = $(`#bar-progreso-${idx}`);
+        bar.css('width', `${porcentaje}%`);
+
+        if (porcentaje < 100) {
+            storyAnimationId = requestAnimationFrame(() => animarProgreso(idx));
+        } else {
+            siguienteStory();
+        }
+    }
+
+    function siguienteStory(e) {
+        if (e) {
+            e.stopPropagation();
+        }
+        if (idxStoryActual + 1 < storiesActuales.length) {
+            reproducirStory(idxStoryActual + 1);
+        } else {
+            // Pasar al siguiente usuario del panel lateral si existe
+            const items = $('.story-sidebar-item');
+            const currentIdx = items.index($(`#sidebar-user-${usuarioActualId}`));
+            if (currentIdx !== -1 && currentIdx + 1 < items.length) {
+                const nextUserItem = items.eq(currentIdx + 1);
+                const nextUserId = nextUserItem.attr('id').replace('sidebar-user-', '');
+                seleccionarUsuarioHistoria(nextUserId);
+            } else {
+                cerrarVisorStories();
+            }
+        }
+    }
+
+    function anteriorStory(e) {
+        if (e) {
+            e.stopPropagation();
+        }
+        if (idxStoryActual - 1 >= 0) {
+            reproducirStory(idxStoryActual - 1);
+        } else {
+            // Retroceder al usuario anterior del panel lateral si existe
+            const items = $('.story-sidebar-item');
+            const currentIdx = items.index($(`#sidebar-user-${usuarioActualId}`));
+            if (currentIdx > 0) {
+                const prevUserItem = items.eq(currentIdx - 1);
+                const prevUserId = prevUserItem.attr('id').replace('sidebar-user-', '');
+                seleccionarUsuarioHistoria(prevUserId);
+            } else {
+                reproducirStory(0); // Reiniciar la primera
+            }
+        }
+    }
+
+    function cerrarVisorStories() {
+        cancelAnimationFrame(storyAnimationId);
+        if (storyAudio) {
+            storyAudio.pause();
+            storyAudio = null;
+        }
+        $('#story-viewer-modal').fadeOut('fast');
+        $('.story-sidebar-item').removeClass('bg-light');
+        $('#story-reply-input').val('');
+        reloadStoriesFeed();
+    }
+
+    // --- Lógica de Respuesta de Historias ---
+    function pausarHistoriaParaEscribir() {
+        if (!storyIsPaused) {
+            storyIsPaused = true;
+            tiempoTranscurridoAntesPausa += Date.now() - storyTimeStart;
+            $('#story-pause-icon').removeClass('fa-pause').addClass('fa-play');
+            if (storyAudio) {
+                storyAudio.pause();
+            }
+        }
+    }
+
+    function reanudarHistoriaAlSalir() {
+        if (storyIsPaused && $('#story-reply-input').val().trim() === '') {
+            storyIsPaused = false;
+            storyTimeStart = Date.now();
+            animarProgreso(idxStoryActual);
+            $('#story-pause-icon').removeClass('fa-play').addClass('fa-pause');
+            if (storyAudio) {
+                storyAudio.play().catch(e => console.log("Audio play resume blocked/failed:", e));
+            }
+        }
+    }
+
+    function enviarRespuestaHistoria(e) {
+        e.preventDefault();
+        const input = $('#story-reply-input');
+        const mensaje = input.val().trim();
+        if (!mensaje) return;
+
+        const story = storiesActuales[idxStoryActual];
+        const story_id = story.id;
+        const btnSubmit = $('#story-reply-submit');
+        const originalHtml = btnSubmit.html();
+
+        btnSubmit.prop('disabled', true).html('<div class="spinner-border spinner-border-sm" role="status"></div>');
+
+        $.ajax({
+            url: '/chat/responder-historia/',
+            type: 'POST',
+            data: {
+                'story_id': story_id,
+                'mensaje': mensaje,
+                'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                if (response.success) {
+                    input.val('');
+                    // Quick confirmation feedback
+                    btnSubmit.html('<i class="fas fa-check text-success"></i>');
+                    setTimeout(() => {
+                        btnSubmit.prop('disabled', false).html(originalHtml);
+                        reanudarHistoriaAlSalir();
+                    }, 1000);
+                } else {
+                    alert(response.error || 'Error al enviar respuesta.');
+                    btnSubmit.prop('disabled', false).html(originalHtml);
+                }
+            },
+            error: function() {
+                alert('Error de red al enviar respuesta.');
+                btnSubmit.prop('disabled', false).html(originalHtml);
+            }
+        });
+    }
+
+    // Detener/Reanudar al presionar prolongadamente (hold to pause)
+    $(document).on('mousedown touchstart', '#story-viewer-content', function(e) {
+        if ($(e.target).closest('.story-arrow-btn, .viewer-close-btn-mobile, #story-delete-btn, #story-pause-btn, #delete-confirm-overlay').length) return;
+        
+        storyIsPaused = true;
+        tiempoTranscurridoAntesPausa += Date.now() - storyTimeStart;
+        $('#story-pause-icon').removeClass('fa-pause').addClass('fa-play');
+        if (storyAudio) {
+            storyAudio.pause();
+        }
+    });
+
+    $(document).on('mouseup touchend', '#story-viewer-content', function(e) {
+        if ($(e.target).closest('.story-arrow-btn, .viewer-close-btn-mobile, #story-delete-btn, #story-pause-btn, #delete-confirm-overlay').length) return;
+
+        if (storyIsPaused) {
+            storyIsPaused = false;
+            storyTimeStart = Date.now();
+            animarProgreso(idxStoryActual);
+            $('#story-pause-icon').removeClass('fa-play').addClass('fa-pause');
+            if (storyAudio) {
+                storyAudio.play().catch(e => console.log("Audio play resume blocked/failed:", e));
+            }
+        }
+    });
+
+    // --- Funciones auxiliares para borrado y modal de confirmación custom ---
+    function abrirConfirmarEliminarModal(e) {
+        if (e) {
+            e.stopPropagation();
+        }
+        // Pausar reproducción
+        storyIsPaused = true;
+        tiempoTranscurridoAntesPausa += Date.now() - storyTimeStart;
+        if (storyAudio) {
+            storyAudio.pause();
+        }
+        
+        // Mostrar overlay de confirmación con blur y animación
+        $('#delete-confirm-overlay').attr('style', 'display: flex !important; background: rgba(0,0,0,0.75); z-index: 200; backdrop-filter: blur(2px);');
+    }
+
+    function cerrarConfirmarEliminarModal(e) {
+        if (e) {
+            e.stopPropagation();
+        }
+        // Ocultar overlay
+        $('#delete-confirm-overlay').attr('style', 'display: none !important;');
+        
+        // Reanudar reproducción
+        storyIsPaused = false;
+        storyTimeStart = Date.now();
+        animarProgreso(idxStoryActual);
+        $('#story-pause-icon').removeClass('fa-play').addClass('fa-pause');
+        if (storyAudio) {
+            storyAudio.play().catch(e => console.log("Audio play resume blocked/failed:", e));
+        }
+    }
+
+    function togglePausaStory(e) {
+        if (e) {
+            e.stopPropagation();
+        }
+        if (storyIsPaused) {
+            // Reanudar
+            storyIsPaused = false;
+            storyTimeStart = Date.now();
+            animarProgreso(idxStoryActual);
+            $('#story-pause-icon').removeClass('fa-play').addClass('fa-pause');
+            if (storyAudio) {
+                storyAudio.play().catch(e => console.log("Audio resume blocked/failed:", e));
+            }
+        } else {
+            // Pausar
+            storyIsPaused = true;
+            tiempoTranscurridoAntesPausa += Date.now() - storyTimeStart;
+            $('#story-pause-icon').removeClass('fa-pause').addClass('fa-play');
+            if (storyAudio) {
+                storyAudio.pause();
+            }
+        }
+    }
+
+    // --- Lógica de Previsualización ---
+    let previewAudio = null;
+    let previewAnimationId = null;
+    let previewTimeStart = 0;
+    let previewIsPaused = false;
+    let previewDuration = 30000; 
+    let previewElapsedBeforePause = 0;
+
+    function abrirPreviewStory() {
+        const tipo = $('#input-tipo-historia').val();
+        const contentBox = $('#story-preview-content');
+        contentBox.empty();
+
+        if (tipo === 'imagen') {
+            const file = document.getElementById('story-file').files[0];
+            const caption = $('#story-caption').val().trim();
+            
+            if (!file) {
+                alert('Por favor, selecciona una imagen para previsualizar.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                contentBox.html(`
+                    <img src="${event.target.result}" class="w-100 h-100 object-fit-contain" style="background-color: #0b0b0b;">
+                    ${caption ? `
+                    <div class="position-absolute bottom-0 start-0 end-0 p-4 text-center" style="background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                        <p class="text-white m-0 fs-5 fw-semibold" style="text-shadow: 0 2px 5px rgba(0,0,0,0.8);">${caption}</p>
+                    </div>` : ''}
+                `);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            const textOnly = $('#story-text-only').val().trim();
+            const color = $('#input-color-fondo').val();
+            
+            if (!textOnly) {
+                alert('Por favor, escribe un texto para previsualizar.');
+                return;
+            }
+
+            contentBox.html(`
+                <div class="w-100 h-100 d-flex align-items-center justify-content-center px-4" style="background: ${color};">
+                    <p class="text-white text-center m-0 fs-3 fw-bold" style="white-space: pre-wrap; word-break: break-word; text-shadow: 0 2px 6px rgba(0,0,0,0.25);">${textOnly}</p>
+                </div>
+            `);
+        }
+
+        const inputDur = parseInt($('#story-duration').val()) || 30;
+        previewDuration = inputDur * 1000;
+
+        const audioFile = document.getElementById('story-audio-file').files[0];
+        const audioStartSec = parseFloat($('#story-audio-start').val()) || 0;
+
+        if (previewAudio) {
+            previewAudio.pause();
+            previewAudio = null;
+        }
+
+        if (audioFile) {
+            const audioReader = new FileReader();
+            audioReader.onload = function(event) {
+                previewAudio = new Audio(event.target.result);
+                previewAudio.currentTime = audioStartSec;
+                if (!previewIsPaused) {
+                    previewAudio.play().catch(err => console.log("Blocked preview audio play:", err));
+                }
+            };
+            audioReader.readAsDataURL(audioFile);
+        }
+
+        previewTimeStart = Date.now();
+        previewElapsedBeforePause = 0;
+        previewIsPaused = false;
+        $('#story-preview-progress-bar').css('width', '0%');
+        
+        $('#story-preview-modal').css('display', 'flex').fadeIn('fast');
+        
+        if (previewAnimationId) {
+            cancelAnimationFrame(previewAnimationId);
+        }
+        animarProgresoPreview();
+    }
+
+    function animarProgresoPreview() {
+        if (previewIsPaused) return;
+
+        const transcurrido = Date.now() - previewTimeStart + previewElapsedBeforePause;
+        const porcentaje = Math.min((transcurrido / previewDuration) * 100, 100);
+
+        $('#story-preview-progress-bar').css('width', `${porcentaje}%`);
+
+        if (porcentaje < 100) {
+            previewAnimationId = requestAnimationFrame(animarProgresoPreview);
+        } else {
+            cerrarPreviewStory();
+        }
+    }
+
+    function cerrarPreviewStory() {
+        if (previewAnimationId) {
+            cancelAnimationFrame(previewAnimationId);
+            previewAnimationId = null;
+        }
+        if (previewAudio) {
+            previewAudio.pause();
+            previewAudio = null;
+        }
+        $('#story-preview-modal').fadeOut('fast');
+    }
+
+    function manejarFondoPreviewClick(event) {
+        const container = document.getElementById('story-preview-phone-container');
+        if (container && !container.contains(event.target)) {
+            cerrarPreviewStory();
+        }
+    }
+
+    function ejecutarEliminarStoryActual(e) {
+        if (e) {
+            e.stopPropagation();
+        }
+
+        const story = storiesActuales[idxStoryActual];
+        if (!story) return;
+
+        // Ocultar overlay inmediatamente
+        $('#delete-confirm-overlay').attr('style', 'display: none !important;');
+
+        $.ajax({
+            url: `/stories/eliminar/${story.id}/`,
+            type: 'POST',
+            data: {
+                csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Remover historia de la lista local
+                    storiesActuales.splice(idxStoryActual, 1);
+
+                    if (storiesActuales.length > 0) {
+                        // Re-generar barras de progreso
+                        const containerProgreso = $('#story-viewer-progress-container');
+                        containerProgreso.empty();
+                        storiesActuales.forEach((s, idx) => {
+                            containerProgreso.append(`
+                                <div class="story-progress-bar-wrapper flex-grow-1 rounded-pill overflow-hidden mx-1" style="height: 3px; background-color: rgba(255,255,255,0.3) !important;">
+                                    <div class="story-progress-bar-fill h-100 bg-white" id="bar-progreso-${idx}" style="width: 0%;"></div>
+                                </div>
+                            `);
+                        });
+                        
+                        // Reproducir el slide en el mismo índice, o el anterior si borramos la última
+                        const siguienteIdx = Math.min(idxStoryActual, storiesActuales.length - 1);
+                        reproducirStory(siguienteIdx);
+                    } else {
+                        // No quedan más historias, cerrar el visor
+                        cerrarVisorStories();
+                    }
+
+                    // Forzar refresco asíncrono del carrusel/sidebar de fondo
+                    reloadStoriesFeed();
+                } else {
+                    alert(response.errors || "Error al intentar eliminar la historia.");
+                    // Reanudar si falla
+                    storyIsPaused = false;
+                    storyTimeStart = Date.now();
+                    animarProgreso(idxStoryActual);
+                }
+            },
+            error: function() {
+                alert("Error de conexión al eliminar la historia.");
+                // Reanudar si falla
+                storyIsPaused = false;
+                storyTimeStart = Date.now();
+                animarProgreso(idxStoryActual);
+            }
+        });
+    }
+
+    // Cerrar al hacer clic en el fondo oscuro del overlay (fuera del celular y panel lateral)
+    function manejarFondoVisorClick(event) {
+        const container = document.getElementById('story-phone-container');
+        const sidebar = document.querySelector('.story-viewer-sidebar');
+        
+        const clickInsidePhone = container && container.contains(event.target);
+        const clickInsideSidebar = sidebar && sidebar.contains(event.target);
+        const clickOnArrow = event.target.closest('.story-arrow-btn');
+
+        if (!clickInsidePhone && !clickInsideSidebar && !clickOnArrow) {
+            cerrarVisorStories();
+        }
+    }
+
+    // --- Integración de WebSockets para actualización en tiempo real ---
+    $(document).ready(function() {
+        const wsProto = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const wsUrl = wsProto + window.location.host + '/ws/stories/';
+        
+        window.WSManager.connect('stories_feed', wsUrl);
+        window.WSManager.subscribe('stories_feed', function(data) {
+            if (data.type === 'story_update') {
+                console.log("♻️ [WS stories_feed] Nueva historia detectada. Recargando feed...");
+                reloadStoriesFeed();
+            }
+        });
+    });
+
+    function reloadStoriesFeed() {
+        $.get('{% url "stories:feed_fragment" %}', function(html) {
+            // Extraer y actualizar sólo el contenido interior del carrusel y de la barra lateral
+            const newCarouselContent = $(html).find('.stories-container').html();
+            const newSidebarContent = $(html).find('.story-viewer-sidebar').html();
+            
+            if (newCarouselContent) {
+                $('.stories-container').html(newCarouselContent);
+            }
+            if (newSidebarContent) {
+                $('.story-viewer-sidebar').html(newSidebarContent);
+            }
+        });
+    }
+</script>

@@ -12,6 +12,7 @@ import publications.routing
 import profiles.routing 
 import chat.routing
 import notifications.routing
+import stories.routing
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
@@ -20,7 +21,8 @@ application = ProtocolTypeRouter({
             publications.routing.websocket_urlpatterns +
             profiles.routing.websocket_urlpatterns +
             chat.routing.websocket_urlpatterns +
-            notifications.routing.websocket_urlpatterns
+            notifications.routing.websocket_urlpatterns +
+            stories.routing.websocket_urlpatterns
         )
     ),
 })

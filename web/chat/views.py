@@ -7,6 +7,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .models import Chat, Mensaje
 from users.models import Usuarios, Seguidores
+from stories.models import Story
 
 @login_required
 def get_mutual_followers(request):
@@ -106,7 +107,10 @@ def load_chat_panel(request):
         'next_page': None,
     })
 
+from django.views.decorators.cache import never_cache
+
 @login_required
+@never_cache
 def get_chat_history(request, user_id):
     """
     Carga la ventana de mensajes con paginación infinita (scroll hacia arriba).
@@ -133,9 +137,8 @@ def get_chat_history(request, user_id):
             return HttpResponse("") # No más mensajes
         page_obj = paginator.page(1)
 
-    # Revertimos para que en el template aparezcan cronológicamente (viejo arriba, nuevo abajo)
+    # NO revertimos. Con flex-direction: column-reverse, el más nuevo (índice 0) debe ser el primero en el DOM (que visualmente es abajo).
     mensajes_list = list(page_obj)
-    mensajes_list.reverse()
     
     context = {
         'chat': chat,
@@ -236,3 +239,52 @@ def upload_chat_image(request):
         return JsonResponse({'status': 'ok', 'image_url': mensaje.imagen.url})
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def responder_historia(request):
+    if request.method == 'POST':
+        story_id = request.POST.get('story_id')
+        mensaje_texto = request.POST.get('mensaje', '').strip()
+        
+        if not story_id or not mensaje_texto:
+            return JsonResponse({'success': False, 'error': 'Datos incompletos.'})
+            
+        story = get_object_or_404(Story, id=story_id)
+        otro_usuario = story.usuario
+        
+        if request.user == otro_usuario:
+            return JsonResponse({'success': False, 'error': 'No puedes responder a tu propia historia.'})
+            
+        u1, u2 = (request.user, otro_usuario) if request.user.id < otro_usuario.id else (otro_usuario, request.user)
+        chat, created = Chat.objects.get_or_create(user1=u1, user2=u2)
+        
+        mensaje = Mensaje.objects.create(
+            chat=chat,
+            user=request.user,
+            story=story,
+            descripcion=mensaje_texto,
+            tipo='story_reply'
+        )
+        
+        # Notify via WebSocket
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'chat_{chat.id}',
+            {
+                'type': 'chat_message',
+                'tipo': 'story_reply',
+                'message': mensaje_texto,
+                'story_id': story.id,
+                'story_url': story.imagen.url if story.imagen else None,
+                'story_color': story.color_fondo if not story.imagen else None,
+                'story_usuario_id': story.usuario.id,
+                'user_id': request.user.id,
+                'is_read': False,
+                'timestamp': mensaje.fecha_mensaje.strftime('%H:%M'),
+                'message_id': mensaje.id
+            }
+        )
+        
+        return JsonResponse({'success': True, 'message': 'Respuesta enviada.'})
+        
+    return JsonResponse({'success': False, 'error': 'Método no permitido.'}, status=400)

@@ -42,16 +42,10 @@
                     </div>
                     {% endif %}
 
-                    {% if item.first_image %}
-                    <div class="w-100 position-relative bg-dark" style="height: 270px; overflow: hidden;">
-                        <img src="{{ item.first_image.imagen.url }}" alt="Post img" class="w-100 h-100"
+                    {% if item.post.imagenes.first %}
+                    <div class="w-100 position-relative bg-dark" style="height: 160px; overflow: hidden;">
+                        <img src="{{ item.post.imagenes.first.imagen.url }}" alt="Post img" class="w-100 h-100"
                             style="object-fit: contain;">
-                        <!-- Badge de tiempo (Rojo un poco más discreto pero visible) -->
-                        <div class="position-absolute bottom-0 end-0 m-2 px-2 py-1 bg-dark bg-opacity-75 text-white rounded d-flex align-items-center shadow-sm"
-                            style="font-size: 0.65rem; border: 1px solid rgba(255,255,255,0.3); z-index: 1000; backdrop-filter: blur(2px);">
-                            <i class="bi bi-clock-history me-1 text-warning"></i>
-                            <span class="fw-bold">Update in: {{ remaining_mins }}m</span>
-                        </div>
                     </div>
                     {% endif %}
 
@@ -66,10 +60,37 @@
             <div class="text-center text-muted small">Nada interesante...</div>
             {% endfor %}
         </div>
-        <div class="mt-2 text-end">
+        <div class="mt-2 d-flex justify-content-between align-items-center px-1">
+            <div class="d-flex align-items-center text-muted" style="font-size: 0.7rem;">
+                <i class="bi bi-clock-history me-1 text-warning"></i>
+                <span class="fw-bold" id="ai-countdown-timer">Expira en: {{ remaining_mins }}m</span>
+            </div>
             <small class="text-xs text-secondary" style="font-size: 0.65rem;">
                 <i class="bi bi-robot"></i> Milanesa IA
             </small>
         </div>
     </div>
 </div>
+
+<script>
+    (function() {
+        let remainingSecs = parseInt("{{ remaining_secs|default:'3600' }}", 10);
+        const timerElement = document.getElementById('ai-countdown-timer');
+        
+        if (timerElement && remainingSecs > 0) {
+            const countdownInterval = setInterval(function() {
+                remainingSecs--;
+                if (remainingSecs <= 0) {
+                    clearInterval(countdownInterval);
+                    timerElement.textContent = 'Actualizando...';
+                    // Recargar esta parte con HTMX
+                    htmx.ajax('GET', '/ai_assistant/trending/', {target: '#sidebar-ai-container'});
+                } else {
+                    const mins = Math.floor(remainingSecs / 60);
+                    const secs = remainingSecs % 60;
+                    timerElement.textContent = `Expira en: ${mins}m ${secs}s`;
+                }
+            }, 1000);
+        }
+    })();
+</script>

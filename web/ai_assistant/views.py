@@ -17,16 +17,36 @@ def get_trending_analysis(request):
     # 0. Limpieza (Hack para asegurar que tenemos JSON con post_id)
     # Si detectamos texto viejo sin IDs, borramos.
     # (Simplificamos borrando todo si hay duda, para que se regenere bien con la nueva lógica)
-    ultimo_check = TrendingAnalysis.objects.last()
+    ultimo_check = TrendingAnalysis.objects.first()
     # Chequeo simple: si no tiene "post_id" en el texto, asumimos formato viejo
     if ultimo_check and 'post_id' not in ultimo_check.texto:
         TrendingAnalysis.objects.all().delete()
 
     # 1. Verificar si existe análisis válido de la última hora
-    limite_tiempo = timezone.now() - timedelta(hours=1)
-    ultimo_analisis = TrendingAnalysis.objects.filter(fecha_creacion__gte=limite_tiempo).first()
+    ultimo_analisis = TrendingAnalysis.objects.first()
+    
+    analisis_valido = False
+    remaining_secs = 0
+    remaining_mins = 0
 
     if ultimo_analisis:
+        # Al quitar el tzinfo evitamos el desfase de 5 horas de MySQL/Django
+        ahora_naive = timezone.now().replace(tzinfo=None)
+        fecha_creacion_naive = ultimo_analisis.fecha_creacion.replace(tzinfo=None)
+        
+        diferencia = ahora_naive - fecha_creacion_naive
+        segundos_pasados = int(diferencia.total_seconds())
+        
+        if segundos_pasados < 0:
+            segundos_pasados = 0
+            
+        remaining_secs = max(0, 3600 - segundos_pasados)
+        remaining_mins = remaining_secs // 60
+        
+        if remaining_secs > 0:
+            analisis_valido = True
+
+    if analisis_valido:
         try:
             analisis_data = json.loads(ultimo_analisis.texto)
         except json.JSONDecodeError:
@@ -42,21 +62,10 @@ def get_trending_analysis(request):
             if post:
                 resultado.append({'post': post, 'comentario': item.get('analisis')})
 
-        # Calcular minutos para el siguiente update (Cada 60 mins)
-        ahora = timezone.now()
-        
-        # Ensure aware before subtract
-        fecha_creacion_aware = ultimo_analisis.fecha_creacion
-        if timezone.is_naive(fecha_creacion_aware):
-             fecha_creacion_aware = timezone.make_aware(fecha_creacion_aware)
-
-        diferencia = ahora - fecha_creacion_aware
-        minutos_pasados = int(diferencia.total_seconds() / 60)
-        remaining_mins = max(0, 60 - minutos_pasados)
-
         return render(request, 'ai_assistant/partials/sidebar_ai.html', {
             'resultados': resultado,
-            'remaining_mins': remaining_mins
+            'remaining_mins': remaining_mins,
+            'remaining_secs': remaining_secs
         })
 
     # 2. Si no existe, generamos uno nuevo
@@ -150,7 +159,8 @@ def get_trending_analysis(request):
 
         return render(request, 'ai_assistant/partials/sidebar_ai.html', {
             'resultados': resultado,
-            'remaining_mins': 60
+            'remaining_mins': 60,
+            'remaining_secs': 3600
         })
     else:
         return render(request, 'ai_assistant/partials/sidebar_ai.html', {

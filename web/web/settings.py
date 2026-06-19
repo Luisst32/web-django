@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'recommendations',
     'ai_assistant',
     'emails',
+    'stories',
 ]
 WEBPUSH_SETTINGS = {
     "VAPID_PUBLIC_KEY": os.getenv('VAPID_PUBLIC_KEY'),

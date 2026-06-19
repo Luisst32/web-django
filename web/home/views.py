@@ -82,12 +82,53 @@ def index(request):
     from recommendations.services import RecommendationService
     suggestions = RecommendationService.get_suggestions(request.user)
 
+    # --- STORIES ACTIVAS ---
+    from django.utils import timezone
+    from datetime import timedelta
+    from stories.models import Story, StoryView
+
+    limite_24h = timezone.now() - timedelta(hours=24)
+    historias_activas = Story.objects.filter(
+        created_at__gte=limite_24h
+    ).select_related('usuario')
+
+    # Obtener los IDs de las historias vistas por el usuario actual en las últimas 24 horas
+    historias_vistas = set()
+    if request.user.is_authenticated:
+        historias_vistas = set(
+            StoryView.objects.filter(
+                usuario=request.user,
+                story__created_at__gte=limite_24h
+            ).values_list('story_id', flat=True)
+        )
+
+    usuarios_con_historias = {}
+    for story in historias_activas:
+        uid = story.usuario.id
+        if uid not in usuarios_con_historias:
+            usuarios_con_historias[uid] = {
+                'usuario': story.usuario,
+                'latest_story': story,
+                'count': 0,
+                'unseen_count': 0
+            }
+        if story.created_at > usuarios_con_historias[uid]['latest_story'].created_at:
+            usuarios_con_historias[uid]['latest_story'] = story
+        usuarios_con_historias[uid]['count'] += 1
+        
+        # Incrementar unseen_count si la historia es nueva para el usuario
+        if story.id not in historias_vistas:
+            usuarios_con_historias[uid]['unseen_count'] += 1
+
+    stories_grouped = list(usuarios_con_historias.values())
+
     extra_context = {
         'notificaciones_no_leidas': notificaciones_no_leidas,
         'total_chat_unread': total_chat_unread,
         'feed_url': feed_url,
         'suggestions': suggestions,
-        'is_from_notifications': bool(highlight_id)
+        'is_from_notifications': bool(highlight_id),
+        'stories_grouped': stories_grouped
     }
 
     # 3. USAR SERVICIO

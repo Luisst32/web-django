@@ -1,9 +1,12 @@
 {% extends 'home/index.html' %}
 {% load static %}
 
+{% block left_sidebar %}
+<!-- Anulamos el sidebar izquierdo de la plantilla base para que no ocupe espacio junto a la portada -->
+{% endblock left_sidebar %}
+
 {% block main_content %}
-<!-- CONTENEDOR CENTRAL: Mantiene el ancho original (900px) para carga FULL -->
-<!-- Pero al usar el partial, este se adaptará a su contenedor padre -->
+<!-- CONTENEDOR CENTRAL del perfil -->
 <div class="container px-0 mb-4" style="max-width: 100%;">
     {% include 'profiles/partials/full_profile_content.html' %}
 </div>
@@ -11,6 +14,8 @@
 
 
 {% block extra_js %}
+
+
 <style>
     /* Estilos base (Body) */
     body {
@@ -21,6 +26,35 @@
     /* Ajustes específicos */
     .hover-opacity-100:hover {
         opacity: 1 !important;
+    }
+    
+    /* Efecto Liquid Glass Blanco */
+    .glass-card-white {
+        background: rgba(255, 255, 255, 0.6) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.8) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04) !important;
+        border-radius: 20px !important; /* Esquinas bien redondeadas */
+    }
+
+    /* Animación suave para avatares */
+    .transition-hover .avatar-glass-wrapper {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 2px solid transparent;
+    }
+    .transition-hover:hover .avatar-glass-wrapper {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+        border: 2px solid rgba(255, 255, 255, 0.9);
+    }
+
+    /* CORRECCIÓN CRÍTICA: forzar z-index de modales por encima de todo */
+    .modal-backdrop {
+        display: none !important;
+    }
+    .modal {
+        z-index: 99999 !important;
     }
 </style>
 

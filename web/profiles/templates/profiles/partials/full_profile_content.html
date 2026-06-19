@@ -67,8 +67,8 @@
 
             <!-- SEGUIDORES y ACCIONES -->
             <div class="d-flex align-items-center justify-content-center gap-3 mb-3">
-                <!-- Contador simplificado -->
-                <div class="text-dark">
+                <!-- Contador simplificado (Clickeable para ver modal) -->
+                <div class="text-dark hover-opacity-100" style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;" data-bs-toggle="modal" data-bs-target="#followersModal" data-bs-backdrop="false">
                     <span class="fw-bold fs-6" id="follower-count">{{ cantidad_seguidores }}</span>
                     <span class="text-muted small">Seguidores</span>
                 </div>
@@ -102,6 +102,67 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- MAIN PROFILE SPLIT CONTENT -->
+    <div class="row">
+        <!-- LEFT COLUMN: AMIGOS & DATOS (Sticky) -->
+        <div class="col-lg-4 d-none d-lg-block">
+            <div id="sticky-sidebar-profile" style="position: sticky; top: 100px;">
+                
+                <!-- DATOS PERSONALES -->
+                <div class="card border-0 p-3 shadow-sm rounded-4 bg-white mb-3">
+                    <h5 class="fw-bold mb-3">Datos personales</h5>
+                    <ul class="list-unstyled mb-0 text-dark">
+                        {% if usuario.fech_nacimiento %}
+                        <li class="d-flex align-items-center mb-2">
+                            <i class="fas fa-birthday-cake text-muted me-3 fs-5" style="width: 20px; text-align: center;"></i>
+                            <span>{{ usuario.fech_nacimiento|date:"j \d\e F \d\e Y" }}</span>
+                        </li>
+                        {% endif %}
+                        <li class="d-flex align-items-center">
+                            <i class="fas fa-venus-mars text-muted me-3 fs-5" style="width: 20px; text-align: center;"></i>
+                            <span>{{ usuario.get_sexo_display }}</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- AMIGOS -->
+                <div class="card border-0 p-3 glass-card-white mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="fw-bold mb-0">Amigos</h5>
+                        <a href="#" class="text-decoration-none small text-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#amigosModal" data-bs-backdrop="false">Ver todos</a>
+                    </div>
+                    <p class="text-muted small mb-3">{{ total_amigos }} amigos mutuos</p>
+                    
+                    <div class="row g-2">
+                        {% for amigo in amigos_mutuos %}
+                        <div class="col-4 text-center">
+                            <a href="{% url 'perfil_detalle' username=amigo.username %}" class="text-decoration-none text-dark d-block transition-hover">
+                                <div class="rounded-4 overflow-hidden mb-1 avatar-glass-wrapper" style="aspect-ratio: 1/1;">
+                                    {% if amigo.foto_perfil %}
+                                    <img src="{{ amigo.foto_perfil.url }}" class="w-100 h-100 object-fit-cover" alt="{{ amigo.first_name }}">
+                                    {% else %}
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="background: rgba(0,0,0,0.03);">
+                                        <i class="fas fa-user fs-4"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <span class="small fw-semibold d-block text-truncate" style="font-size: 0.75rem;">{{ amigo.username }}</span>
+                            </a>
+                        </div>
+                        {% endfor %}
+                        {% if not amigos_mutuos %}
+                        <div class="col-12 text-center text-muted small py-3">
+                            No hay amigos mutuos.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: FEED -->
+        <div class="col-lg-8">
 
     <!-- COMPOSER (Si es dueño) -->
     {% if es_perfil_del_usuario_logueado %}
@@ -141,7 +202,117 @@
             <span class="visually-hidden">Cargando...</span>
         </div>
     </div>
-</div>
+        </div> <!-- End right column -->
+    </div> <!-- End row -->
+
+    <!-- MODAL SEGUIDORES -->
+    <div class="modal fade" id="followersModal" tabindex="-1" aria-labelledby="followersModalLabel" aria-hidden="true" data-bs-backdrop="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0 shadow glass-card-white">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="followersModalLabel">Seguidores</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if todos_seguidores %}
+                    <ul class="list-unstyled mb-0" id="followers-list">
+                        {% for seguidor in todos_seguidores %}
+                        <li class="follower-item align-items-center justify-content-between mb-3 {% if forloop.counter > 5 %}d-none{% else %}d-flex{% endif %}">
+                            <a href="{% url 'perfil_detalle' username=seguidor.username %}" class="text-decoration-none text-dark d-flex align-items-center gap-3 w-100">
+                                {% if seguidor.foto_perfil %}
+                                <img src="{{ seguidor.foto_perfil.url }}" class="rounded-circle object-fit-cover" style="width: 45px; height: 45px;" alt="Avatar">
+                                {% else %}
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-muted" style="width: 45px; height: 45px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0 fw-semibold">{{ seguidor.first_name }} {{ seguidor.last_name }}</h6>
+                                    <small class="text-muted">@{{ seguidor.username }}</small>
+                                </div>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if todos_seguidores|length > 5 %}
+                    <div class="text-center mt-3 mb-2">
+                        <a href="#" class="text-primary fw-semibold text-decoration-none" id="load-more-followers">Ver más</a>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-user-slash fs-1 mb-3 opacity-50"></i>
+                        <p class="mb-0">Aún no tiene seguidores.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AMIGOS MUTUOS -->
+    <div class="modal fade" id="amigosModal" tabindex="-1" aria-labelledby="amigosModalLabel" aria-hidden="true" data-bs-backdrop="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0 shadow glass-card-white">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="amigosModalLabel">Amigos mutuos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if todos_amigos_mutuos %}
+                    <ul class="list-unstyled mb-0" id="amigos-list">
+                        {% for amigo in todos_amigos_mutuos %}
+                        <li class="amigo-item align-items-center justify-content-between mb-3 {% if forloop.counter > 5 %}d-none{% else %}d-flex{% endif %}">
+                            <a href="{% url 'perfil_detalle' username=amigo.username %}" class="text-decoration-none text-dark d-flex align-items-center gap-3 w-100">
+                                {% if amigo.foto_perfil %}
+                                <img src="{{ amigo.foto_perfil.url }}" class="rounded-circle object-fit-cover" style="width: 45px; height: 45px;" alt="Avatar">
+                                {% else %}
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-muted" style="width: 45px; height: 45px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0 fw-semibold">{{ amigo.first_name }} {{ amigo.last_name }}</h6>
+                                    <small class="text-muted">@{{ amigo.username }}</small>
+                                </div>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if todos_amigos_mutuos|length > 5 %}
+                    <div class="text-center mt-3 mb-2">
+                        <a href="#" class="text-primary fw-semibold text-decoration-none" id="load-more-amigos">Ver más</a>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <p class="mb-0">No hay amigos mutuos.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+<style>
+    /* GARANTIZAR QUE EL FONDO OSCURO NO EXISTA NUNCA */
+    .modal-backdrop {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        z-index: -1 !important;
+    }
+    
+    /* ASEGURAR QUE EL MODAL QUEDE POR ENCIMA DE TODO Y NO ESTÉ BLOQUEADO */
+    .modal {
+        z-index: 2147483647 !important; /* Máximo z-index posible */
+        background: transparent !important;
+    }
+    
+    /* El contenedor sticky puede crear problemas de stacking context.
+       Si el modal se queda debajo, es porque su contenedor padre tiene un z-index menor.
+       Al forzar position: fixed fuera de todo, Bootstrap lo maneja pero necesitamos evitar el backdrop. */
+</style>
 
 <script>
     // Re-instantiate script logic for swapped content
@@ -160,7 +331,99 @@
             feedContainer.style.maxWidth = '100%';
         }
 
-        const wsProto = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        // --- MATAR CUALQUIER BACKDROP REBELDE ---
+        // Elimina el backdrop activamente si algo intenta crearlo
+        const killBackdrop = () => {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        };
+
+        ['followersModal', 'amigosModal'].forEach(id => {
+            const modalEl = document.getElementById(id);
+            if (modalEl) {
+                // Remove old modals if HTMX duplicates them
+                const duplicates = document.querySelectorAll('#' + id);
+                if (duplicates.length > 1) {
+                    duplicates.forEach((el, index) => {
+                        if (index > 0) el.remove();
+                    });
+                }
+                
+                // Mover al body explícitamente para escapar de stacking contexts problemáticos
+                if (modalEl.parentNode !== document.body) {
+                    document.body.appendChild(modalEl);
+                }
+
+                // Eventos de Bootstrap para eliminar backdrops
+                modalEl.addEventListener('show.bs.modal', killBackdrop);
+                modalEl.addEventListener('shown.bs.modal', killBackdrop);
+                
+                // Asegurarse de que al cerrar el modal todo vuelva a la normalidad
+                modalEl.addEventListener('hidden.bs.modal', killBackdrop);
+            }
+        });
+        
+        // --- ACTUALIZAR STICKY SIDEBAR ---
+        // Ajusta el 'top' dinámicamente para que si el sidebar es más alto que la pantalla,
+        // se quede pegado en la parte de ABAJO en lugar de cortar el contenido.
+        const updateStickySidebar = () => {
+            const sidebar = document.getElementById('sticky-sidebar-profile');
+            if (sidebar) {
+                const viewportHeight = window.innerHeight;
+                const sidebarHeight = sidebar.offsetHeight;
+                if (sidebarHeight + 120 > viewportHeight) {
+                    sidebar.style.top = (viewportHeight - sidebarHeight - 20) + 'px';
+                } else {
+                    sidebar.style.top = '100px';
+                }
+            }
+        };
+        updateStickySidebar();
+        window.addEventListener('resize', updateStickySidebar);
+        // Observador por si el contenido cambia (ej. cargar más seguidores)
+        const observer = new ResizeObserver(updateStickySidebar);
+        const sidebarEl = document.getElementById('sticky-sidebar-profile');
+        if (sidebarEl) observer.observe(sidebarEl);
+
+        // Intervalo agresivo para eliminar backdrops si de casualidad se cuelan
+        setInterval(() => {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        }, 500);
+
+        // --- PAGINACIÓN DE SEGUIDORES ---
+        const btnLoadFollowers = document.getElementById('load-more-followers');
+        if (btnLoadFollowers) {
+            // Remove old listeners implicitly by recreating if needed or just add it (HTMX swaps the button anyway)
+            btnLoadFollowers.addEventListener('click', function(e) {
+                e.preventDefault();
+                const hiddenItems = document.querySelectorAll('.follower-item.d-none');
+                for (let i = 0; i < 5 && i < hiddenItems.length; i++) {
+                    hiddenItems[i].classList.remove('d-none');
+                    hiddenItems[i].classList.add('d-flex');
+                }
+                if (document.querySelectorAll('.follower-item.d-none').length === 0) {
+                    btnLoadFollowers.style.display = 'none';
+                }
+            });
+        }
+
+        // --- PAGINACIÓN DE AMIGOS MUTUOS ---
+        const btnLoadAmigos = document.getElementById('load-more-amigos');
+        if (btnLoadAmigos) {
+            btnLoadAmigos.addEventListener('click', function(e) {
+                e.preventDefault();
+                const hiddenItems = document.querySelectorAll('.amigo-item.d-none');
+                for (let i = 0; i < 5 && i < hiddenItems.length; i++) {
+                    hiddenItems[i].classList.remove('d-none');
+                    hiddenItems[i].classList.add('d-flex');
+                }
+                if (document.querySelectorAll('.amigo-item.d-none').length === 0) {
+                    btnLoadAmigos.style.display = 'none';
+                }
+            });
+        }
 
         // --- 1. WebSocket de ESTADO (Online/Offline) ---
         try {

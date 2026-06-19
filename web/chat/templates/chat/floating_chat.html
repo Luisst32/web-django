@@ -148,10 +148,28 @@
 
 <script>
     let chatSocket = null;
+    let activeChatSocketId = null;
     let presenceSocket = null;
     const presenceTimers = {}; // To manage 5-minute timeouts
     const currentUserId = parseInt("{{ request.user.id }}".trim());
     console.log("Current User ID initialized:", currentUserId);
+
+    // ---- NAVBAR CHAT BADGE ----
+    function incrementChatBadge() {
+        const badge = document.getElementById('chat-badge');
+        if (!badge) return;
+        const current = parseInt(badge.textContent.trim()) || 0;
+        badge.textContent = current + 1;
+        badge.classList.remove('d-none');
+    }
+
+    function clearChatBadge() {
+        const badge = document.getElementById('chat-badge');
+        if (!badge) return;
+        badge.textContent = '0';
+        badge.classList.add('d-none');
+    }
+    // ---------------------------
 
     function toggleMessagePanel() {
         var panel = document.getElementById('message-panel');
@@ -162,7 +180,10 @@
         const trigger = document.getElementById('chat-compact-trigger');
         if (trigger) trigger.classList.add('hidden');
 
-        // Mark all as read
+        // Limpiar badge del navbar al abrir el panel
+        clearChatBadge();
+
+        // Marcar como leídos los mensajes del chat activo cuando se abre el panel
         if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
             chatSocket.send(JSON.stringify({ 'action': 'read_messages' }));
         }
@@ -237,51 +258,121 @@
         }
     }
 
+    // Mapa para cancelar reconexiones pendientes al cambiar de chat
+    let reconnectTimer = null;
+
     function connectToChat(chatId) {
         if (!chatId) {
             console.error('ERROR: Chat ID no válido:', chatId);
             return;
         }
 
+        // Cancelar cualquier reconexión pendiente del chat anterior
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
+
+        // Si ya estamos en este mismo chat y el socket está abierto, no hacer nada
+        if (activeChatSocketId === chatId && chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            console.log('Ya conectado al chat:', chatId);
+            return;
+        }
+
+        // Guardar el chatId ANTES de cerrar el socket anterior
+        // para que su onclose sepa que ya no debe reconectar
+        const previousChatId = activeChatSocketId;
+        activeChatSocketId = chatId;
+
+        // Cerrar el socket anterior si existe
         if (chatSocket) {
-            chatSocket.close();
+            const oldSocket = chatSocket;
+            chatSocket = null; // Desconectar la referencia global primero
+            oldSocket.onclose = null; // Evitar que dispare reconexión
+            oldSocket.onerror = null;
+            oldSocket.onmessage = null;
+            try { oldSocket.close(); } catch(e) {}
         }
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/ws/chat/${chatId}/`;
         
-        console.log('Conectando WebSocket a:', wsUrl);
+        console.log('Conectando WebSocket a:', wsUrl, '(chatId:', chatId, ')');
 
-        chatSocket = new WebSocket(wsUrl);
+        const currentSocket = new WebSocket(wsUrl);
+        chatSocket = currentSocket;
 
-        chatSocket.onopen = function (e) {
-            console.log('Chat socket connected');
-            // Check read status on connect
-            chatSocket.send(JSON.stringify({ 'action': 'read_messages' }));
+        let chatHeartbeat = null;
+
+        currentSocket.onopen = function (e) {
+            // Verificar que este socket siga siendo el activo
+            if (chatSocket !== currentSocket) { currentSocket.close(); return; }
+            console.log('Chat socket connected a chatId:', chatId);
+
+            // Solo marcar como leído si el panel está visible/abierto
+            const panel = document.getElementById('message-panel');
+            if (panel && panel.classList.contains('active')) {
+                currentSocket.send(JSON.stringify({ 'action': 'read_messages' }));
+            }
+
+            // Ping cada 30 segundos para mantener el WebSocket vivo
+            chatHeartbeat = setInterval(function() {
+                if (chatSocket === currentSocket && currentSocket.readyState === WebSocket.OPEN) {
+                    currentSocket.send(JSON.stringify({ 'action': 'heartbeat' }));
+                } else {
+                    clearInterval(chatHeartbeat);
+                }
+            }, 30000);
         };
 
-        chatSocket.onmessage = function (e) {
+        currentSocket.onmessage = function (e) {
+            // Ignorar mensajes de sockets ya reemplazados
+            if (chatSocket !== currentSocket) return;
+
             const data = JSON.parse(e.data);
-            console.log('Chat message received:', data);
+            console.log('Chat message received (chatId ' + chatId + '):', data.type);
 
             if (data.type === 'chat_message') {
                 renderIncomingMessage(data);
                 if (typeof updateLastSentStatus === 'function') {
                     updateLastSentStatus();
                 }
+                if (data.user_id != currentUserId) {
+                    currentSocket.send(JSON.stringify({ action: 'message_received', message_id: data.message_id }));
+                    // Si el panel NO está visible o el chat no está activo, incrementar badge del navbar
+                    const panel = document.getElementById('message-panel');
+                    const isPanelOpen = panel && panel.classList.contains('active');
+                    if (!isPanelOpen) {
+                        incrementChatBadge();
+                    }
+                }
             } else if (data.type === 'chat_read_receipt') {
                 handleReadReceipt(data);
+            } else if (data.type === 'chat_delivered_receipt') {
+                handleDeliveredReceipt(data);
             } else if (data.type === 'user_typing') {
                 handleTypingIndicator(data);
             }
         };
 
-        chatSocket.onerror = function (e) {
+        currentSocket.onerror = function (e) {
+            if (chatSocket !== currentSocket) return;
             console.error('Chat socket error:', e);
         };
 
-        chatSocket.onclose = function (e) {
-            console.error('Chat socket closed unexpectedly:', e.code, e.reason);
+        currentSocket.onclose = function (e) {
+            if (chatHeartbeat) clearInterval(chatHeartbeat);
+            // Solo reconectar si este socket sigue siendo el activo para este chatId
+            if (chatSocket === currentSocket && activeChatSocketId === chatId) {
+                chatSocket = null;
+                console.warn('Chat socket closed (code ' + e.code + '). Reconectando en 2s...');
+                reconnectTimer = setTimeout(function() {
+                    reconnectTimer = null;
+                    if (activeChatSocketId === chatId) {
+                        connectToChat(chatId);
+                    }
+                }, 2000);
+            }
         };
     }
 
@@ -311,6 +402,20 @@
         }
     }
 
+    function handleDeliveredReceipt(data) {
+        const readerId = parseInt(data.user_id);
+        if (readerId === currentUserId) return;
+
+        const sentMessages = document.querySelectorAll('.message-status.status-sent');
+        sentMessages.forEach(el => {
+            if (el.innerText.includes('Enviado')) {
+                const isImage = el.closest('.message-bubble').style.background === 'transparent';
+                el.innerHTML = '<i class="fas fa-check-double"></i> Recibido';
+                el.style.color = isImage ? '#666' : '#a0a0a0';
+            }
+        });
+    }
+
     function handleTypingIndicator(data) {
         // Implement typing indicator logic here if needed
     }
@@ -333,6 +438,25 @@
         let bubbleContent = '';
         if (data.tipo === 'imagen') {
             bubbleContent = `<img src="${data.image_url}" class="img-fluid rounded-2 mb-1" style="max-height: 250px; cursor: pointer; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);" onclick="window.open('${data.image_url}', '_blank')">`;
+        } else if (data.tipo === 'story_reply') {
+            let storyHtml = '';
+            if (data.story_url) {
+                storyHtml = `<img src="${data.story_url}" style="width: 40px; height: 60px; object-fit: cover; border-radius: 4px;">`;
+            } else {
+                storyHtml = `<div style="width: 40px; height: 60px; background: ${data.story_color || '#4f46e5'}; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden;"><span class="text-white text-center" style="font-size: 0.4rem; padding: 2px;"></span></div>`;
+            }
+            bubbleContent = `
+                <div class="story-reply-preview mb-2 p-2 rounded" style="background: rgba(0,0,0,0.1); border-left: 3px solid ${isMe ? '#fff' : '#0084ff'};">
+                    <small class="d-block mb-1" style="opacity: 0.8; font-size: 0.75rem;"><i class="fas fa-reply"></i> Respondió a la historia</small>
+                    <div class="d-flex align-items-center gap-2" style="cursor: pointer;" onclick="if(typeof abrirVisorStories === 'function') abrirVisorStories('${data.story_usuario_id}', '${data.story_id}');">
+                        ${storyHtml}
+                        <div class="text-truncate small flex-grow-1" style="max-width: 150px; opacity: 0.9;">
+                            Historia
+                        </div>
+                    </div>
+                </div>
+                <div class="message-text" style="word-wrap: break-word;">${data.message}</div>
+            `;
         } else {
             bubbleContent = `<div class="message-text" style="word-wrap: break-word;">${data.message}</div>`;
         }
@@ -354,15 +478,19 @@
         `;
 
         try {
-            // Insert logic similar to htmx-swap="beforeend"
-            // If there's a typing indicator, insert before it
+            const isNearBottom = container && Math.abs(container.scrollTop) < 100;
             const indicator = document.getElementById('typing-indicator');
             if (indicator) {
-                indicator.insertAdjacentHTML('beforebegin', msgHtml);
+                indicator.insertAdjacentHTML('afterend', msgHtml);
             } else {
-                container.insertAdjacentHTML('beforeend', msgHtml);
+                container.insertAdjacentHTML('afterbegin', msgHtml);
             }
-            container.scrollTop = container.scrollHeight;
+            container.scrollTop = 0; // Con column-reverse, 0 es el fondo visible
+
+            // Si es un mensaje entrante y estamos viendo la parte inferior del chat, lo marcamos como leído automáticamente.
+            if (!isMe && isNearBottom && typeof window.markChatAsRead === 'function') {
+                window.markChatAsRead();
+            }
         } catch (error) {
             console.error('ERROR al renderizar mensaje:', error);
         }
@@ -408,12 +536,10 @@
     }
 
     function highlightContact(el, userId) {
-        // Only visual highlight, actual load is handled by HTMX
         // Remove notification badge if present
         const badge = el.querySelector('.badge');
-        if (badge) {
-            badge.remove();
-        }
+        if (badge) badge.remove();
+
         // Reset preview font weight
         const previewEl = el.querySelector('.small.text-truncate');
         if (previewEl) {
@@ -424,7 +550,18 @@
         // Update active class in list items
         document.querySelectorAll('.contact-list-item').forEach(item => item.classList.remove('active'));
         el.classList.add('active');
-        // Store current user ID for reordering logic
+
+        // Store current other user ID for reordering logic
         window.currentChatOtherUserId = userId;
     }
+
+    // Escuchar evento que dispara chat_window.html cuando ya está en el DOM
+    // para conectar el WebSocket al chat correcto
+    document.addEventListener('chat:connect', function(e) {
+        const chatId = e.detail && e.detail.chatId;
+        if (chatId) {
+            console.log('[floating_chat] Evento chat:connect recibido, chatId:', chatId);
+            connectToChat(chatId);
+        }
+    });
 </script>
