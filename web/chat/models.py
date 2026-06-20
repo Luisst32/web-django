@@ -52,4 +52,27 @@ class Mensaje(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.chat.save()
+
+
+class LlamadaLog(models.Model):
+    ESTADO_CHOICES = [
+        ('iniciada', 'Iniciada'),
+        ('respondida', 'Respondida'),
+        ('rechazada', 'Rechazada'),
+        ('perdida', 'Perdida'),
+        ('finalizada', 'Finalizada'),
+    ]
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='llamadas')
+    llamante = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='llamadas_realizadas')
+    receptor = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name='llamadas_recibidas')
+    inicio = models.DateTimeField(auto_now_add=True)
+    fin = models.DateTimeField(null=True, blank=True)
+    duracion_segundos = models.IntegerField(null=True, blank=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='iniciada')
+
+    class Meta:
+        db_table = 'llamada_log'
+        ordering = ['-inicio']
+
+    def __str__(self):
+        return f"Llamada de {self.llamante} a {self.receptor} ({self.estado})"

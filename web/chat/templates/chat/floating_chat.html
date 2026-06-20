@@ -1,3 +1,5 @@
+{% load static %}
+{% include 'chat/call_ui.html' %}
 <!-- MESSAGE PANEL (Floating Bottom-Right) -->
 <div id="message-panel" class="message-panel">
     <div class="message-header" onclick="toggleMinimize()" style="cursor: pointer;">
@@ -150,9 +152,48 @@
     let chatSocket = null;
     let activeChatSocketId = null;
     let presenceSocket = null;
-    const presenceTimers = {}; // To manage 5-minute timeouts
+    const presenceTimers = {}; // To manage timeouts
+    const presenceCache = {}; // Cache of {userId: 'online'|'offline'} for when DOM loads later
     const currentUserId = parseInt("{{ request.user.id }}".trim());
     console.log("Current User ID initialized:", currentUserId);
+
+    // ---- TIMEZONE FORMATTING ----
+    function formatLocalTime() {
+        document.querySelectorAll('.local-time').forEach(el => {
+            if (el.dataset.utc && !el.dataset.formatted) {
+                let utcStr = el.dataset.utc;
+                if (!utcStr.endsWith('Z')) utcStr += 'Z'; // ensure UTC
+                let d = new Date(utcStr);
+                if (!isNaN(d.getTime())) {
+                    el.textContent = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    el.dataset.formatted = "true";
+                }
+            }
+        });
+    }
+
+    document.body.addEventListener('htmx:afterSwap', function(e) {
+        formatLocalTime();
+    });
+
+    // ---- PRESENCE POLLING (Fallback/Definitive source of truth) ----
+    function fetchOnlineStatuses() {
+        fetch("{% url 'online_status_api' %}")
+            .then(res => res.json())
+            .then(data => {
+                if (data.statuses) {
+                    console.log('[Presence API] Synced statuses:', data.statuses);
+                    Object.entries(data.statuses).forEach(([userId, status]) => {
+                        updateUserStatusInList(userId, status);
+                    });
+                }
+            })
+            .catch(err => console.error('[Presence API] Sync error:', err));
+    }
+    
+    // Fetch immediately on load, then every 30 seconds
+    fetchOnlineStatuses();
+    setInterval(fetchOnlineStatuses, 30000);
 
     // ---- NAVBAR CHAT BADGE ----
     function incrementChatBadge() {
@@ -230,9 +271,31 @@
 
         presenceSocket.onmessage = function (e) {
             const data = JSON.parse(e.data);
-            if (data.type === 'user_status') {
+            if (data.type === 'presence_update') {
                 updateUserStatusInList(data.user_id, data.status);
-                // Also update header if chatting with this user
+                
+                // Clear any existing timer for this user
+                if (presenceTimers[data.user_id]) {
+                    clearTimeout(presenceTimers[data.user_id]);
+                }
+                
+                // Set a 30-second timeout for testing. If no heartbeat is received, mark offline.
+                if (data.status === 'online') {
+                    presenceTimers[data.user_id] = setTimeout(() => {
+                        updateUserStatusInList(data.user_id, 'offline');
+                        
+                        // Update header if we are chatting with them
+                        if (window.currentChatOtherUserId && window.currentChatOtherUserId == data.user_id) {
+                            const statusEl = document.getElementById('chat-status');
+                            if (statusEl) {
+                                statusEl.innerText = 'Desconectado';
+                                statusEl.style.color = '#9ca3af';
+                            }
+                        }
+                    }, 35000); // 35 seconds (TEST MODE)
+                }
+
+                // Update header immediately if chatting with this user
                 if (window.currentChatOtherUserId && window.currentChatOtherUserId == data.user_id) {
                     const statusEl = document.getElementById('chat-status');
                     if (statusEl) {
@@ -249,14 +312,52 @@
     }
 
     function updateUserStatusInList(userId, status) {
+        // Always update cache so when contact list loads later it gets the right status
+        presenceCache[userId] = status;
+
+        console.log('[Presence] Updating user', userId, 'to status:', status);
         const item = document.querySelector(`.contact-list-item[data-user-id="${userId}"]`);
         if (item) {
             const indicator = item.querySelector('.status-indicator');
             if (indicator) {
-                indicator.className = `status-indicator ${status === 'online' ? 'bg-success' : 'bg-secondary'}`;
+                if (status === 'online') {
+                    indicator.classList.remove('bg-secondary');
+                    indicator.classList.add('bg-success');
+                } else {
+                    indicator.classList.remove('bg-success');
+                    indicator.classList.add('bg-secondary');
+                }
+                console.log('[Presence] Updated indicator for user', userId, 'to', status);
             }
         }
     }
+
+    // Apply cached presence statuses to all contact list items
+    function applyPresenceCacheToList() {
+        console.log('[Presence] Applying cache to contact list:', presenceCache);
+        Object.entries(presenceCache).forEach(([userId, status]) => {
+            const item = document.querySelector(`.contact-list-item[data-user-id="${userId}"]`);
+            if (item) {
+                const indicator = item.querySelector('.status-indicator');
+                if (indicator) {
+                    if (status === 'online') {
+                        indicator.classList.remove('bg-secondary');
+                        indicator.classList.add('bg-success');
+                    } else {
+                        indicator.classList.remove('bg-success');
+                        indicator.classList.add('bg-secondary');
+                    }
+                }
+            }
+        });
+    }
+
+    // When HTMX renders the contact list, apply the cached presence statuses
+    document.addEventListener('htmx:afterSwap', function(e) {
+        if (e.detail && e.detail.target && e.detail.target.id === 'chat-content-area') {
+            setTimeout(applyPresenceCacheToList, 100);
+        }
+    });
 
     // Mapa para cancelar reconexiones pendientes al cambiar de chat
     let reconnectTimer = null;
@@ -339,12 +440,6 @@
                 }
                 if (data.user_id != currentUserId) {
                     currentSocket.send(JSON.stringify({ action: 'message_received', message_id: data.message_id }));
-                    // Si el panel NO está visible o el chat no está activo, incrementar badge del navbar
-                    const panel = document.getElementById('message-panel');
-                    const isPanelOpen = panel && panel.classList.contains('active');
-                    if (!isPanelOpen) {
-                        incrementChatBadge();
-                    }
                 }
             } else if (data.type === 'chat_read_receipt') {
                 handleReadReceipt(data);
@@ -471,7 +566,7 @@
                         <div class="message-status status-sent me-2" style="color: ${data.tipo === 'imagen' ? '#666' : '#e0e0e0'}">
                             <i class="fas fa-check"></i> Enviado
                         </div>` : ''}
-                        <div>${data.timestamp}</div>
+                        <div class="local-time" data-utc="${data.timestamp}"></div>
                     </div>
                 </div>
             </div>
@@ -486,9 +581,12 @@
                 container.insertAdjacentHTML('afterbegin', msgHtml);
             }
             container.scrollTop = 0; // Con column-reverse, 0 es el fondo visible
+            formatLocalTime();
 
             // Si es un mensaje entrante y estamos viendo la parte inferior del chat, lo marcamos como leído automáticamente.
-            if (!isMe && isNearBottom && typeof window.markChatAsRead === 'function') {
+            const panel = document.getElementById('message-panel');
+            const isPanelOpen = panel && panel.classList.contains('active');
+            if (!isMe && isNearBottom && isPanelOpen && typeof window.markChatAsRead === 'function') {
                 window.markChatAsRead();
             }
         } catch (error) {
@@ -523,11 +621,14 @@
             }
 
             // Update time
-            const timeEl = contactItem.querySelector('.time-badge'); // Assuming we add a class for time
+            const timeEl = contactItem.querySelector('.local-time');
             if (timeEl) {
-                timeEl.innerText = data.timestamp;
+                timeEl.dataset.utc = data.timestamp;
+                delete timeEl.dataset.formatted;
             }
         }
+        
+        formatLocalTime();
     }
 
     // Init presence
@@ -564,4 +665,332 @@
             connectToChat(chatId);
         }
     });
+
+    // ================================================================
+    // === LLAMADAS DE AUDIO WebRTC ===================================
+    // ================================================================
+
+    let callSocket = null;
+    let peerConnection = null;
+    let localStream = null;
+    let currentCallData = null;
+    let callTimerInterval = null;
+    let callStartTime = null;
+    let isMuted = false;
+    let isSpeakerOff = false;
+
+    const ICE_SERVERS = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+        ]
+    };
+
+    // --- Conectar WebSocket de llamadas ---
+    function connectCallSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        callSocket = new WebSocket(`${protocol}//${window.location.host}/ws/call/`);
+
+        callSocket.onopen = () => console.log('[Call WS] Conectado');
+
+        callSocket.onmessage = function(e) {
+            try {
+                const data = JSON.parse(e.data);
+                console.log('[Call WS] Recibido:', data.action);
+                switch(data.action) {
+                    case 'incoming_call':  handleIncomingCall(data);  break;
+                    case 'call_accepted':  handleCallAccepted(data);  break;
+                    case 'call_rejected':  handleCallRejected();       break;
+                    case 'call_offer':     handleCallOffer(data);      break;
+                    case 'call_answer':    handleCallAnswer(data);     break;
+                    case 'ice_candidate':  handleIceCandidate(data);   break;
+                    case 'end_call':       handleRemoteEndCall();       break;
+                }
+            } catch(err) { console.error('[Call WS] Parse error:', err); }
+        };
+
+        callSocket.onclose = () => {
+            console.warn('[Call WS] Cerrado. Reconectando en 3s...');
+            setTimeout(connectCallSocket, 3000);
+        };
+        callSocket.onerror = (e) => console.error('[Call WS] Error:', e);
+    }
+
+    // --- Helper: enviar por callSocket ---
+    function callSend(obj) {
+        if (callSocket && callSocket.readyState === WebSocket.OPEN) {
+            callSocket.send(JSON.stringify(obj));
+        } else {
+            console.error('[Call] Socket no disponible, readyState:', callSocket && callSocket.readyState);
+        }
+    }
+
+    // --- Iniciar llamada (llamante) ---
+    window.startCall = function(targetUserId, peerName, peerPhoto) {
+        if (!callSocket || callSocket.readyState !== WebSocket.OPEN) {
+            alert('Conectando al servicio de llamadas, intenta en un momento...');
+            return;
+        }
+        currentCallData = { target_user_id: targetUserId, peer_name: peerName.trim() || 'Usuario', peer_photo: peerPhoto, is_caller: true };
+        callSend({ action: 'initiate_call', target_user_id: targetUserId });
+        showActiveCallUI(currentCallData.peer_name, currentCallData.peer_photo);
+        document.getElementById('call-status-label').textContent = 'Llamando...';
+    };
+
+    // --- Llamada entrante (receptor) ---
+    function handleIncomingCall(data) {
+        currentCallData = {
+            llamada_id: data.llamada_id,
+            target_user_id: data.caller_id,
+            peer_name: data.caller_name || data.caller_username || 'Usuario',
+            peer_photo: data.caller_photo,
+            is_caller: false,
+        };
+        const overlay = document.getElementById('incoming-call-overlay');
+        document.getElementById('incoming-caller-name').textContent = currentCallData.peer_name;
+        const photoEl = document.getElementById('incoming-caller-photo');
+        const iconEl  = document.getElementById('incoming-caller-icon');
+        if (data.caller_photo) {
+            photoEl.src = data.caller_photo;
+            photoEl.style.display = 'block';
+            iconEl.style.display = 'none';
+        }
+        overlay.style.display = 'block';
+        try { document.getElementById('call-ringtone').play(); } catch(e) {}
+    }
+
+    // --- Receptor acepta ---
+    window.acceptCall = async function() {
+        try {
+            console.log('[Call] Aceptando llamada...');
+            document.getElementById('incoming-call-overlay').style.display = 'none';
+            try { const r = document.getElementById('call-ringtone'); r.pause(); r.currentTime = 0; } catch(e) {}
+
+            // Notificar al llamante
+            callSend({
+                action: 'call_accepted',
+                target_user_id: currentCallData.target_user_id,
+                llamada_id: currentCallData.llamada_id,
+            });
+
+            // Obtener micro del receptor
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error("Tu navegador no soporta llamadas de audio en esta conexión (¿estás usando HTTP en vez de HTTPS?).");
+                }
+                localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                console.log('[Call] Stream local obtenido');
+            } catch(err) {
+                console.error('[Call] Error al acceder al micrófono:', err);
+                alert('Error de micrófono: ' + err.message);
+                callSend({ action: 'end_call', target_user_id: currentCallData.target_user_id, llamada_id: currentCallData.llamada_id, duracion: 0 });
+                currentCallData = null;
+                cleanupCall();
+                return;
+            }
+
+            showActiveCallUI(currentCallData.peer_name, currentCallData.peer_photo);
+            createPeerConnection();
+        } catch (e) {
+            alert("Error en acceptCall: " + e.message);
+        }
+    };
+
+    // --- Receptor rechaza ---
+    window.rejectCall = function() {
+        try {
+            document.getElementById('incoming-call-overlay').style.display = 'none';
+            try { const r = document.getElementById('call-ringtone'); r.pause(); r.currentTime = 0; } catch(e) {}
+            if (currentCallData) {
+                callSend({ action: 'call_rejected', target_user_id: currentCallData.target_user_id, llamada_id: currentCallData.llamada_id });
+            }
+            currentCallData = null;
+        } catch (e) {
+            alert("Error en rejectCall: " + e.message);
+        }
+    };
+
+    // --- Llamante: receptor aceptó → obtener micro y enviar offer ---
+    async function handleCallAccepted(data) {
+        try {
+            console.log('[Call] Receptor aceptó, obteniendo micrófono...');
+            currentCallData.llamada_id = data.llamada_id;
+
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error("Navegador no soporta audio en esta conexión.");
+                }
+                localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                console.log('[Call] Stream local del llamante obtenido');
+            } catch(err) {
+                console.error('[Call] Error al acceder al micrófono:', err);
+                alert('Error de micrófono: ' + err.message);
+                cleanupCall();
+                return;
+            }
+
+            createPeerConnection();
+
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                callSend({ action: 'call_offer', target_user_id: currentCallData.target_user_id, sdp: peerConnection.localDescription });
+                console.log('[Call] Offer enviado');
+            } catch(err) {
+                console.error('[Call] Error creando offer:', err);
+                alert('Error de conexión: ' + err.message);
+            }
+        } catch(e) {
+            alert("Error en handleCallAccepted: " + e.message);
+        }
+    }
+
+    // --- Receptor: recibir offer y responder ---
+    async function handleCallOffer(data) {
+        console.log('[Call] Offer recibido, creando answer...');
+        if (!peerConnection) createPeerConnection();
+        try {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            callSend({ action: 'call_answer', target_user_id: currentCallData.target_user_id, sdp: peerConnection.localDescription });
+            console.log('[Call] Answer enviado');
+        } catch(err) {
+            console.error('[Call] Error en handleCallOffer:', err);
+        }
+    }
+
+    // --- Llamante: recibir answer ---
+    async function handleCallAnswer(data) {
+        console.log('[Call] Answer recibido');
+        try {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+        } catch(err) {
+            console.error('[Call] Error en handleCallAnswer:', err);
+        }
+    }
+
+    // --- ICE candidate ---
+    async function handleIceCandidate(data) {
+        if (data.candidate && peerConnection) {
+            try {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+            } catch(e) { console.error('[ICE] Error:', e); }
+        }
+    }
+
+    // --- Colgar (local) ---
+    window.endCall = function() {
+        if (currentCallData) {
+            const duracion = callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : 0;
+            callSend({ action: 'end_call', target_user_id: currentCallData.target_user_id, llamada_id: currentCallData.llamada_id, duracion: duracion });
+        }
+        cleanupCall();
+    };
+
+    function handleRemoteEndCall() { cleanupCall(); }
+
+    function handleCallRejected() {
+        document.getElementById('call-status-label').textContent = 'Llamada rechazada';
+        setTimeout(cleanupCall, 1500);
+    }
+
+    // --- Crear RTCPeerConnection (audio only) ---
+    function createPeerConnection() {
+        peerConnection = new RTCPeerConnection(ICE_SERVERS);
+
+        // Agregar tracks de audio local
+        if (localStream) {
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        }
+
+        // Relay ICE candidates
+        peerConnection.onicecandidate = (e) => {
+            if (e.candidate && currentCallData) {
+                callSend({ action: 'ice_candidate', target_user_id: currentCallData.target_user_id, candidate: e.candidate });
+            }
+        };
+
+        // Audio remoto → reproducir
+        peerConnection.ontrack = (e) => {
+            console.log('[Call] Track remoto recibido');
+            const remoteAudio = document.getElementById('remote-audio');
+            if (remoteAudio && e.streams[0]) {
+                remoteAudio.srcObject = e.streams[0];
+                document.getElementById('call-status-label').textContent = 'En llamada';
+                callStartTime = Date.now();
+                startCallTimer();
+            }
+        };
+
+        peerConnection.onconnectionstatechange = () => {
+            console.log('[Call] Estado de conexión:', peerConnection.connectionState);
+            if (peerConnection.connectionState === 'connected') {
+                document.getElementById('call-status-label').textContent = 'En llamada';
+            } else if (['disconnected','failed','closed'].includes(peerConnection.connectionState)) {
+                cleanupCall();
+            }
+        };
+    }
+
+    // --- Mostrar UI de llamada activa ---
+    function showActiveCallUI(peerName, peerPhoto) {
+        document.getElementById('active-call-overlay').style.display = 'block';
+        document.getElementById('call-peer-name').textContent = peerName;
+        const photoEl = document.getElementById('call-peer-photo');
+        const iconEl  = document.getElementById('call-peer-icon');
+        if (peerPhoto) {
+            photoEl.src = peerPhoto;
+            photoEl.style.display = 'block';
+            iconEl.style.display = 'none';
+        }
+    }
+
+    function startCallTimer() {
+        const timerEl = document.getElementById('call-timer');
+        callTimerInterval = setInterval(() => {
+            if (!callStartTime) return;
+            const secs = Math.floor((Date.now() - callStartTime) / 1000);
+            const m = String(Math.floor(secs / 60)).padStart(2, '0');
+            const s = String(secs % 60).padStart(2, '0');
+            timerEl.textContent = `${m}:${s}`;
+        }, 1000);
+    }
+
+    // --- Limpiar todo ---
+    function cleanupCall() {
+        if (peerConnection) { peerConnection.close(); peerConnection = null; }
+        if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+        const ra = document.getElementById('remote-audio'); if (ra) ra.srcObject = null;
+        document.getElementById('active-call-overlay').style.display = 'none';
+        document.getElementById('incoming-call-overlay').style.display = 'none';
+        try { const r = document.getElementById('call-ringtone'); r.pause(); r.currentTime = 0; } catch(e) {}
+        if (callTimerInterval) { clearInterval(callTimerInterval); callTimerInterval = null; }
+        callStartTime = null;
+        currentCallData = null;
+        isMuted = false; isSpeakerOff = false;
+        const muteIcon = document.getElementById('mute-icon');
+        const muteBtn  = document.getElementById('btn-mute');
+        if (muteIcon) muteIcon.className = 'fas fa-microphone';
+        if (muteBtn)  muteBtn.style.background = 'rgba(255,255,255,0.12)';
+        const timerEl = document.getElementById('call-timer');
+        if (timerEl) timerEl.textContent = '';
+        const statusEl = document.getElementById('call-status-label');
+        if (statusEl) statusEl.textContent = 'Conectando...';
+    }
+
+    window.toggleMute = function() {
+        if (!localStream) {
+            console.warn('[Call] No localStream found to mute');
+            return;
+        }
+        isMuted = !isMuted;
+        localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+        document.getElementById('mute-icon').className = isMuted ? 'fas fa-microphone-slash' : 'fas fa-microphone';
+        document.getElementById('btn-mute').style.background = isMuted ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.12)';
+    };
+
+    // Inicializar al cargar
+    connectCallSocket();
+
 </script>

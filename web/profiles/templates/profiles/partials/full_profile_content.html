@@ -4,28 +4,24 @@
 
 <!-- CONTENEDOR CENTRAL del Perfil -->
 <!-- Removing "container" and fixed "900px" width to fit in col-lg-6 context fluidly -->
-<div class="px-0 mb-4 w-100">
+<div class="px-0 mb-4 w-100" style="margin-top: -1.5rem;">
+    <div class="card border-0 shadow-none mb-4 bg-transparent" style="position: relative;">
+        <!-- Fondo blanco que ocupa todo el ancho -->
+        <div style="position: absolute; top: 0; left: 50%; right: 50%; width: 100vw; height: 100%; margin-left: -50vw; background-color: #fff; z-index: -1; border-bottom: 1px solid #ddd;"></div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
-        <!-- Portada -->
-        <div style="height: 200px; position: relative;">
-            {% if perfil.foto_portada %}
-            <img src="{{ perfil.foto_portada.url }}" class="w-100 h-100 object-fit-cover"
-                alt="Portada de {{ usuario.username }}">
-            {% else %}
-            <div class="w-100 h-100 bg-secondary"></div>
-            {% endif %}
+        <div style="max-width: 1000px; margin: 0 auto; width: 100%;">
+            <!-- Portada -->
+            <div style="height: 350px; position: relative; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; overflow: hidden;">
+                {% if perfil.foto_portada %}
+                <img src="{{ perfil.foto_portada.url }}" class="w-100 h-100 object-fit-cover"
+                    alt="Portada de {{ usuario.username }}">
+                {% else %}
+                <div class="w-100 h-100 bg-secondary"></div>
+                {% endif %}
+            </div>
 
-            <!-- Botón de regreso (Overlay) -->
-            <a href="{% url 'index' %}"
-                class="position-absolute top-0 start-0 m-3 btn btn-light rounded-circle shadow-sm p-2 opacity-75 hover-opacity-100 text-dark"
-                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-        </div>
-
-        <!-- Cuerpo del Perfil -->
-        <div class="card-body text-center position-relative pt-0 px-3 pb-4">
+            <!-- Cuerpo del Perfil -->
+            <div class="card-body text-center position-relative pt-0 px-3 pb-3">
             <!-- Avatar superpuesto -->
             <div class="mx-auto position-relative"
                 style="width: 120px; height: 120px; margin-top: -60px; margin-bottom: 0.5rem;">
@@ -56,51 +52,56 @@
                     data-bs-toggle="tooltip" data-bs-placement="top">
                 {% endif %}
             </h2>
-            <p class="text-muted mb-2 small">@{{ usuario.username }}</p>
+            <p class="text-muted mb-1 small">@{{ usuario.username }}</p>
 
             <!-- Bio -->
             {% if perfil.bio %}
-            <div class="mb-3 text-secondary mx-auto small" style="max-width: 90%; line-height: 1.5;">
+            <div class="mb-2 text-secondary mx-auto small" style="max-width: 90%; line-height: 1.5;">
                 {{ perfil.bio|linebreaksbr }}
             </div>
             {% endif %}
 
-            <!-- SEGUIDORES y ACCIONES -->
-            <div class="d-flex align-items-center justify-content-center gap-3 mb-3">
-                <!-- Contador simplificado (Clickeable para ver modal) -->
+            <!-- SEGUIDORES y SEGUIDOS -->
+            <div class="d-flex align-items-center justify-content-center mb-2">
                 <div class="text-dark hover-opacity-100" style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;" data-bs-toggle="modal" data-bs-target="#followersModal" data-bs-backdrop="false">
                     <span class="fw-bold fs-6" id="follower-count">{{ cantidad_seguidores }}</span>
                     <span class="text-muted small">Seguidores</span>
                 </div>
-
-                <!-- Botón Seguir (Icono) - Solo si no es el dueño -->
-                {% if usuario != request.user %}
-                {% if esta_siguiendo %}
-                <a href="#" onclick="toggleFollow(event, '{{ usuario.id }}')"
-                    class="btn btn-light rounded-circle border shadow-sm d-flex align-items-center justify-content-center text-danger"
-                    style="width: 36px; height: 36px;" title="Dejar de seguir">
-                    <i class="fas fa-user-check"></i>
-                </a>
-                {% else %}
-                <a href="#" onclick="toggleFollow(event, '{{ usuario.id }}')"
-                    class="btn btn-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                    style="width: 36px; height: 36px;" title="Seguir">
-                    <i class="fas fa-user-plus"></i>
-                </a>
-                {% endif %}
-                {% endif %}
+                <span class="text-muted mx-2">•</span>
+                <div class="text-dark hover-opacity-100" style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;">
+                    <span class="fw-bold fs-6">{{ usuario.siguiendo.count }}</span>
+                    <span class="text-muted small">Seguidos</span>
+                </div>
             </div>
 
-            <!-- Botón Editar Perfil (Visible solo para dueño) -->
-            {% if usuario == request.user %}
-            <div class="mb-3">
+            <!-- Botón Seguir / Editar Perfil (Abajo) -->
+            <div class="d-flex justify-content-center mb-0">
+                {% if usuario != request.user %}
+                    {% if esta_siguiendo %}
+                    <a href="#" onclick="toggleFollow(event, '{{ usuario.id }}')"
+                        class="btn btn-light rounded-pill border shadow-sm d-flex align-items-center justify-content-center text-danger px-4 fw-bold"
+                        title="Dejar de seguir">
+                        <i class="fas fa-user-check me-2"></i> Siguiendo
+                    </a>
+                    {% else %}
+                    <a href="#" onclick="toggleFollow(event, '{{ usuario.id }}')"
+                        class="btn btn-dark rounded-pill shadow-sm d-flex align-items-center justify-content-center px-4 fw-bold"
+                        title="Seguir">
+                        <i class="fas fa-user-plus me-2"></i> Seguir
+                    </a>
+                    {% endif %}
+                {% endif %}
+
+                <!-- Botón Editar Perfil (Visible solo para dueño) -->
+                {% if usuario == request.user %}
                 <a href="{% url 'editar_perfil' username=usuario.username %}"
-                    class="btn btn-black rounded-pill px-3 py-1 fw-bold fs-6">
+                    class="btn btn-black rounded-pill px-4 py-1 fw-bold fs-6">
                     <i class="fas fa-pencil-alt me-2"></i>Editar
                 </a>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
+        </div> <!-- Fin de contenedor max-width 1000px -->
     </div>
 
     <!-- MAIN PROFILE SPLIT CONTENT -->
@@ -473,4 +474,9 @@
             };
         } catch (e) { console.warn("WS Profile Error", e); }
     }
+</script>
+</script>   };
+        } catch (e) { console.warn("WS Profile Error", e); }
+    }
+</script>
 </script>

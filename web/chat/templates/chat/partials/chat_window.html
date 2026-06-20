@@ -35,18 +35,26 @@
             </div>
         </div>
 
-        <div class="dropdown">
-            <button class="btn btn-light btn-sm rounded-circle" data-bs-toggle="dropdown">
-                <i class="fas fa-ellipsis-v"></i>
+        <div class="d-flex align-items-center gap-2">
+            <!-- Botón Llamada de Audio -->
+            <button
+                onclick="startCall({{ otro_usuario.id }}, '{{ otro_usuario.first_name }} {{ otro_usuario.last_name }}', '{% if otro_usuario.foto_perfil %}{{ otro_usuario.foto_perfil.url }}{% endif %}')"
+                class="btn btn-light btn-sm rounded-circle"
+                title="Llamada de audio"
+                style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-phone-alt text-success"></i>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                <li><a class="dropdown-item" href="{% url 'perfil_detalle' username=otro_usuario.username %}">Ver
-                        perfil</a></li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li><a class="dropdown-item text-danger" href="#">Bloquear usuario</a></li>
-            </ul>
+
+            <div class="dropdown">
+                <button class="btn btn-light btn-sm rounded-circle" data-bs-toggle="dropdown">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                    <li><a class="dropdown-item" href="{% url 'perfil_detalle' username=otro_usuario.username %}">Ver perfil</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="#">Bloquear usuario</a></li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -114,7 +122,7 @@
                         {% endif %}
                     </div>
                     {% endif %}
-                    <div>{{ mensaje.fecha_mensaje|date:"H:i" }}</div>
+                    <div class="local-time" data-utc="{{ mensaje.local_time_str }}">{{ mensaje.local_time_str }}</div>
                 </div>
             </div>
         </div>

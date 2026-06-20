@@ -24,7 +24,7 @@ class VerificationBadge(models.Model):
 
 
 class Usuarios(AbstractUser):
-    username = models.CharField(max_length=12, unique=True)
+    username = models.CharField(max_length=150, unique=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     fech_nacimiento = models.DateField(null=True, blank=True)  
@@ -66,13 +66,15 @@ class Usuarios(AbstractUser):
             from django.utils import timezone
             from datetime import timedelta
             
-            # Ensure last_seen is aware
-            last_seen_aware = self.last_seen
-            if timezone.is_naive(last_seen_aware):
-                last_seen_aware = timezone.make_aware(last_seen_aware)
-
-            # Online if seen in the last 5 minutes
-            return last_seen_aware > timezone.now() - timedelta(minutes=5)
+            # last_seen from db is naive UTC when USE_TZ=True but time zone logic gets messy.
+            # Easiest correct way: get current UTC time as naive, compare directly.
+            now_utc_naive = timezone.now().replace(tzinfo=None)
+            
+            ls = self.last_seen
+            if timezone.is_aware(ls):
+                ls = ls.replace(tzinfo=None)
+                
+            return ls > now_utc_naive - timedelta(seconds=30)
         return False
 
 

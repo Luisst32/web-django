@@ -11,15 +11,10 @@ def notify_new_message(sender, instance, created, **kwargs):
         chat = instance.chat
         recipient = chat.user2 if chat.user1 == instance.user else chat.user1
         
-        # Calculate total unread messages for the recipient (RESPECTING PERSISTENCE)
-        qs_unread = Mensaje.objects.filter(
+        # Calculate total unread messages for the recipient
+        total_unread = Mensaje.objects.filter(
             Q(chat__user1=recipient) | Q(chat__user2=recipient)
-        ).filter(es_leido=False).exclude(user=recipient)
-
-        if recipient.last_messages_check:
-            qs_unread = qs_unread.filter(fecha_mensaje__gt=recipient.last_messages_check)
-
-        total_unread = qs_unread.count()
+        ).filter(es_leido=False).exclude(user=recipient).count()
 
         # Send event to the EXISTING notification channel
         channel_layer = get_channel_layer()

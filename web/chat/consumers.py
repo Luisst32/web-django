@@ -3,7 +3,7 @@ import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
-from .models import Chat, Mensaje
+from .models import Chat, Mensaje, LlamadaLog
 from users.models import Usuarios, Seguidores
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -106,7 +106,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         'message': message,
                         'user_id': user.id,
                         'username': user.username,
-                        'timestamp': timezone.now().strftime('%H:%M'),
+                        'timestamp': timezone.now().isoformat(),
                         'message_id': msg_id
                     }
                 )
@@ -208,8 +208,12 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             # Update last_seen in DB
             await self.update_user_last_seen()
             
-            # Broadcast JOIN
+            # Broadcast JOIN to everyone else
             await self.broadcast_presence('online')
+            
+            # Send initial sync: mark all offline users as offline for THIS client
+            # This fixes the case where a user disconnected while this client was away
+            await self.send_initial_sync()
             
             # Start keepalive ping
             self.keepalive_task = asyncio.create_task(self.send_keepalive())
@@ -217,13 +221,29 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             await self.close()
 
     async def disconnect(self, close_code):
+        user = self.scope['user']
+        print(f"[Presence] DISCONNECT called for user: {user} (code: {close_code})")
         # Cancel keepalive task
         if self.keepalive_task:
             self.keepalive_task.cancel()
             
-        if self.scope['user'].is_authenticated:
-            # We DON'T broadcast OFFLINE immediately if we want it to persist 5 minutes
-            # But we can still leave the group
+        if user.is_authenticated:
+            # Broadcast OFFLINE immediately so all clients update the green dot
+            try:
+                print(f"[Presence] Broadcasting OFFLINE for user {user.id} ({user.username})")
+                await self.channel_layer.group_send(
+                    self.presence_group_name,
+                    {
+                        'type': 'presence_update',
+                        'user_id': user.id,
+                        'status': 'offline',
+                        'is_reply': False,
+                        'is_heartbeat': False
+                    }
+                )
+                print(f"[Presence] OFFLINE broadcast sent for user {user.id}")
+            except Exception as e:
+                print(f"[Presence] Error broadcasting offline on disconnect: {e}")
             await self.channel_layer.group_discard(self.presence_group_name, self.channel_name)
 
     async def send_keepalive(self):
@@ -285,3 +305,213 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             user.save(update_fields=['last_seen'])
         except Exception as e:
             print(f"Error updating last_seen: {e}")
+
+    async def send_initial_sync(self):
+        """Send the current online/offline status of all users directly to this client.
+        This ensures that when a client reconnects, they immediately see correct statuses
+        instead of stale ones from before they reconnected."""
+        try:
+            users_status = await self.get_all_users_status()
+            for user_id, status in users_status:
+                await self.send(text_data=json.dumps({
+                    'type': 'presence_update',
+                    'user_id': user_id,
+                    'status': status,
+                    'is_reply': True,
+                    'is_heartbeat': False
+                }))
+        except Exception as e:
+            print(f"Error in send_initial_sync: {e}")
+
+    @database_sync_to_async
+    def get_all_users_status(self):
+        """Return list of (user_id, status) for all users with last_seen set."""
+        from datetime import timedelta
+        from django.utils import timezone
+        
+        now_utc_naive = timezone.now().replace(tzinfo=None)
+        
+        users = Usuarios.objects.exclude(id=self.scope['user'].id).exclude(last_seen=None).values('id', 'last_seen')
+        result = []
+        for u in users:
+            ls = u['last_seen']
+            if timezone.is_aware(ls):
+                ls = ls.replace(tzinfo=None)
+            status = 'online' if ls > (now_utc_naive - timedelta(seconds=30)) else 'offline'
+            result.append((u['id'], status))
+        return result
+
+
+class CallConsumer(AsyncWebsocketConsumer):
+    """
+    WebSocket consumer para señalización de videollamadas WebRTC.
+    Cada usuario conectado se une a su grupo personal: call_user_{user_id}
+    El servidor actúa como relay de señales SDP e ICE entre los peers.
+    """
+
+    async def connect(self):
+        self.user = self.scope['user']
+        if not self.user.is_authenticated:
+            await self.close()
+            return
+        self.personal_group = f'call_user_{self.user.id}'
+        await self.channel_layer.group_add(self.personal_group, self.channel_name)
+        await self.accept()
+        print(f'[Call] Usuario {self.user.username} conectado al canal de llamadas')
+
+    async def disconnect(self, close_code):
+        if hasattr(self, 'personal_group'):
+            await self.channel_layer.group_discard(self.personal_group, self.channel_name)
+
+    async def receive(self, text_data):
+        try:
+            data = json.loads(text_data)
+            action = data.get('action')
+            target_user_id = data.get('target_user_id')
+
+            if action == 'initiate_call':
+                # Caller → Server → Receptor: notificar llamada entrante
+                caller_info = await self.get_user_info(self.user.id)
+                chat_id = await self.get_or_create_chat_id(self.user.id, target_user_id)
+                llamada_id = await self.create_llamada_log(chat_id, self.user.id, target_user_id)
+                await self.channel_layer.group_send(
+                    f'call_user_{target_user_id}',
+                    {
+                        'type': 'call_event',
+                        'action': 'incoming_call',
+                        'caller_id': self.user.id,
+                        'caller_name': caller_info['name'],
+                        'caller_username': caller_info['username'],
+                        'caller_photo': caller_info['photo'],
+                        'llamada_id': llamada_id,
+                        'chat_id': chat_id,
+                    }
+                )
+
+            elif action == 'call_accepted':
+                # Receptor aceptó → notificar al llamante
+                await self.update_llamada_estado(data.get('llamada_id'), 'respondida')
+                await self.channel_layer.group_send(
+                    f'call_user_{target_user_id}',
+                    {
+                        'type': 'call_event',
+                        'action': 'call_accepted',
+                        'from_user_id': self.user.id,
+                        'llamada_id': data.get('llamada_id'),
+                    }
+                )
+
+            elif action == 'call_rejected':
+                # Receptor rechazó → notificar al llamante
+                await self.update_llamada_estado(data.get('llamada_id'), 'rechazada')
+                await self.channel_layer.group_send(
+                    f'call_user_{target_user_id}',
+                    {
+                        'type': 'call_event',
+                        'action': 'call_rejected',
+                        'from_user_id': self.user.id,
+                    }
+                )
+
+            elif action == 'call_offer':
+                # Llamante envía SDP offer → relay al receptor
+                await self.channel_layer.group_send(
+                    f'call_user_{target_user_id}',
+                    {
+                        'type': 'call_event',
+                        'action': 'call_offer',
+                        'sdp': data.get('sdp'),
+                        'from_user_id': self.user.id,
+                    }
+                )
+
+            elif action == 'call_answer':
+                # Receptor envía SDP answer → relay al llamante
+                await self.channel_layer.group_send(
+                    f'call_user_{target_user_id}',
+                    {
+                        'type': 'call_event',
+                        'action': 'call_answer',
+                        'sdp': data.get('sdp'),
+                        'from_user_id': self.user.id,
+                    }
+                )
+
+            elif action == 'ice_candidate':
+                # Relay de candidatos ICE
+                await self.channel_layer.group_send(
+                    f'call_user_{target_user_id}',
+                    {
+                        'type': 'call_event',
+                        'action': 'ice_candidate',
+                        'candidate': data.get('candidate'),
+                        'from_user_id': self.user.id,
+                    }
+                )
+
+            elif action == 'end_call':
+                # Notificar fin de llamada y guardar duración
+                llamada_id = data.get('llamada_id')
+                if llamada_id:
+                    await self.finalize_llamada(llamada_id, data.get('duracion', 0))
+                await self.channel_layer.group_send(
+                    f'call_user_{target_user_id}',
+                    {
+                        'type': 'call_event',
+                        'action': 'end_call',
+                        'from_user_id': self.user.id,
+                    }
+                )
+
+        except Exception as e:
+            print(f'[Call] Error en receive: {e}')
+
+    async def call_event(self, event):
+        """Reenvía el evento al WebSocket del cliente."""
+        await self.send(text_data=json.dumps(event))
+
+    # ---- DB helpers ----
+
+    @database_sync_to_async
+    def get_user_info(self, user_id):
+        u = Usuarios.objects.get(id=user_id)
+        photo = u.foto_perfil.url if u.foto_perfil else None
+        return {
+            'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
+            'username': u.username,
+            'photo': photo,
+        }
+
+    @database_sync_to_async
+    def get_or_create_chat_id(self, user1_id, user2_id):
+        u1_id, u2_id = (user1_id, user2_id) if user1_id < user2_id else (user2_id, user1_id)
+        u1 = Usuarios.objects.get(id=u1_id)
+        u2 = Usuarios.objects.get(id=u2_id)
+        chat, _ = Chat.objects.get_or_create(user1=u1, user2=u2)
+        return chat.id
+
+    @database_sync_to_async
+    def create_llamada_log(self, chat_id, llamante_id, receptor_id):
+        chat = Chat.objects.get(id=chat_id)
+        llamante = Usuarios.objects.get(id=llamante_id)
+        receptor = Usuarios.objects.get(id=receptor_id)
+        log = LlamadaLog.objects.create(
+            chat=chat,
+            llamante=llamante,
+            receptor=receptor,
+            estado='iniciada',
+        )
+        return log.id
+
+    @database_sync_to_async
+    def update_llamada_estado(self, llamada_id, estado):
+        if llamada_id:
+            LlamadaLog.objects.filter(id=llamada_id).update(estado=estado)
+
+    @database_sync_to_async
+    def finalize_llamada(self, llamada_id, duracion):
+        LlamadaLog.objects.filter(id=llamada_id).update(
+            fin=timezone.now(),
+            duracion_segundos=duracion,
+            estado='finalizada',
+        )

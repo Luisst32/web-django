@@ -632,8 +632,8 @@
                         style="border-right: 1px solid #e0e0e0; min-height: calc(100vh - 100px); position: relative; margin-left: -100vw; width: calc(100% + 100vw); padding-left: 100vw; margin-top: -50px; padding-top: 50px;">
                         <!-- MENÚ DE NAVEGACIÓN -->
                         <div class="d-flex flex-column gap-1 mb-3 pt-2">
-                            <a href="{% url 'index' %}" class="nav-link d-flex align-items-center gap-3 fs-5 px-3">
-                                <i class="fas fa-home fa-fw"></i> <span>Home</span>
+                            <a href="{% url 'top_fracasados' %}" class="nav-link d-flex align-items-center gap-3 fs-5 px-3">
+                                <i class="fas fa-thumbs-down fa-fw"></i> <span>Top Fracasados</span>
                             </a>
                             <a href="{% url 'top_seguidores' %}"
                                 class="nav-link d-flex align-items-center gap-3 fs-5 px-3">
@@ -1257,41 +1257,107 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        const notiSocket = new WebSocket(
-            protocol + window.location.host + '/ws/notifications/'
-        );
 
-        notiSocket.onmessage = function (e) {
-            const data = JSON.parse(e.data);
-            if (data.type === 'notification') {
-                updateNotiBadge(1);
-                const bell = document.querySelector('#notiDropdown i');
-                if (bell) {
-                    bell.classList.add('bell-animate');
-                    setTimeout(() => bell.classList.remove('bell-animate'), 500);
-                }
-                const notiList = document.getElementById('notiList');
-                if (notiList && notiList.classList.contains('show')) {
-                    htmx.trigger('#notiDropdown', 'click');
-                }
-            } else if (data.type === 'chat_count_update') {
-                // 1. Badge Global
-                updateChatBadge(data.count);
+        // Audio element para notificaciones de chat
+        const chatAudio = document.createElement('audio');
+        chatAudio.id = 'global-chat-sound';
+        chatAudio.src = "{% static 'song/dragon-studio-new-notification-3-398649.mp3' %}";
+        chatAudio.preload = 'auto';
+        chatAudio.volume = 1.0;
+        document.body.appendChild(chatAudio);
 
-                // 2. Badge Individual (Si existe en la lista)
-                if (data.sender_id) {
-                    updateUserBadge(data.sender_id);
-                }
+        // Desbloquear audio en el primer gesto del usuario (política de autoplay del navegador)
+        let audioUnlocked = false;
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            chatAudio.play().then(() => {
+                chatAudio.pause();
+                chatAudio.currentTime = 0;
+                audioUnlocked = true;
+                console.log('[Chat Sound] Audio unlocked');
+            }).catch(() => {});
+        }
+        document.addEventListener('click', unlockAudio, { once: false });
+        document.addEventListener('keydown', unlockAudio, { once: false });
+        document.addEventListener('touchstart', unlockAudio, { once: false });
+
+        // ---- NOTI SOCKET CON AUTO-RECONEXIÓN Y KEEPALIVE ----
+        let notiSocket = null;
+        let notiReconnectTimer = null;
+        let notiHeartbeat = null;
+
+        function connectNotiSocket() {
+            // Limpiar reconexión pendiente
+            if (notiReconnectTimer) {
+                clearTimeout(notiReconnectTimer);
+                notiReconnectTimer = null;
             }
-        };
+
+            notiSocket = new WebSocket(protocol + window.location.host + '/ws/notifications/');
+
+            notiSocket.onopen = function () {
+                console.log('[NotiSocket] Conectado');
+                // Keepalive ping cada 25 segundos para evitar timeout del servidor
+                notiHeartbeat = setInterval(function () {
+                    if (notiSocket && notiSocket.readyState === WebSocket.OPEN) {
+                        notiSocket.send(JSON.stringify({ action: 'heartbeat' }));
+                    }
+                }, 25000);
+            };
+
+            notiSocket.onmessage = function (e) {
+                const data = JSON.parse(e.data);
+                if (data.type === 'notification') {
+                    updateNotiBadge(1);
+                    const bell = document.querySelector('#notiDropdown i');
+                    if (bell) {
+                        bell.classList.add('bell-animate');
+                        setTimeout(() => bell.classList.remove('bell-animate'), 500);
+                    }
+                    const notiList = document.getElementById('notiList');
+                    if (notiList && notiList.classList.contains('show')) {
+                        htmx.trigger('#notiDropdown', 'click');
+                    }
+                } else if (data.type === 'chat_count_update') {
+                    // Reproducir sonido siempre que llegue un mensaje nuevo (count > 0)
+                    if (data.count > 0) {
+                        try {
+                            chatAudio.currentTime = 0;
+                            let playPromise = chatAudio.play();
+                            if (playPromise !== undefined) {
+                                playPromise.catch(error => {
+                                    console.log('Autoplay prevent or audio play error:', error);
+                                });
+                            }
+                        } catch (e) {}
+                    }
+
+                    // 1. Badge Global
+                    updateChatBadge(data.count);
+
+                    // 2. Badge Individual (Si existe en la lista)
+                    if (data.sender_id) {
+                        updateUserBadge(data.sender_id);
+                    }
+                }
+            };
+
+            notiSocket.onerror = function (e) {
+                console.warn('[NotiSocket] Error:', e);
+            };
+
+            notiSocket.onclose = function (e) {
+                console.warn('[NotiSocket] Cerrado (code ' + e.code + '). Reconectando en 3s...');
+                if (notiHeartbeat) { clearInterval(notiHeartbeat); notiHeartbeat = null; }
+                // Reconectar automáticamente a los 3 segundos
+                notiReconnectTimer = setTimeout(connectNotiSocket, 3000);
+            };
+        }
+
+        // Conectar al iniciar
+        connectNotiSocket();
 
         function updateChatBadge(count) {
-            const panel = document.getElementById('message-panel');
-            // Si el panel está abierto, ignoramos la actualización visual del globo global
-            if (panel && panel.classList.contains('active')) {
-                return;
-            }
-
             const badge = document.getElementById('chat-badge');
             if (badge) {
                 badge.textContent = count;

@@ -19,12 +19,12 @@ def analyze_trending_posts(posts_data):
     genai.configure(api_key=api_key)
     
     # Modelo a usar (Gemini 1.5 Flash es el estándar actual y rápido)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
     prompt_parts = [
         "Eres un crítico de redes sociales 'Guayaco' (de Guayaquil)  ",
-        "se como la verga batracio y arrogante critica dura."
-
+        "se como la verga batracio y arrogante critica dura. Sé moderadamente breve, limitando el análisis a un rango de entre 4 a 7 oraciones por publicación.",
+        "Usa de forma natural frases y palabras como: 'que tiro', 'no creoo', 'gordo', 'montas la de agrandado', 'brother', 'eso eso eso' (referencia al chavo), 'lámpara tu tiro'. Si en la publicación se presume o presume ropa, objetos o mujeres, incluye la frase 'ya vas a sacar en cara'."
     ]
 
     import PIL.Image
@@ -53,7 +53,7 @@ def analyze_trending_posts(posts_data):
             except Exception as e:
                 prompt_parts.append(f"[Error cargando imagen: {str(e)}]")
         
-    prompt_parts.append("\nResponde SOLAMENTE en JSON con este formato exacto: [{\"index\": 0, \"analisis\": \"...\"}, ...]. Si hay foto, comenta sobre ella con tu estilo guayaco pero en nota suave, nada de ser grosero.")
+    prompt_parts.append("\nResponde SOLAMENTE en JSON con este formato exacto: [{\"index\": 0, \"analisis\": \"...\"}, ...]. Si hay foto, comenta sobre ella con tu estilo guayaco pero en nota suave, nada de ser grosero. Recuerda limitar la longitud de la reseña a un rango de entre 4 a 7 oraciones.")
 
     try:
         response = model.generate_content(prompt_parts)

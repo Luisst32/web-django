@@ -30,7 +30,7 @@
                 {% endif %}
             </div>
             {% endif %}
-            <div>{{ mensaje.fecha_mensaje|date:"H:i" }}</div>
+            <div class="local-time" data-utc="{{ mensaje.local_time_str }}">{{ mensaje.local_time_str }}</div>
         </div>
     </div>
 </div>

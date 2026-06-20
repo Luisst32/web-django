@@ -64,10 +64,16 @@ def load_chat_panel(request):
             # Calcular no leídos de este chat específico
             unread_count = chat_obj.mensajes.filter(es_leido=False).exclude(user=request.user).count()
 
+            last_time = last_msg.fecha_mensaje if last_msg else chat_obj.updated_at
+            last_time_str = ""
+            if last_time:
+                last_time_str = last_time.isoformat()
+
             contactos_data.append({
                 'usuario': u,
                 'last_message': preview,
-                'last_time': last_msg.fecha_mensaje if last_msg else chat_obj.updated_at,
+                'last_time': last_time,
+                'last_time_str': last_time_str,
                 'unread_count': unread_count,
                 'has_unread': unread_count > 0
             })
@@ -139,6 +145,9 @@ def get_chat_history(request, user_id):
 
     # NO revertimos. Con flex-direction: column-reverse, el más nuevo (índice 0) debe ser el primero en el DOM (que visualmente es abajo).
     mensajes_list = list(page_obj)
+    
+    for m in mensajes_list:
+        m.local_time_str = m.fecha_mensaje.isoformat()
     
     context = {
         'chat': chat,
@@ -232,7 +241,7 @@ def upload_chat_image(request):
                 'image_url': mensaje.imagen.url,
                 'user_id': request.user.id,
                 'username': request.user.username,
-                'timestamp': mensaje.fecha_mensaje.strftime('%H:%M')
+                'timestamp': mensaje.fecha_mensaje.isoformat()
             }
         )
         
@@ -280,11 +289,46 @@ def responder_historia(request):
                 'story_usuario_id': story.usuario.id,
                 'user_id': request.user.id,
                 'is_read': False,
-                'timestamp': mensaje.fecha_mensaje.strftime('%H:%M'),
+                'timestamp': mensaje.fecha_mensaje.isoformat(),
                 'message_id': mensaje.id
             }
         )
         
         return JsonResponse({'success': True, 'message': 'Respuesta enviada.'})
         
-    return JsonResponse({'success': False, 'error': 'Método no permitido.'}, status=400)
+        return JsonResponse({'success': False, 'error': 'Método no permitido.'}, status=400)
+
+@login_required
+def online_status_api(request):
+    """
+    Returns the current online/offline status of all mutual followers.
+    Used by the frontend to periodically sync status indicators.
+    """
+    from datetime import timedelta
+    from django.utils import timezone
+    
+    # Get mutual follower IDs
+    que_sigo = set(Seguidores.objects.filter(usuario=request.user).values_list('seguido_id', flat=True))
+    que_me_siguen = set(Seguidores.objects.filter(seguido=request.user).values_list('usuario_id', flat=True))
+    mutual_ids = que_sigo.intersection(que_me_siguen)
+    
+    # Use naive UTC time for safe comparison with DB's naive UTC
+    now_utc_naive = timezone.now().replace(tzinfo=None)
+    cutoff = now_utc_naive - timedelta(seconds=30)
+    
+    statuses = {}
+    for u in Usuarios.objects.filter(id__in=mutual_ids).values('id', 'last_seen'):
+        if not u['last_seen']:
+            statuses[u['id']] = 'offline'
+            continue
+            
+        ls = u['last_seen']
+        if timezone.is_aware(ls):
+            ls = ls.replace(tzinfo=None)
+            
+        if ls > cutoff:
+            statuses[u['id']] = 'online'
+        else:
+            statuses[u['id']] = 'offline'
+    
+    return JsonResponse({'statuses': statuses})
