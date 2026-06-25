@@ -160,7 +160,31 @@ function abrirModalComentarios() {
     const contenido = document.getElementById('contenido-modal-comentarios');
     if (modal && contenido) {
         modal.style.display = 'flex';
-        contenido.innerHTML = '<div style="padding:40px; text-align:center;">Cargando...</div>';
+        contenido.innerHTML = `
+            <div class="p-3">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="skeleton-shimmer rounded-circle me-2" style="width: 32px; height: 32px; flex-shrink: 0;"></div>
+                    <div class="flex-grow-1">
+                        <div class="skeleton-shimmer rounded mb-1" style="height: 10px; width: 40%;"></div>
+                        <div class="skeleton-shimmer rounded" style="height: 8px; width: 70%;"></div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="skeleton-shimmer rounded-circle me-2" style="width: 32px; height: 32px; flex-shrink: 0;"></div>
+                    <div class="flex-grow-1">
+                        <div class="skeleton-shimmer rounded mb-1" style="height: 10px; width: 30%;"></div>
+                        <div class="skeleton-shimmer rounded" style="height: 8px; width: 60%;"></div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="skeleton-shimmer rounded-circle me-2" style="width: 32px; height: 32px; flex-shrink: 0;"></div>
+                    <div class="flex-grow-1">
+                        <div class="skeleton-shimmer rounded mb-1" style="height: 10px; width: 50%;"></div>
+                        <div class="skeleton-shimmer rounded" style="height: 8px; width: 80%;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 }
 

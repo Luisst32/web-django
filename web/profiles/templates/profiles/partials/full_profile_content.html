@@ -13,7 +13,7 @@
             <!-- Portada -->
             <div style="height: 350px; position: relative; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; overflow: hidden;">
                 {% if perfil.foto_portada %}
-                <img src="{{ perfil.foto_portada.url }}" class="w-100 h-100 object-fit-cover"
+                <img src="{{ perfil.foto_portada.url }}{% if timestamp %}?t={{ timestamp }}{% endif %}" class="w-100 h-100 object-fit-cover"
                     alt="Portada de {{ usuario.username }}">
                 {% else %}
                 <div class="w-100 h-100 bg-secondary"></div>
@@ -26,7 +26,7 @@
             <div class="mx-auto position-relative"
                 style="width: 120px; height: 120px; margin-top: -60px; margin-bottom: 0.5rem;">
                 {% if usuario.foto_perfil %}
-                <img src="{{ usuario.foto_perfil.url }}"
+                <img src="{{ usuario.foto_perfil.url }}{% if timestamp %}?t={{ timestamp }}{% endif %}"
                     class="w-100 h-100 rounded-circle border border-4 border-white shadow bg-white object-fit-cover"
                     alt="Avatar">
                 {% else %}
@@ -178,14 +178,24 @@
                 <i class="fas fa-user text-muted"></i>
             </div>
             {% endif %}
-            <a href="{% url 'publications:crear_publicacion' %}" class="flex-grow-1 text-decoration-none"
-                style="display: block;">
+            <a href="#" 
+               hx-get="{% url 'publications:crear_publicacion' %}?modal=1" 
+               hx-target="#contenido-modal-crear-publicacion" 
+               hx-trigger="click" 
+               onclick="abrirModalCrearPublicacion()"
+               class="flex-grow-1 text-decoration-none"
+               style="display: block;">
                 <div class="form-control rounded-pill bg-light border-0 px-3 py-2 text-muted small"
                     style="cursor: pointer;">
                     ¿Qué estás pensando, {{ usuario.first_name }}?
                 </div>
             </a>
-            <a href="{% url 'publications:crear_publicacion' %}" class="text-success">
+            <a href="#" 
+               hx-get="{% url 'publications:crear_publicacion' %}?modal=1" 
+               hx-target="#contenido-modal-crear-publicacion" 
+               hx-trigger="click" 
+               onclick="abrirModalCrearPublicacion()"
+               class="text-success">
                 <i class="fas fa-image fa-lg"></i>
             </a>
         </div>
@@ -197,10 +207,26 @@
         {% include 'publications/lista_publicaciones.html' %}
     </div>
 
-    <!-- HTMX Indicator (Spinner) -->
-    <div class="htmx-indicator text-center py-4">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Cargando...</span>
+    <!-- HTMX Indicator (Shimmer Skeleton) -->
+    <div class="htmx-indicator w-100 py-2">
+        <div class="skeleton-post">
+            <div class="skeleton-post-header">
+                <div class="skeleton-post-avatar skeleton-shimmer"></div>
+                <div class="skeleton-post-meta">
+                    <div class="skeleton-post-line-title skeleton-shimmer"></div>
+                    <div class="skeleton-post-line-subtitle skeleton-shimmer"></div>
+                </div>
+            </div>
+            <div class="skeleton-post-body">
+                <div class="skeleton-post-line skeleton-shimmer" style="width: 90%;"></div>
+                <div class="skeleton-post-line skeleton-shimmer" style="width: 75%;"></div>
+                <div class="skeleton-post-image skeleton-shimmer"></div>
+            </div>
+            <div class="skeleton-post-footer">
+                <div class="skeleton-post-button skeleton-shimmer"></div>
+                <div class="skeleton-post-button skeleton-shimmer"></div>
+                <div class="skeleton-post-button skeleton-shimmer"></div>
+            </div>
         </div>
     </div>
         </div> <!-- End right column -->
@@ -474,9 +500,4 @@
             };
         } catch (e) { console.warn("WS Profile Error", e); }
     }
-</script>
-</script>   };
-        } catch (e) { console.warn("WS Profile Error", e); }
-    }
-</script>
 </script>

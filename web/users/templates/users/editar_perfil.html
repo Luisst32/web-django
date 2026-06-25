@@ -1,242 +1,390 @@
+{% extends 'home/index.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil de {{ usuario.username }}</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <link rel="icon" href="{% static 'logo/logo.png' %}" type="image/png">
-</head>
-<body>
-  <div class="container">
-    <h2>Editar perfil de {{ user_form.instance.username }}</h2>
+{% block left_sidebar %}
+<!-- No left sidebar -->
+{% endblock left_sidebar %}
 
-    <div class="profile-edit-form">
-      <div class="profile-picture">
-        {% if user_form.instance.foto_perfil %}
-          <img src="{{ user_form.instance.foto_perfil.url }}" alt="Foto de {{ user_form.instance.username }}" class="profile-img">
-        {% else %}
-          <div class="foto-placeholder">No hay foto</div>
-        {% endif %}
+{% block main_content %}
+<!-- Cropper.js CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-      
-      </div>
-
-      <form method="post" enctype="multipart/form-data">          
-        {% csrf_token %}
-
-        <div class="change-photo-btn">
-          <label for="id_foto_perfil" class="btn change-photo-btn-label">Elegir nueva foto</label>
-          <input type="file" name="foto_perfil" id="id_foto_perfil" accept="image/*" style="display: none;">
-        </div>
-        
-        <div class="input-group">
-          <label for="{{ user_form.first_name.id_for_label }}">Nombre</label>
-          {{ user_form.first_name }}
+<div class="card border-0 shadow-sm rounded-4 mb-4 mx-auto" style="max-width: 650px; background: #fff; border: 1px solid rgba(0,0,0,0.05) !important;">
+    <div class="card-body p-4">
+        <!-- Título con flecha de volver -->
+        <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+            <a href="{% url 'perfil_detalle' username=usuario.username %}" class="btn btn-link text-dark p-0 me-3 transition-hover" title="Volver al perfil">
+                <i class="fas fa-arrow-left fa-lg"></i>
+            </a>
+            <h2 class="mb-0 fs-5 fw-bold text-dark">Editar perfil</h2>
         </div>
 
-        <div class="input-group">
-          <label for="{{ user_form.last_name.id_for_label }}">Apellido</label>
-          {{ user_form.last_name }}
-        </div>
+        <form method="post" enctype="multipart/form-data" id="editProfileForm">
+            {% csrf_token %}
 
-        <div class="input-group">
-          <label for="{{ user_form.username.id_for_label }}">Username</label>
-          {{ user_form.username }}
-        </div>
+            <!-- Foto de portada (Banner superior) -->
+            <div class="mb-4">
+                <div class="position-relative rounded-4 overflow-hidden shadow-sm border" style="height: 180px; background-color: #f3f4f6;">
+                    
+                    <!-- Contenedor del Preview / Cropper -->
+                    <div class="w-100 h-100 position-relative">
+                        {% if bio_form.instance.foto_portada %}
+                            <img src="{% if foto_portada_original_url %}{{ foto_portada_original_url }}{% else %}{{ bio_form.instance.foto_portada.url }}{% endif %}" alt="Foto de portada" id="coverImagePreview" class="w-100 h-100 object-fit-cover">
+                            <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted d-none" id="coverImagePlaceholder">
+                                <i class="fas fa-image fa-2x mb-2"></i>
+                                <span class="small fw-semibold">Sin foto de portada</span>
+                            </div>
+                        {% else %}
+                            <img src="" alt="Foto de portada" id="coverImagePreview" class="w-100 h-100 object-fit-cover d-none">
+                            <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted" id="coverImagePlaceholder">
+                                <i class="fas fa-image fa-2x mb-2"></i>
+                                <span class="small fw-semibold">Sin foto de portada</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Botones de Control overlay (Zoom y Cambiar Portada) -->
+                    <div class="d-flex align-items-center gap-2" style="position: absolute; right: 15px; bottom: 15px; z-index: 10;">
+                        <!-- Controles de Zoom (+ / -) -->
+                        <div class="d-flex gap-1 bg-white rounded-pill p-1 shadow-sm border" id="coverZoomControls" style="display: none !important;">
+                            <button type="button" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" id="btnZoomIn" style="width: 28px; height: 28px; font-size: 0.8rem; border: none; background: transparent;">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button type="button" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" id="btnZoomOut" style="width: 28px; height: 28px; font-size: 0.8rem; border: none; background: transparent;">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Botón Cambiar portada -->
+                        <label for="id_foto_portada" class="btn btn-light rounded-pill px-3 py-1.5 fw-semibold transition-hover shadow-sm border" style="font-size: 0.85rem; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); color: #000; border-color: rgba(0,0,0,0.1) !important;">
+                            <i class="fas fa-camera me-1"></i> Cambiar portada
+                        </label>
+                        <input type="file" name="foto_portada" id="id_foto_portada" accept="image/*" style="display: none;">
+                        <input type="file" name="foto_portada_original" id="id_foto_portada_original" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+            </div>
 
-        <div class="input-group">
-          <label for="{{ user_form.sexo.id_for_label }}">Sexo</label>
-          {{ user_form.sexo }}
-        </div>
+            <!-- Foto de perfil y datos básicos en barra horizontal (estilo Milanesa) -->
+            <div class="d-flex align-items-center justify-content-between p-3 mb-4 rounded-4 shadow-sm border" style="background-color: #ffffff !important; border: 1px solid rgba(0,0,0,0.08) !important;">
+                <div class="d-flex align-items-center">
+                    <!-- Imagen de Perfil -->
+                    <div class="position-relative me-3" style="width: 64px; height: 64px;">
+                        {% if user_form.instance.foto_perfil %}
+                            <img src="{{ user_form.instance.foto_perfil.url }}" alt="Foto de {{ usuario.username }}" class="rounded-circle object-fit-cover shadow-sm w-100 h-100" id="profileImagePreview">
+                            <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-muted w-100 h-100 shadow-sm d-none" id="profileImagePlaceholder">
+                                <i class="fas fa-user fa-lg"></i>
+                            </div>
+                        {% else %}
+                            <img src="" alt="Foto de {{ usuario.username }}" class="rounded-circle object-fit-cover shadow-sm w-100 h-100 d-none" id="profileImagePreview">
+                            <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-muted w-100 h-100 shadow-sm" id="profileImagePlaceholder">
+                                <i class="fas fa-user fa-lg"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- Textos -->
+                    <div>
+                        <h4 class="mb-0 fw-bold text-dark fs-6">@{{ usuario.username }}</h4>
+                        <span class="text-secondary small" style="font-size: 0.85rem;">{{ usuario.first_name }} {{ usuario.last_name }}</span>
+                    </div>
+                </div>
 
-        <div class="input-group">
-          <label for="{{ bio_form.bio.id_for_label }}">Biografia</label>
-          {{ bio_form.bio }}
-        </div>
+                <!-- Botón Cambiar foto -->
+                <div>
+                    <label for="id_foto_perfil" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold transition-hover shadow-sm" style="background-color: #3897f0; border-color: #3897f0; font-size: 0.9rem;">
+                        Cambiar foto
+                    </label>
+                    <input type="file" name="foto_perfil" id="id_foto_perfil" accept="image/*" style="display: none;" onchange="previewImage(this, 'profileImagePreview', 'profileImagePlaceholder')">
+                </div>
+            </div>
+
+            <!-- Form fields -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ user_form.first_name.id_for_label }}" class="form-label fw-semibold text-secondary">Nombre</label>
+                    {{ user_form.first_name }}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="{{ user_form.last_name.id_for_label }}" class="form-label fw-semibold text-secondary">Apellido</label>
+                    {{ user_form.last_name }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ user_form.username.id_for_label }}" class="form-label fw-semibold text-secondary">Nombre de usuario</label>
+                {{ user_form.username }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ bio_form.bio.id_for_label }}" class="form-label fw-semibold text-secondary">Biografía</label>
+                {{ bio_form.bio }}
+            </div>
 
 
-        <div class="input-group">
-          <label for="{{ bio_form.foto_portada.id_for_label }}">Foto de portada</label>
-          <input type="file" name="foto_portada" accept="image/*">
-          {% if bio_form.instance.foto_portada %}
-            <img src="{{ bio_form.instance.foto_portada.url }}" alt="Foto de portada" class="profile-img">
-          {% endif %}
-        </div>
 
-
-
-
-        <div class="form-actions">
-          <button type="submit" class="btn save-btn">Guardar cambios</button>
-        </div>
-      </form>
-
-
-
-      
-      <a href="{% url 'perfil_detalle' username=user_form.instance.username %}" class="back-link">Volver al perfil</a>
+            <div class="form-actions mt-4 pt-2">
+                <button type="submit" class="btn btn-black rounded-pill w-100 py-2.5 fw-bold transition-hover shadow-sm fs-5">
+                    Guardar cambios
+                </button>
+            </div>
+        </form>
     </div>
-  </div>
+</div>
 
-</body>
-</html>
-  <style>
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      font-family: Arial, sans-serif;
+<style>
+    /* Premium style system matching index aesthetics */
+    .card {
+        background: rgba(255, 255, 255, 0.9) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.8) !important;
     }
 
-    h2 {
-      text-align: center;
-      color: #333;
-      font-size: 24px;
-      margin-bottom: 20px;
+    .form-label {
+        font-size: 0.85rem;
+        margin-bottom: 0.4rem;
+        letter-spacing: 0.3px;
     }
 
-    .profile-edit-form {
-      background-color: #f8f8f8;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    /* Target input, select, textarea elements generated by Django widgets */
+    .card-body input[type="text"],
+    .card-body input[type="file"],
+    .card-body select,
+    .card-body textarea {
+        width: 100%;
+        border-radius: 12px !important;
+        border: 1px solid #d1d5db !important;
+        background-color: #ffffff !important;
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+        color: #1f2937 !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        margin-top: 2px;
     }
 
-    .profile-picture {
-      text-align: center;
-      margin-bottom: 20px;
+    .card-body input[type="text"]:focus,
+    .card-body select:focus,
+    .card-body textarea:focus {
+        border-color: #000 !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05) !important;
+        outline: none !important;
     }
 
-    .profile-img {
-      width: 150px;
-      height: 150px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 10px;
+    /* Textarea resize lock */
+    textarea {
+        resize: none;
+        height: 100px;
     }
 
-    .foto-placeholder {
-      width: 150px;
-      height: 150px;
-      border-radius: 50%;
-      background-color: #ccc;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 14px;
+    /* Transition classes */
+    .transition-hover {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .transition-hover:hover {
+        transform: translateY(-2px);
+        opacity: 0.9;
     }
 
-    .change-photo-btn {
-      margin-top: 10px;
+    .btn-link:hover {
+        background-color: #f3f4f6;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .change-photo-btn-label {
-      background-color: #3897f0;
-      color: white;
-      padding: 8px 20px;
-      font-size: 14px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
+    /* Make back link vertically centered with title */
+    .btn-link {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
     }
 
-    .change-photo-btn-label:hover {
-      background-color: #0079d1;
+    /* Customizing Cropper.js styles to fit perfectly inline */
+    .cropper-container {
+        width: 100% !important;
+        height: 100% !important;
     }
-
-    .input-group {
-      margin-bottom: 15px;
+    .cropper-view-box,
+    .cropper-face {
+        border-radius: 0px !important;
     }
-
-    .input-group input, .input-group select, .input-group textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    .form-actions {
-      text-align: center;
-    }
-
-    .btn {
-      background-color: #3897f0;
-      color: white;
-      padding: 12px 30px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .btn:hover {
-      background-color: #0079d1;
-    }
-
-    .back-link {
-      display: block;
-      margin-top: 15px;
-      text-align: center;
-      color: #3897f0;
-      font-size: 14px;
-      text-decoration: none;
-    }
-
-    .back-link:hover {
-      text-decoration: underline;
-    }
-
-
-
-.change-photo-btn {
-  display: flex;
-  justify-content: center; 
-  margin-top: 10px;
-}
-
-.change-photo-btn-label {
-  background-color: #000;  
-  color: white; 
-  padding: 10px 20px;  
-  font-size: 16px;  
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  text-align: center; 
-}
-
-.change-photo-btn-label:hover {
-  background-color: #333;
-}
-
-
-.save-btn {
-  background-color: #000;  
-  color: white;  
-  padding: 12px 30px;  
-  font-size: 16px;  
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  border: none; 
-  width: 100%;  
-}
-
-.save-btn:hover {
-  background-color: #333;  
-}
-
-
-
-
-
-
-
 </style>
+
+<script>
+    // Preview selected images immediately before upload for premium UX (profile pic)
+    function previewImage(input, previewId, placeholderId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById(previewId);
+                const placeholder = document.getElementById(placeholderId);
+                
+                if (img) {
+                    img.src = e.target.result;
+                    img.classList.remove('d-none');
+                }
+                if (placeholder) {
+                    placeholder.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Cropper JS Inline Logic
+    document.addEventListener("DOMContentLoaded", function() {
+        let cropperInstance = null;
+        let selectedFile = null;
+        let hasInteracted = false;
+
+        const coverInput = document.getElementById('id_foto_portada');
+        const previewImg = document.getElementById('coverImagePreview');
+        const placeholderDiv = document.getElementById('coverImagePlaceholder');
+        const zoomControls = document.getElementById('coverZoomControls');
+        const form = document.getElementById('editProfileForm');
+
+        function initCropper(imageElement) {
+            if (cropperInstance) {
+                cropperInstance.destroy();
+            }
+            
+            cropperInstance = new Cropper(imageElement, {
+                aspectRatio: 1000 / 350,
+                viewMode: 1,
+                dragMode: 'move',
+                responsive: true,
+                restore: false,
+                guides: false,
+                center: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+                background: false,
+                autoCropArea: 1,
+                ready: function() {
+                    if (zoomControls) {
+                        zoomControls.style.setProperty('display', 'flex', 'important');
+                    }
+                },
+                zoom: function() {
+                    hasInteracted = true;
+                }
+            });
+
+            imageElement.addEventListener('cropstart', function() {
+                hasInteracted = true;
+            });
+        }
+
+        // Init Cropper if cover exists
+        if (previewImg && previewImg.src && !previewImg.classList.contains('d-none')) {
+            if (previewImg.complete) {
+                initCropper(previewImg);
+            } else {
+                previewImg.addEventListener('load', function() {
+                    initCropper(previewImg);
+                });
+            }
+        }
+
+        // Handle new file selection
+        if (coverInput) {
+            coverInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    selectedFile = e.target.files[0];
+                    hasInteracted = true;
+
+                    // Duplicar el archivo seleccionado en el input de la foto original
+                    const coverInputOriginal = document.getElementById('id_foto_portada_original');
+                    if (coverInputOriginal) {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(selectedFile);
+                        coverInputOriginal.files = dataTransfer.files;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        if (placeholderDiv) {
+                            placeholderDiv.classList.add('d-none');
+                        }
+                        if (previewImg) {
+                            previewImg.src = event.target.result;
+                            previewImg.classList.remove('d-none');
+                            
+                            if (cropperInstance) {
+                                cropperInstance.replace(event.target.result);
+                            } else {
+                                initCropper(previewImg);
+                            }
+                        }
+                    };
+                    reader.readAsDataURL(selectedFile);
+                }
+            });
+        }
+
+        // Zoom controls
+        const btnZoomIn = document.getElementById('btnZoomIn');
+        const btnZoomOut = document.getElementById('btnZoomOut');
+        if (btnZoomIn) {
+            btnZoomIn.addEventListener('click', function() {
+                if (cropperInstance) {
+                    cropperInstance.zoom(0.1);
+                    hasInteracted = true;
+                }
+            });
+        }
+        if (btnZoomOut) {
+            btnZoomOut.addEventListener('click', function() {
+                if (cropperInstance) {
+                    cropperInstance.zoom(-0.1);
+                    hasInteracted = true;
+                }
+            });
+        }
+
+        // Intercept form submission
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (hasInteracted && cropperInstance) {
+                    e.preventDefault(); // Stop form submission to crop first
+
+                    const canvas = cropperInstance.getCroppedCanvas({
+                        width: 1000,
+                        height: 350,
+                        imageSmoothingEnabled: true,
+                        imageSmoothingQuality: 'high',
+                    });
+
+                    canvas.toBlob(function(blob) {
+                        const filename = selectedFile ? selectedFile.name : 'foto_portada.jpg';
+                        const filetype = selectedFile ? selectedFile.type : 'image/jpeg';
+                        
+                        const croppedFile = new File([blob], filename, {
+                            type: filetype,
+                            lastModified: new Date().getTime()
+                        });
+
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(croppedFile);
+                        coverInput.files = dataTransfer.files;
+
+                        form.submit(); // submit form programmatically
+                    }, selectedFile ? selectedFile.type : 'image/jpeg');
+                }
+            });
+        }
+    });
+</script>
+{% endblock main_content %}

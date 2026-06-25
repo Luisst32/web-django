@@ -146,6 +146,28 @@
     .cursor-pointer {
         cursor: pointer;
     }
+
+    /* --- Mobile Overrides --- */
+    @media (max-width: 767.98px) {
+        .message-panel {
+            width: 100vw !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            right: 0 !important;
+            border-radius: 0 !important;
+            bottom: -100dvh !important;
+            z-index: 99999 !important; /* Above navbar and other elements */
+        }
+        .message-panel.active {
+            bottom: 0 !important;
+        }
+        .message-panel.minimized {
+            bottom: -100dvh !important;
+        }
+        .chat-compact-trigger {
+            display: none !important;
+        }
+    }
 </style>
 
 <script>
@@ -593,6 +615,13 @@
             console.error('ERROR al renderizar mensaje:', error);
         }
 
+        // Reproducir sonido si el mensaje no es nuestro (incluso si el chat está abierto)
+        if (!isMe) {
+            if (typeof window.playNotificationSound === 'function') {
+                window.playNotificationSound();
+            }
+        }
+
         if (typeof updateLastSentStatus === 'function') {
             updateLastSentStatus();
         }
@@ -654,6 +683,16 @@
 
         // Store current other user ID for reordering logic
         window.currentChatOtherUserId = userId;
+
+        // On mobile, hide the sidebar and show the chat column
+        if (window.innerWidth < 768) {
+            const sidebar = document.getElementById('sidebar-column');
+            const chatCol = document.getElementById('chat-column');
+            if (sidebar && chatCol) {
+                sidebar.classList.add('d-none');
+                chatCol.classList.remove('d-none', 'd-md-block');
+            }
+        }
     }
 
     // Escuchar evento que dispara chat_window.html cuando ya está en el DOM
@@ -735,6 +774,11 @@
         callSend({ action: 'initiate_call', target_user_id: targetUserId });
         showActiveCallUI(currentCallData.peer_name, currentCallData.peer_photo);
         document.getElementById('call-status-label').textContent = 'Llamando...';
+        
+        // Reproducir tono de llamada saliente
+        if (typeof window.playCallRingtone === 'function') {
+            window.playCallRingtone();
+        }
     };
 
     // --- Llamada entrante (receptor) ---
@@ -756,7 +800,9 @@
             iconEl.style.display = 'none';
         }
         overlay.style.display = 'block';
-        try { document.getElementById('call-ringtone').play(); } catch(e) {}
+        if (typeof window.playCallRingtone === 'function') {
+            window.playCallRingtone();
+        }
     }
 
     // --- Receptor acepta ---
@@ -764,7 +810,7 @@
         try {
             console.log('[Call] Aceptando llamada...');
             document.getElementById('incoming-call-overlay').style.display = 'none';
-            try { const r = document.getElementById('call-ringtone'); r.pause(); r.currentTime = 0; } catch(e) {}
+            if (typeof window.stopCallRingtone === 'function') window.stopCallRingtone();
 
             // Notificar al llamante
             callSend({
@@ -800,7 +846,7 @@
     window.rejectCall = function() {
         try {
             document.getElementById('incoming-call-overlay').style.display = 'none';
-            try { const r = document.getElementById('call-ringtone'); r.pause(); r.currentTime = 0; } catch(e) {}
+            endCallUI();
             if (currentCallData) {
                 callSend({ action: 'call_rejected', target_user_id: currentCallData.target_user_id, llamada_id: currentCallData.llamada_id });
             }
@@ -964,7 +1010,7 @@
         const ra = document.getElementById('remote-audio'); if (ra) ra.srcObject = null;
         document.getElementById('active-call-overlay').style.display = 'none';
         document.getElementById('incoming-call-overlay').style.display = 'none';
-        try { const r = document.getElementById('call-ringtone'); r.pause(); r.currentTime = 0; } catch(e) {}
+        if (typeof window.stopCallRingtone === 'function') window.stopCallRingtone();
         if (callTimerInterval) { clearInterval(callTimerInterval); callTimerInterval = null; }
         callStartTime = null;
         currentCallData = null;

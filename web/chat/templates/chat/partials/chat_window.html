@@ -255,6 +255,16 @@
 
         if (!message && !file) return;
 
+        // Desbloquear audio en el mismo click (requiere gesto directo del usuario)
+        try {
+            if (window._chatAudioRef) {
+                window._chatAudioRef.play().then(function() {
+                    window._chatAudioRef.pause();
+                    window._chatAudioRef.currentTime = 0;
+                }).catch(function(){});
+            }
+        } catch(e) {}
+
         if (file) {
             const formData = new FormData();
             formData.append('image', file);

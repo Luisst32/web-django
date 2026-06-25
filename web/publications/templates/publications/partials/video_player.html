@@ -1,8 +1,8 @@
 {% load static %}
 <div class="video-container plyr-wrapper">
-    <video controls class="js-player" playsinline preload="none" data-poster="{{ publicacion.imagen.url }}" {% if is_muted %}muted{% endif %}>
+    <video controls class="js-player" playsinline preload="metadata" {% if is_muted %}muted{% endif %}>
         
-        <source src="{{ video_url }}">
+        <source src="{{ video_url }}#t=0.1">
         Your browser does not support the video tag.
     </video>
 </div>

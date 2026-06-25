@@ -233,8 +233,8 @@ ASGI_APPLICATION = 'web.asgi.application'
 
 # WebSocket timeout settings para evitar desconexiones
 WEBSOCKET_ACCEPT_ALL = False  # Validar conexiones
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB para uploads
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = None  # Sin limite en el body de la peticion
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5MB en RAM, archivos mas grandes van directo a disco (evita caidas por memoria/OOM)
 
 # Configuración de Correo Electrónico (SMTP)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -247,5 +247,14 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', '')
 
 # Google Sign-In Settings
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
+
+STORAGES = {
+    "default": {
+        "BACKEND": "web.storage.HashMatchStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 

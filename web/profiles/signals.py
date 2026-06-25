@@ -1,5 +1,5 @@
 # profiles/signals.py
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from users.models import Usuarios 
 from .models import Perfil
@@ -9,21 +9,10 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Perfil.objects.create(usuario=instance)
 
-@receiver(post_save, sender=Usuarios)
-def save_user_profile(sender, instance, **kwargs):
-    instance.perfil.save()
-
-
-
-@receiver(post_save, sender=Usuarios)
-def crear_o_actualizar_perfil(sender, instance, created, **kwargs):
-    if created:
-      
-        pass
-
+@receiver(pre_save, sender=Usuarios)
+def set_default_profile_picture(sender, instance, **kwargs):
     if not instance.foto_perfil:
         instance.foto_perfil = 'default/default-profil.jpg'
-        instance.save()
 
 # --- Señales para WebSockets (Seguidores) ---
 from django.db.models.signals import post_save, post_delete

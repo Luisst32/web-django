@@ -115,7 +115,8 @@ def obtener_stories_usuario(request, usuario_id):
             'audio_nombre': audio_nombre,
             'audio_inicio': s.audio_inicio,
             'duracion': s.duracion,
-            'fecha': f"Hace {tiempo_transcurrido}"
+            'fecha': f"Hace {tiempo_transcurrido}",
+            'views_count': s.views.exclude(usuario=s.usuario).count()
         })
         
     user_data = {
@@ -132,11 +133,34 @@ def obtener_stories_usuario(request, usuario_id):
     })
 
 @login_required
+def obtener_espectadores_story(request, story_id):
+    story = get_object_or_404(Story, id=story_id)
+    if story.usuario != request.user:
+        return JsonResponse({'success': False, 'errors': 'No tienes permiso para ver los espectadores de esta historia.'})
+    
+    from .models import StoryView
+    views = StoryView.objects.filter(story=story).exclude(usuario=story.usuario).select_related('usuario').order_by('-viewed_at')
+    
+    espectadores = []
+    for v in views:
+        espectadores.append({
+            'username': v.usuario.username,
+            'foto_perfil': v.usuario.foto_perfil.url if v.usuario.foto_perfil else None,
+            'viewed_at': timezone.localtime(v.viewed_at).strftime('%H:%M')
+        })
+        
+    return JsonResponse({
+        'success': True,
+        'espectadores': espectadores
+    })
+
+@login_required
 def marcar_vista(request, story_id):
     if request.method == 'POST':
         from .models import StoryView
         story = get_object_or_404(Story, id=story_id)
-        StoryView.objects.get_or_create(story=story, usuario=request.user)
+        if story.usuario != request.user:
+            StoryView.objects.get_or_create(story=story, usuario=request.user)
         return JsonResponse({'success': True})
     return JsonResponse({'success': False, 'errors': 'Método no permitido.'})
 

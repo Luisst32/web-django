@@ -12,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pulltorefreshjs/0.1.22/index.umd.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="icon" href="{% static 'logo/logo.png' %}" type="image/png">
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
@@ -161,6 +162,22 @@
         @media (max-width: 575.98px) {
             .navbar {
                 padding: 0.5rem 0;
+            }
+            .navbar .container {
+                position: relative;
+            }
+            #rightActions .dropdown {
+                position: static !important;
+            }
+            #rightActions .dropdown-menu {
+                position: absolute !important;
+                right: 10px !important;
+                left: auto !important;
+                transform: none !important;
+                top: 100% !important;
+                width: 320px !important;
+                max-width: calc(100vw - 20px) !important;
+                margin-top: 5px !important;
             }
         }
 
@@ -401,6 +418,306 @@
             border: 1px solid rgba(0, 0, 0, 0.05) !important;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
         }
+
+        /* --- Premium Shimmer Skeleton Loader --- */
+        .skeleton-shimmer {
+            background: linear-gradient(
+                90deg,
+                #eceef1 25%,
+                #f6f7f9 50%,
+                #eceef1 75%
+            );
+            background-size: 200% 100%;
+            animation: skeleton-metallic-shimmer 1.5s infinite linear;
+        }
+
+        .skeleton-shimmer-dark {
+            background: linear-gradient(
+                90deg,
+                #22252a 25%,
+                #2d3139 50%,
+                #22252a 75%
+            );
+            background-size: 200% 100%;
+            animation: skeleton-metallic-shimmer 1.5s infinite linear;
+        }
+
+        @keyframes skeleton-metallic-shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Post Skeleton Layout */
+        .skeleton-post {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+
+        .skeleton-post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .skeleton-post-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .skeleton-post-meta {
+            flex-grow: 1;
+            margin-left: 12px;
+        }
+
+        .skeleton-post-line-title {
+            height: 12px;
+            width: 35%;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-post-line-subtitle {
+            height: 8px;
+            width: 20%;
+            border-radius: 4px;
+        }
+
+        .skeleton-post-body {
+            margin-bottom: 16px;
+        }
+
+        .skeleton-post-line {
+            height: 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-post-image {
+            height: 250px;
+            border-radius: 8px;
+            margin-top: 12px;
+            width: 100%;
+        }
+
+        .skeleton-post-footer {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #f0f2f5;
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+
+        .skeleton-post-button {
+            height: 32px;
+            width: 25%;
+            border-radius: 16px;
+        }
+
+        /* Sidebar AI Skeleton Card */
+        .skeleton-ai-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 16px;
+        }
+
+        .skeleton-ai-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .skeleton-ai-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .skeleton-ai-title {
+            height: 10px;
+            width: 60%;
+            border-radius: 4px;
+        }
+
+        .skeleton-ai-comment {
+            height: 50px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .skeleton-ai-post {
+            border: 1px solid #f0f2f5;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .skeleton-ai-post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-ai-post-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .skeleton-ai-post-meta {
+            height: 8px;
+            width: 40%;
+            border-radius: 3px;
+        }
+
+        .skeleton-ai-post-image {
+            height: 100px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+
+        .skeleton-ai-post-text {
+            height: 8px;
+            width: 80%;
+            border-radius: 3px;
+        }
+
+        /* Story Visor Loader */
+        .skeleton-story-viewer {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #0b0b0b;
+            padding: 24px;
+        }
+
+        .skeleton-story-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 16px;
+        }
+
+        .skeleton-story-title {
+            width: 150px;
+            height: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-story-line {
+            width: 100px;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        /* HTMX Indicator display styles */
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator, .htmx-request.htmx-indicator {
+            display: block !important;
+        }
+
+        /* Responsive Sidebar Styles */
+        #left-sidebar-col, #main-content-col {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @media (min-width: 992px) {
+            .sidebar-col {
+                width: 25%;
+                flex: 0 0 25%;
+                max-width: 25%;
+                display: block !important;
+                position: sticky;
+                top: 100px;
+                height: calc(100vh - 100px);
+                overflow-y: visible;
+                scrollbar-width: none;
+                z-index: 1000;
+            }
+            .sidebar-col.collapsed {
+                width: 0 !important;
+                flex: 0 0 0 !important;
+                max-width: 0 !important;
+                padding: 0 !important;
+                overflow: hidden;
+            }
+            #toggle-btn-container {
+                position: absolute;
+                right: -20px;
+                top: 80px;
+                z-index: 1001;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .sidebar-col.collapsed #toggle-btn-container {
+                right: -55px; /* Float on the left side of content */
+            }
+            .main-content-expanded {
+                width: 75% !important;
+                flex: 0 0 75% !important;
+                max-width: 75% !important;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar-col {
+                position: fixed !important;
+                top: 0 !important;
+                left: -280px; /* Hidden off-canvas */
+                width: 280px !important;
+                height: 100vh !important;
+                background: #fff;
+                z-index: 1020 !important;
+                transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+                overflow-y: visible !important;
+                padding-top: 60px; /* Spacer for navbar height */
+                display: block !important;
+            }
+            .sidebar-col.open {
+                left: 0 !important;
+            }
+            /* Show the toggle button on mobile permanently floated outside to prevent stretching illusion */
+            #toggle-btn-container {
+                right: -55px !important;
+                transition: none !important;
+            }
+            /* Style the inner sidebar container to not have translation offsets */
+            #sidebar-container {
+                transform: none !important;
+            }
+            #sidebar-container .bg-white {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-left: 0 !important;
+                margin-top: 0 !important;
+                padding-top: 0 !important;
+                border-right: none !important;
+            }
+        }
     </style>
 
     <script>
@@ -610,7 +927,7 @@
             {% block left_sidebar %}
             {% if not hide_left_sidebar %}
             <!-- COLUMNA IZQUIERDA (Menú + Sugerencias) -->
-            <div class="col-lg-3 d-none d-lg-block ps-0"
+            <div class="col-lg-3 sidebar-col ps-0" id="left-sidebar-col"
                 style="position: sticky; top: 100px; height: calc(100vh - 100px); overflow-y: visible; scrollbar-width: none; z-index: 1000;">
 
                 <!-- Contenedor Deslizable (Incluye Botón + Contenido) -->
@@ -659,6 +976,14 @@
 
             <script>
                 function toggleSidebar() {
+                    if (window.innerWidth < 992) {
+                        const col = document.getElementById('left-sidebar-col');
+                        if (col) {
+                            col.classList.toggle('open');
+                        }
+                        return;
+                    }
+
                     const container = document.getElementById('sidebar-container');
                     const btnContainer = document.getElementById('toggle-btn-container'); // Get Button Container
                     const menu = document.getElementById('sidebar-menu');
@@ -728,6 +1053,8 @@
                 {% endif %}
 
                 <!-- HISTORIAS DE USUARIOS -->
+                <!-- Audio Elements -->
+    <audio id="global-chat-sound" src="{% static 'song/dragon-studio-new-notification-3-398649.mp3' %}" preload="auto"></audio>
                 {% include 'stories/stories_feed.html' %}
 
                 <!-- COMPOSER (Home Feed) -->
@@ -742,14 +1069,24 @@
                             <i class="fas fa-user text-muted"></i>
                         </div>
                         {% endif %}
-                        <a href="{% url 'publications:crear_publicacion' %}" class="flex-grow-1 text-decoration-none"
-                            style="display: block;">
+                        <a href="#" 
+                           hx-get="{% url 'publications:crear_publicacion' %}?modal=1" 
+                           hx-target="#contenido-modal-crear-publicacion" 
+                           hx-trigger="click" 
+                           onclick="abrirModalCrearPublicacion()"
+                           class="flex-grow-1 text-decoration-none"
+                           style="display: block;">
                             <div class="form-control rounded-pill bg-light border-0 px-3 py-2 text-muted small"
                                 style="cursor: pointer;">
                                 ¿Qué estás pensando, {{ user.first_name|default:user.username }}?
                             </div>
                         </a>
-                        <a href="{% url 'publications:crear_publicacion' %}" class="text-success">
+                        <a href="#" 
+                           hx-get="{% url 'publications:crear_publicacion' %}?modal=1" 
+                           hx-target="#contenido-modal-crear-publicacion" 
+                           hx-trigger="click" 
+                           onclick="abrirModalCrearPublicacion()"
+                           class="text-success">
                             <i class="fas fa-image fa-lg"></i>
                         </a>
                     </div>
@@ -760,9 +1097,25 @@
                     {% include 'publications/lista_publicaciones.html' %}
                 </div>
                 <!-- HTMX Indicator -->
-                <div class="htmx-indicator text-center py-3">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
+                <div class="htmx-indicator w-100 py-2">
+                    <div class="skeleton-post">
+                        <div class="skeleton-post-header">
+                            <div class="skeleton-post-avatar skeleton-shimmer"></div>
+                            <div class="skeleton-post-meta">
+                                <div class="skeleton-post-line-title skeleton-shimmer"></div>
+                                <div class="skeleton-post-line-subtitle skeleton-shimmer"></div>
+                            </div>
+                        </div>
+                        <div class="skeleton-post-body">
+                            <div class="skeleton-post-line skeleton-shimmer" style="width: 90%;"></div>
+                            <div class="skeleton-post-line skeleton-shimmer" style="width: 75%;"></div>
+                            <div class="skeleton-post-image skeleton-shimmer"></div>
+                        </div>
+                        <div class="skeleton-post-footer">
+                            <div class="skeleton-post-button skeleton-shimmer"></div>
+                            <div class="skeleton-post-button skeleton-shimmer"></div>
+                            <div class="skeleton-post-button skeleton-shimmer"></div>
+                        </div>
                     </div>
                 </div>
                 {% endif %}
@@ -775,13 +1128,20 @@
                 style="position: sticky; top: 100px; height: fit-content;">
                 {% if user.is_authenticated %}
                 <div hx-get="{% url 'trending_analysis' %}" hx-trigger="load" hx-swap="innerHTML">
-                    <!-- Placeholder animation if desired, or just empty -->
-                    <div class="card border-0 shadow-sm mb-3">
-                        <div class="card-body p-3 text-center">
-                            <div class="spinner-border text-primary spinner-border-sm" role="status">
-                                <span class="visually-hidden">Cargando panel IA...</span>
+                    <!-- Shimmering metallic skeleton for AI Analysis -->
+                    <div class="skeleton-ai-card">
+                        <div class="skeleton-ai-header">
+                            <div class="skeleton-ai-icon skeleton-shimmer"></div>
+                            <div class="skeleton-ai-title skeleton-shimmer"></div>
+                        </div>
+                        <div class="skeleton-ai-comment skeleton-shimmer"></div>
+                        <div class="skeleton-ai-post">
+                            <div class="skeleton-ai-post-header">
+                                <div class="skeleton-ai-post-avatar skeleton-shimmer"></div>
+                                <div class="skeleton-ai-post-meta skeleton-shimmer"></div>
                             </div>
-                            <small class="text-muted ms-2">Cargando...</small>
+                            <div class="skeleton-ai-post-image skeleton-shimmer"></div>
+                            <div class="skeleton-ai-post-text skeleton-shimmer"></div>
                         </div>
                     </div>
                 </div>
@@ -799,7 +1159,51 @@
                 <i class="bi bi-x-lg"></i>
             </button>
             <div id="contenido-modal-comentarios">
-                <div style="padding: 20px; text-align: center;">Cargando...</div>
+                <div class="p-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="skeleton-shimmer rounded-circle me-2" style="width: 32px; height: 32px; flex-shrink: 0;"></div>
+                        <div class="flex-grow-1">
+                            <div class="skeleton-shimmer rounded mb-1" style="height: 10px; width: 40%;"></div>
+                            <div class="skeleton-shimmer rounded" style="height: 8px; width: 70%;"></div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="skeleton-shimmer rounded-circle me-2" style="width: 32px; height: 32px; flex-shrink: 0;"></div>
+                        <div class="flex-grow-1">
+                            <div class="skeleton-shimmer rounded mb-1" style="height: 10px; width: 30%;"></div>
+                            <div class="skeleton-shimmer rounded" style="height: 8px; width: 60%;"></div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="skeleton-shimmer rounded-circle me-2" style="width: 32px; height: 32px; flex-shrink: 0;"></div>
+                        <div class="flex-grow-1">
+                            <div class="skeleton-shimmer rounded mb-1" style="height: 10px; width: 50%;"></div>
+                            <div class="skeleton-shimmer rounded" style="height: 8px; width: 80%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CREAR PUBLICACIÓN -->
+    <div id="modal-crear-publicacion-global" class="modal-overlay" style="display: none;">
+        <div class="modal-container animate-fade-in" style="max-width: 600px; padding: 0; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.08); overflow: auto; max-height: 90vh; position: relative;">
+            <button class="btn-cerrar-modal" onclick="cerrarModalCrearPublicacion()" style="top: 15px; right: 15px; border: none; background: transparent; font-size: 1.25rem; z-index: 1050; cursor: pointer;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div id="contenido-modal-crear-publicacion" style="width: 100%;">
+                <div class="p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="skeleton-shimmer rounded-circle me-3" style="width: 40px; height: 40px; flex-shrink: 0;"></div>
+                        <div class="skeleton-shimmer rounded" style="height: 12px; width: 35%;"></div>
+                    </div>
+                    <div class="skeleton-shimmer rounded mb-3" style="height: 80px; width: 100%;"></div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="skeleton-shimmer rounded" style="height: 24px; width: 30px;"></div>
+                        <div class="skeleton-shimmer rounded-pill" style="height: 36px; width: 100px;"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -866,6 +1270,25 @@
                 modal.style.display = "none";
             }
         }
+        function abrirModalCrearPublicacion() {
+            $('#modal-crear-publicacion-global').fadeIn('fast').css('display', 'flex');
+        }
+        function cerrarModalCrearPublicacion() {
+            $('#modal-crear-publicacion-global').fadeOut('fast');
+            $('#contenido-modal-crear-publicacion').html(`
+                <div class="p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="skeleton-shimmer rounded-circle me-3" style="width: 40px; height: 40px; flex-shrink: 0;"></div>
+                        <div class="skeleton-shimmer rounded" style="height: 12px; width: 35%;"></div>
+                    </div>
+                    <div class="skeleton-shimmer rounded mb-3" style="height: 80px; width: 100%;"></div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="skeleton-shimmer rounded" style="height: 24px; width: 30px;"></div>
+                        <div class="skeleton-shimmer rounded-pill" style="height: 36px; width: 100px;"></div>
+                    </div>
+                </div>
+            `);
+        }
     </script>
 
 
@@ -873,7 +1296,7 @@
     {% block scripts %}
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="{% static 'js/websocket_manager.js' %}"></script>
-    <script src="{% static 'js/feed_managers.js' %}"></script>
+    <script src="{% static 'js/feed_managers.js' %}?v=12"></script>
     <script src="{% static 'publications/comments/js/comments.js' %}?v=11"></script>
     </script>
     {% include 'users/scripts_vinculacion.html' %}
@@ -1255,31 +1678,57 @@
 </style>
 
 <script>
+    // === AUDIO GLOBAL ===
+    // Creamos la referencia de audio UNA sola vez para poder desbloquerala
+    window._chatAudioRef = new Audio("{% static 'song/dragon-studio-new-notification-3-398649.mp3' %}");
+    window._chatAudioRef.preload = 'auto';
+    window._chatAudioRef.volume = 1.0;
+
+    window.playNotificationSound = function() {
+        try {
+            window._chatAudioRef.currentTime = 0;
+            var p = window._chatAudioRef.play();
+            if (p) p.catch(function(e) { console.warn('[Sound] bloqueado:', e.message); });
+        } catch(e) { console.warn('[Sound] error:', e); }
+    };
+
+    window.playCallRingtone = function() {
+        try {
+            var r = document.getElementById('call-ringtone');
+            if (r) { r.currentTime = 0; r.play().catch(function(e){}); }
+        } catch(e) {}
+    };
+
+    window.stopCallRingtone = function() {
+        try {
+            var r = document.getElementById('call-ringtone');
+            if (r) { r.pause(); r.currentTime = 0; }
+        } catch(e) {}
+    };
+
+    // Desbloquear en primer toque/click
+    (function() {
+        var unlocked = false;
+        function unlock() {
+            if (unlocked) return;
+            unlocked = true;
+            window._chatAudioRef.play().then(function() {
+                window._chatAudioRef.pause();
+                window._chatAudioRef.currentTime = 0;
+                console.log('[Sound] audio desbloqueado OK');
+            }).catch(function(e) { console.warn('[Sound] unlock failed:', e.message); });
+        }
+        document.addEventListener('click', unlock, { once: true });
+        document.addEventListener('touchstart', unlock, { once: true });
+        document.addEventListener('keydown', unlock, { once: true });
+    })();
+
+
     document.addEventListener('DOMContentLoaded', function () {
         const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
 
-        // Audio element para notificaciones de chat
-        const chatAudio = document.createElement('audio');
-        chatAudio.id = 'global-chat-sound';
-        chatAudio.src = "{% static 'song/dragon-studio-new-notification-3-398649.mp3' %}";
-        chatAudio.preload = 'auto';
-        chatAudio.volume = 1.0;
-        document.body.appendChild(chatAudio);
-
-        // Desbloquear audio en el primer gesto del usuario (política de autoplay del navegador)
-        let audioUnlocked = false;
-        function unlockAudio() {
-            if (audioUnlocked) return;
-            chatAudio.play().then(() => {
-                chatAudio.pause();
-                chatAudio.currentTime = 0;
-                audioUnlocked = true;
-                console.log('[Chat Sound] Audio unlocked');
-            }).catch(() => {});
-        }
-        document.addEventListener('click', unlockAudio, { once: false });
-        document.addEventListener('keydown', unlockAudio, { once: false });
-        document.addEventListener('touchstart', unlockAudio, { once: false });
+        // Elemento de audio base para obtener la URL
+        const chatAudioUrl = "{% static 'song/dragon-studio-new-notification-3-398649.mp3' %}";
 
         // ---- NOTI SOCKET CON AUTO-RECONEXIÓN Y KEEPALIVE ----
         let notiSocket = null;
@@ -1321,15 +1770,7 @@
                 } else if (data.type === 'chat_count_update') {
                     // Reproducir sonido siempre que llegue un mensaje nuevo (count > 0)
                     if (data.count > 0) {
-                        try {
-                            chatAudio.currentTime = 0;
-                            let playPromise = chatAudio.play();
-                            if (playPromise !== undefined) {
-                                playPromise.catch(error => {
-                                    console.log('Autoplay prevent or audio play error:', error);
-                                });
-                            }
-                        } catch (e) {}
+                        window.playNotificationSound();
                     }
 
                     // 1. Badge Global
@@ -1474,6 +1915,27 @@
             msgPreview.classList.add('text-muted');
         }
     }
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (window.innerWidth < 992) {
+            PullToRefresh.init({
+                mainElement: 'body',
+                onRefresh: function() {
+                    window.location.reload();
+                },
+                distThreshold: 60,
+                distMax: 80,
+                distReload: 50,
+                iconArrow: '<i class="fas fa-arrow-down text-secondary fs-4"></i>',
+                iconRefreshing: '<div class="spinner-border text-secondary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>',
+                instructionsPullToRefresh: 'Desliza para actualizar',
+                instructionsReleaseToRefresh: 'Suelta para actualizar',
+                instructionsRefreshing: 'Actualizando...'
+            });
+        }
+    });
 </script>
 
 {% block extra_js %}{% endblock %}

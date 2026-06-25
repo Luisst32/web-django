@@ -7,7 +7,7 @@ class EditFrom(forms.ModelForm):
     class Meta:
         model=Usuarios
         fields={
-            'first_name','last_name','username','sexo','foto_perfil'
+            'first_name','last_name','username','foto_perfil'
         }
 
 class EditPerfil(forms.ModelForm):

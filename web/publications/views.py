@@ -44,6 +44,7 @@ def get_comentarios_recursivos(post_id):
 @login_required
 def crear_publicacion(request):
     username = request.user.username
+    is_modal = request.headers.get('HX-Request') is not None or request.GET.get('modal') == '1'
 
     if request.method == 'POST':
         print("--- DEBUG CREAR PUBLICACION ---")
@@ -72,6 +73,9 @@ def crear_publicacion(request):
             # ----------------------------------
 
             form.save_m2m()
+            referrer = request.META.get('HTTP_REFERER')
+            if referrer and '/publications/crear/' not in referrer:
+                return redirect(referrer)
             return redirect(f'/perfil/{username}/')
         else:
             print("--- ERRORES EN EL FORMULARIO ---")
@@ -83,9 +87,12 @@ def crear_publicacion(request):
     # --- NUEVO: Enviamos el formulario para el modal de subir música ---
     musica_form = MusicaForm()
 
-    return render(request, 'publications/crear_publicacion.html', {
+    template_name = 'publications/partials/crear_publicacion_form.html' if is_modal else 'publications/crear_publicacion.html'
+
+    return render(request, template_name, {
         'form': form, 
-        'musica_form': musica_form # <--- Lo pasamos al contexto
+        'musica_form': musica_form,
+        'is_modal': is_modal
     })
 
 
