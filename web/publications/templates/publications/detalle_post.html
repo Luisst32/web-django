@@ -60,46 +60,64 @@
         const postId = {{ post.pk }};
         const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
         const wsUrl = wsProtocol + window.location.host + '/ws/post/' + postId + '/comments/';
-        const commentSocket = new WebSocket(wsUrl);
+        let commentSocket = null;
+        let commentHeartbeat = null;
 
-        commentSocket.onopen = function (e) {
-            console.log("WebSocket conectado exitosamente al post:", postId);
-        };
+        function connectCommentSocket() {
+            commentSocket = new WebSocket(wsUrl);
 
-        commentSocket.onclose = function (e) {
-            console.log("WebSocket desconectado. Código:", e.code);
-        };
-
-        // 2. Manejo de Mensajes Recibidos (Actualización en Tiempo Real)
-        commentSocket.onmessage = function (e) {
-            console.log("WS MESSAGE RECEIVED (RAW):", e.data);
-
-            try {
-                const data = JSON.parse(e.data);
-
-                if (data.type === 'new_comment') {
-                    const commentHtml = data.html;
-                    const parentId = data.parent_id;
-
-                    // Determina el contenedor de destino
-                    const isMainComment = (parentId === 'main' || parentId === null || parentId === undefined);
-                    const containerId = isMainComment ? 'comentarios-container' : 'replies-for-' + parentId;
-
-                    const container = document.getElementById(containerId);
-
-                    if (container) {
-                        // CRÍTICO: Insertar el HTML
-                        container.insertAdjacentHTML('beforeend', commentHtml);
-                        console.log(`✅ COMENTARIO INSERTADO. Target ID: ${containerId}`);
+            commentSocket.onopen = function (e) {
+                console.log("WebSocket conectado exitosamente al post:", postId);
+                // Ping cada 30 segundos para mantener el WebSocket vivo
+                commentHeartbeat = setInterval(function() {
+                    if (commentSocket && commentSocket.readyState === WebSocket.OPEN) {
+                        commentSocket.send(JSON.stringify({ 'action': 'heartbeat' }));
                     } else {
-                        console.error(`❌ FALLO DE INSERCIÓN: Contenedor no encontrado. ID esperado: ${containerId}`);
+                        clearInterval(commentHeartbeat);
                     }
+                }, 30000);
+            };
 
+            commentSocket.onclose = function (e) {
+                console.log("WebSocket desconectado. Código:", e.code, ". Reconectando en 3s...");
+                if (commentHeartbeat) clearInterval(commentHeartbeat);
+                setTimeout(connectCommentSocket, 3000);
+            };
+
+            // 2. Manejo de Mensajes Recibidos (Actualización en Tiempo Real)
+            commentSocket.onmessage = function (e) {
+                console.log("WS MESSAGE RECEIVED (RAW):", e.data);
+
+                try {
+                    const data = JSON.parse(e.data);
+
+                    if (data.type === 'new_comment') {
+                        const commentHtml = data.html;
+                        const parentId = data.parent_id;
+
+                        // Determina el contenedor de destino
+                        const isMainComment = (parentId === 'main' || parentId === null || parentId === undefined);
+                        const containerId = isMainComment ? 'comentarios-container' : 'replies-for-' + parentId;
+
+                        const container = document.getElementById(containerId);
+
+                        if (container) {
+                            // CRÍTICO: Insertar el HTML
+                            container.insertAdjacentHTML('beforeend', commentHtml);
+                            console.log(`✅ COMENTARIO INSERTADO. Target ID: ${containerId}`);
+                        } else {
+                            console.error(`❌ FALLO DE INSERCIÓN: Contenedor no encontrado. ID esperado: ${containerId}`);
+                        }
+
+                    }
+                } catch (error) {
+                    console.error("❌ ERROR CRÍTICO AL PROCESAR JSON DE WS:", error);
                 }
-            } catch (error) {
-                console.error("❌ ERROR CRÍTICO AL PROCESAR JSON DE WS:", error);
-            }
-        };
+            };
+        }
+
+        connectCommentSocket();
+
 
 
         // 3. Lógica del Botón "Responder" y Limpieza de Estado (Usada por HTMX)

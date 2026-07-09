@@ -32,7 +32,8 @@ def get_comentarios_recursivos(post_id):
     # Usaremos un prefetch_related básico para el usuario de cada comentario
     return Comentario.objects.filter(
         post_id=post_id,
-        comentario_padre__isnull=True # Solo comentarios principales
+        comentario_padre__isnull=True, # Solo comentarios principales
+        usuario__is_active=True
     ).select_related('usuario').prefetch_related(
         # Pre-carga las respuestas del primer nivel (simplificado)
         Prefetch(
@@ -54,30 +55,35 @@ def crear_publicacion(request):
         
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
-            post = form.save(commit=False)
-            post.usuario = request.user 
-            post.perfil = request.user.perfil 
-            
-            # Al guardar aquí, ya se guardan los campos 'musica', 'inicio' y 'fin' 
-            # porque están incluidos en el PostForm que modificamos antes.
-            post.save()
-
-            # --- GUARGAR IMÁGENES MÚLTIPLES ---
+            descripcion = form.cleaned_data.get('descripcion')
             imagenes = request.FILES.getlist('imagenes')
-            for i, imagen in enumerate(imagenes):
-                PostImagen.objects.create(
-                    post=post,
-                    imagen=imagen,
-                    orden=i
-                )
-            # ----------------------------------
-
-            form.save_m2m()
-            referrer = request.META.get('HTTP_REFERER')
-            if referrer and '/publications/crear/' not in referrer:
-                return redirect(referrer)
-            return redirect(f'/perfil/{username}/')
-        else:
+            
+            if not descripcion and not imagenes:
+                form.add_error(None, 'Debes escribir un texto o subir una imagen/video para publicar.')
+            else:
+                post = form.save(commit=False)
+                post.usuario = request.user 
+                post.perfil = request.user.perfil 
+                
+                post.save()
+                
+                # --- GUARGAR IMÁGENES MÚLTIPLES ---
+                for i, imagen in enumerate(imagenes):
+                    PostImagen.objects.create(
+                        post=post,
+                        imagen=imagen,
+                        orden=i
+                    )
+                # ----------------------------------
+                
+                form.save_m2m()
+                referrer = request.META.get('HTTP_REFERER')
+                if referrer and '/publications/crear/' not in referrer:
+                    return redirect(referrer)
+                return redirect(f'/perfil/{username}/')
+        
+        # Si llega aquí, el formulario no es válido o falló nuestra validación manual
+        if form.errors:
             print("--- ERRORES EN EL FORMULARIO ---")
             print(form.errors)
 
@@ -131,7 +137,7 @@ def subir_musica(request):
 def buscar_usuarios(request):
     query = request.GET.get('q', '')
     if query:
-        usuarios = Usuarios.objects.filter(username__icontains=query).values('id', 'username')
+        usuarios = Usuarios.objects.filter(username__icontains=query, is_active=True).values('id', 'username')
         return JsonResponse({'usuarios': list(usuarios)})
     return JsonResponse({'usuarios': []})
 
@@ -218,7 +224,8 @@ def panel_comentarios(request, post_id):
     # 3. Ordenamos por fecha de publicación (ajusta el nombre del campo si es diferente en tu modelo)
     comentarios_principales_qs = Comentario.objects.filter(
         post=post, 
-        comentario_padre__isnull=True
+        comentario_padre__isnull=True,
+        usuario__is_active=True
     ).select_related('usuario').prefetch_related('respuestas').order_by('-fecha_publicacion')
 
     # Paginator: 10 comentarios por carga
@@ -254,7 +261,7 @@ def load_replies(request, comment_id):
     Carga respuestas de un comentario específico.
     """
     padre = get_object_or_404(Comentario, pk=comment_id)
-    respuestas = Comentario.objects.filter(comentario_padre=padre).select_related('usuario').order_by('fecha_publicacion')
+    respuestas = Comentario.objects.filter(comentario_padre=padre, usuario__is_active=True).select_related('usuario').order_by('fecha_publicacion')
     
     return render(request, 'publications/partials/reply_list.html', {
         'respuestas': respuestas,

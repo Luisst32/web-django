@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 import json
+from fcm_django.models import FCMDevice
 
 @login_required
 def lista_notificaciones(request):
@@ -63,6 +64,27 @@ def get_notificaciones_dropdown(request):
         'notificaciones': notificaciones,
         'unread_count': unread_count
     })
+
+@csrf_exempt
+@login_required
+def register_fcm_device(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data.get('token')
+            if token:
+                FCMDevice.objects.update_or_create(
+                    registration_id=token,
+                    defaults={
+                        'user': request.user,
+                        'type': 'web',
+                        'active': True
+                    }
+                )
+                return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'invalid method'}, status=405)
 
 
 #def check_server_status(request):

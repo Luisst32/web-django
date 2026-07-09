@@ -27,13 +27,18 @@
                                 <div class="me-3 fw-bold fs-5 rank-number text-muted" style="min-width: 25px;"></div>
 
                                 <a href="{% url 'perfil_detalle' username=usuario.username %}"
-                                    class="text-decoration-none">
+                                    class="text-decoration-none position-relative d-inline-block">
+                                    {% if forloop.first %}
+                                    <div class="position-absolute" style="top: -12px; right: -8px; transform: rotate(15deg); z-index: 2;">
+                                        <i class="fas fa-crown text-warning" style="font-size: 1.25rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>
+                                    </div>
+                                    {% endif %}
                                     {% if usuario.foto_perfil %}
                                     <img src="{{ usuario.foto_perfil.url }}" alt="{{ usuario.username }}"
-                                        class="rounded-circle border"
+                                        class="rounded-circle border {% if forloop.first %}border-warning border-2{% endif %}"
                                         style="width: 50px; height: 50px; object-fit: cover;">
                                     {% else %}
-                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center border"
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center border {% if forloop.first %}border-warning border-2{% endif %}"
                                         style="width: 50px; height: 50px;">
                                         <i class="fas fa-user text-muted fs-5"></i>
                                     </div>
@@ -54,20 +59,16 @@
                                 </div>
                             </div>
 
-                            <!-- Contadores & Botón -->
+                            <!-- Contadores -->
                             <div class="d-flex align-items-center gap-3">
-                                <div class="text-end d-none d-sm-block me-3">
+                                <div class="text-end me-2 me-sm-3">
                                     <div class="fw-bold fs-5 text-dark" title="Dislikes (Me divierte)"><i class="fas fa-thumbs-down"></i> {{ usuario.num_dislikes }}</div>
-                                    <small class="text-muted">Dislikes</small>
+                                    <small class="text-muted d-none d-sm-block">Dislikes</small>
                                 </div>
-                                <div class="text-end d-none d-sm-block">
+                                <div class="text-end">
                                     <div class="fw-bold fs-5 text-secondary"><i class="fas fa-users"></i> {{ usuario.num_seguidores }}</div>
-                                    <small class="text-muted">Seguidores</small>
+                                    <small class="text-muted d-none d-sm-block">Seguidores</small>
                                 </div>
-                                <a href="{% url 'perfil_detalle' username=usuario.username %}"
-                                    class="btn btn-sm btn-outline-dark rounded-pill px-3">
-                                    Ver Perfil
-                                </a>
                             </div>
                         </div>
                         {% empty %}

@@ -20,8 +20,8 @@ def get_mutual_followers(request):
     seguidores = Seguidores.objects.filter(seguido=request.user).values_list('usuario_id', flat=True)
     
     # Intersección: Seguidores mutuos
-    mutual_ids = set(siguiendo) & set(seguidores)
-    amigos = Usuarios.objects.filter(id__in=mutual_ids)
+    mutual_ids_raw = set(siguiendo) & set(seguidores)
+    amigos = Usuarios.objects.filter(id__in=mutual_ids_raw, is_active=True)
     
     return render(request, 'chat/partials/contact_list.html', {'amigos': amigos})
 
@@ -35,12 +35,12 @@ def load_chat_panel(request):
     que_sigo = set(Seguidores.objects.filter(usuario=request.user).values_list('seguido_id', flat=True))
     # 2. Obtener IDs de personas que me siguen
     que_me_siguen = set(Seguidores.objects.filter(seguido=request.user).values_list('usuario_id', flat=True))
+    # Amigos mutuos activos
+    mutual_ids_raw = que_sigo.intersection(que_me_siguen)
+    amigos_qs = Usuarios.objects.filter(id__in=mutual_ids_raw, is_active=True)
+    mutual_ids = set(amigos_qs.values_list('id', flat=True))
     
-    # Amigos mutuos
-    mutual_ids = que_sigo.intersection(que_me_siguen)
-    amigos_qs = Usuarios.objects.filter(id__in=mutual_ids)
-    
-    # 3. Obtener chats solo para esos amigos mutuos para no procesar chats irrelevantes
+    # 3. Obtener chats solo para esos amigos mutuos (ya filtrados) para no procesar chats irrelevantes
     chats_usuario = Chat.objects.filter(
         (Q(user1=request.user) & Q(user2__in=mutual_ids)) |
         (Q(user2=request.user) & Q(user1__in=mutual_ids))
@@ -231,6 +231,28 @@ def upload_chat_image(request):
             tipo='imagen'
         )
         
+        # Send Push Notification
+        try:
+            from fcm_django.models import FCMDevice
+            from firebase_admin.messaging import Message, Notification
+            
+            recipient = chat.user2 if request.user == chat.user1 else chat.user1
+            devices = FCMDevice.objects.filter(user=recipient, active=True)
+            if devices.exists():
+                sender_name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+                push_msg = Message(
+                    notification=Notification(
+                        title=sender_name,
+                        body="envio una foto",
+                    ),
+                    data={
+                        'url': f'/chat/?chat_id={chat.id}'
+                    }
+                )
+                devices.send_message(push_msg)
+        except Exception as e:
+            print(f"Error enviando push notification FCM para imagen: {e}")
+
         # Notify via WebSocket
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
@@ -275,6 +297,27 @@ def responder_historia(request):
             tipo='story_reply'
         )
         
+        # Send Push Notification
+        try:
+            from fcm_django.models import FCMDevice
+            from firebase_admin.messaging import Message, Notification
+            
+            devices = FCMDevice.objects.filter(user=otro_usuario, active=True)
+            if devices.exists():
+                sender_name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+                push_msg = Message(
+                    notification=Notification(
+                        title=sender_name,
+                        body=mensaje_texto,
+                    ),
+                    data={
+                        'url': f'/chat/?chat_id={chat.id}'
+                    }
+                )
+                devices.send_message(push_msg)
+        except Exception as e:
+            print(f"Error enviando push notification FCM para historia: {e}")
+
         # Notify via WebSocket
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
@@ -310,14 +353,15 @@ def online_status_api(request):
     # Get mutual follower IDs
     que_sigo = set(Seguidores.objects.filter(usuario=request.user).values_list('seguido_id', flat=True))
     que_me_siguen = set(Seguidores.objects.filter(seguido=request.user).values_list('usuario_id', flat=True))
-    mutual_ids = que_sigo.intersection(que_me_siguen)
+    mutual_ids_raw = que_sigo.intersection(que_me_siguen)
+    mutual_ids = set(Usuarios.objects.filter(id__in=mutual_ids_raw, is_active=True).values_list('id', flat=True))
     
     # Use naive UTC time for safe comparison with DB's naive UTC
     now_utc_naive = timezone.now().replace(tzinfo=None)
     cutoff = now_utc_naive - timedelta(seconds=30)
     
     statuses = {}
-    for u in Usuarios.objects.filter(id__in=mutual_ids).values('id', 'last_seen'):
+    for u in Usuarios.objects.filter(id__in=mutual_ids, is_active=True).values('id', 'last_seen'):
         if not u['last_seen']:
             statuses[u['id']] = 'offline'
             continue

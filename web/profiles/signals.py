@@ -33,7 +33,7 @@ def enviar_actualizacion_seguidores(usuario_seguido):
     grupo = f'profile_{usuario_seguido.id}'
     
     # Calcular nueva cantidad
-    cantidad = usuario_seguido.seguidores.count()
+    cantidad = usuario_seguido.seguidores.filter(usuario__is_active=True).count()
     
     async_to_sync(channel_layer.group_send)(
         grupo,

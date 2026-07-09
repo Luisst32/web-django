@@ -1,5 +1,6 @@
 from django.db import models
 from users.models import Usuarios
+from simple_history.models import HistoricalRecords
 
 class Notificacion(models.Model):
     usuario_destino = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name="notificaciones_recibidas")
@@ -14,6 +15,7 @@ class Notificacion(models.Model):
     # --- ESTADOS ---
     leida = models.BooleanField(default=False)    # ¿El usuario hizo clic en la web?
     enviada = models.BooleanField(default=False)  # ¿Ya se envió la alerta de escritorio?
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'notificacion'

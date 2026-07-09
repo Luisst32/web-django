@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from users.models import Usuarios
+from simple_history.models import HistoricalRecords
 
 
 class Chat(models.Model):
@@ -8,6 +9,7 @@ class Chat(models.Model):
     user2 = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name="chats_recibidos")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'chat'
@@ -42,6 +44,7 @@ class Mensaje(models.Model):
     es_leido = models.BooleanField(default=False)
     es_recibido = models.BooleanField(default=False)
     tipo = models.CharField(max_length=50, default='texto') # 'texto' o 'imagen' o 'story_reply'
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'mensaje'
@@ -69,6 +72,7 @@ class LlamadaLog(models.Model):
     fin = models.DateTimeField(null=True, blank=True)
     duracion_segundos = models.IntegerField(null=True, blank=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='iniciada')
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'llamada_log'

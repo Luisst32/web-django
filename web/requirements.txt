@@ -65,3 +65,7 @@ typing_extensions==4.15.0
 urllib3==2.6.2
 uvicorn==0.40.0
 gunicorn
+fcm-django==3.2.0
+firebase-admin==7.4.0
+django-simple-historydjango-simple-history
+django-ipware 

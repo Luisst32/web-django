@@ -138,6 +138,9 @@ $(document).on('click', '.btn-accion', function (e) {
             if (data.success) {
                 container.find('.love-count').text(data.love_count);
                 container.find('.fun-count').text(data.fun_count);
+                if (container.find('.net-score').length) {
+                    container.find('.net-score').text(data.love_count - data.fun_count);
+                }
                 container.find('.btn-accion').removeClass('active');
 
                 if (data.user_reaction !== undefined) {

@@ -8,18 +8,63 @@ from .models import DispositivoSesion
 import json
 from webpush.models import PushInformation, SubscriptionInfo # Importamos modelos de la librería
 from django.views.decorators.csrf import csrf_exempt
+from legal.models import TermsVersion, UserConsent
+from django.utils import timezone
+import os
+from django.conf import settings
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
 def register(request):
     if request.method=="POST":
         form=UserRegisterForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            
+            # Registrar el consentimiento
+            if request.POST.get('terms_accepted'):
+                lang = request.POST.get('terms_language', 'es')
+                active_terms = TermsVersion.objects.filter(is_active=True, language=lang).first()
+                if active_terms:
+                    UserConsent.objects.create(
+                        user=user,
+                        terms_version=active_terms,
+                        ip_address=get_client_ip(request),
+                        user_agent=request.META.get('HTTP_USER_AGENT', '')[:255],
+                        device_type='web',
+                        consent_method='registration',
+                        ai_critique_accepted=True,
+                        ai_critique_accepted_at=timezone.now(),
+                        is_active=True
+                    )
+            # Iniciar sesión automáticamente (opcional, pero ayuda al flujo)
+            # login(request, user) -> en este proyecto asumo que redirect a login es lo normal, 
+            # pero el código original dice "redirect('index')". Si redirige a index sin login, el middleware de legal saltará?
+            # Si el middleware salta sin estar logueado, lo ignora. Si está logueado, lo redirige.
+            # Según tu código original:
             return redirect('index')
         else:
             print("Form errors:", form.errors) # DEBUG: Print errors to console
     else: 
         form=UserRegisterForm() 
     
-    return render(request,'users/register.html' ,{'form':form})
+    try:
+        with open(os.path.join(settings.BASE_DIR, 'Legal', 'Milanesa_Paquete_Legal_ES.txt'), 'r', encoding='utf-8') as f:
+            es_text = f.read()
+    except FileNotFoundError:
+        es_text = "Los términos no están disponibles."
+        
+    try:
+        with open(os.path.join(settings.BASE_DIR, 'Legal', 'Milanesa_Legal_Package_EN.txt'), 'r', encoding='utf-8') as f:
+            en_text = f.read()
+    except FileNotFoundError:
+        en_text = "Terms not available."
+    
+    return render(request,'users/register.html' ,{'form':form, 'es_text': es_text, 'en_text': en_text})
             
   
 
@@ -66,7 +111,7 @@ def search_users(request):
     query = request.GET.get('q', '')
     if query:
      
-        users = Usuarios.objects.filter(username__icontains=query).select_related('verification_badge')
+        users = Usuarios.objects.filter(username__icontains=query, is_active=True).select_related('verification_badge')
         results = [ 
             {
                 "username": user.username,
@@ -281,6 +326,25 @@ def google_login(request):
                     password=get_random_string(16),
                     sexo=3 # Default to "Otro"
                 )
+                
+                # Auto-accept terms for Google login
+                lang = request.POST.get('terms_language', 'es')
+                active_terms = TermsVersion.objects.filter(is_active=True, language=lang).first()
+                if not active_terms:
+                    active_terms = TermsVersion.objects.filter(is_active=True).first()
+                if active_terms:
+                    UserConsent.objects.create(
+                        user=user,
+                        terms_version=active_terms,
+                        ip_address=get_client_ip(request),
+                        user_agent=request.META.get('HTTP_USER_AGENT', '')[:255],
+                        device_type='web',
+                        consent_method='google_login',
+                        ai_critique_accepted=True,
+                        ai_critique_accepted_at=timezone.now(),
+                        is_active=True
+                    )
+                
                 messages.success(request, f"¡Te has registrado con éxito con Google, {first_name}!")
             except Exception as e:
                 messages.error(request, f"Error al registrar tu cuenta: {str(e)}")

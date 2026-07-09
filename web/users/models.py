@@ -1,8 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from simple_history.models import HistoricalRecords
 
 class TipoUser(models.Model):
     tipo_usuario = models.CharField(max_length=50, unique=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'tipouser'
@@ -15,6 +17,7 @@ class VerificationBadge(models.Model):
     name = models.CharField(max_length=100)
     icon = models.ImageField(upload_to='badges/', null=True, blank=True)
     description = models.TextField(null=True, blank=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'verification_badges'
@@ -53,6 +56,7 @@ class Usuarios(AbstractUser):
 
     last_seen = models.DateTimeField(null=True, blank=True)
     last_messages_check = models.DateTimeField(null=True, blank=True, help_text="Para gestionar el badge global de mensajes")
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'usuarios'
@@ -77,12 +81,26 @@ class Usuarios(AbstractUser):
             return ls > now_utc_naive - timedelta(seconds=30)
         return False
 
+    @property
+    def is_top_1(self):
+        from django.core.cache import cache
+        from django.db.models import Count
+        
+        top_user_id = cache.get('top_1_user_id')
+        if top_user_id is None:
+            top_user = type(self).objects.annotate(num_seguidores=Count('seguidores', filter=models.Q(seguidores__usuario__is_active=True))).order_by('-num_seguidores').first()
+            top_user_id = top_user.id if top_user else -1
+            cache.set('top_1_user_id', top_user_id, 300) # Cache for 5 minutes
+            
+        return self.id == top_user_id
+
 
 
 class Seguidores(models.Model):
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name="siguiendo")
     seguido = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name="seguidores")
     fecha_seguimiento = models.DateField(auto_now_add=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'seguidores'
@@ -104,6 +122,7 @@ class DispositivoSesion(models.Model):
     endpoint = models.TextField()
      
     fecha_creacion = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'dispositivo_sesion'

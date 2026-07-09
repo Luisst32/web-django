@@ -1,0 +1,278 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualización de Términos - Milanesa</title>
+    <!-- Incluir Font Awesome para el ícono -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;        /* Fondo claro */
+            --surface: rgba(255, 255, 255, 0.95);   /* Tarjeta blanca translúcida */
+            --text: #0f172a;      /* Texto oscuro */
+            --text-muted: #475569;/* Texto secundario */
+            --border: #cbd5e1;    /* Borde claro */
+            --danger: #ef4444;
+            --terms-bg: rgba(241, 245, 249, 0.8);  /* Fondo caja de texto translúcido */
+        }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Botón de cerrar sesión en la esquina superior izquierda */
+        .logout-form {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+        }
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .main-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .cat-mascot {
+            position: absolute;
+            left: 100%; /* Colocar justo a la derecha de la tarjeta */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 320px; /* Tamaño del gato */
+            margin-left: 3rem; /* Separación del cuadro */
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Ocultar el gato en pantallas móviles para que no se rompa el diseño */
+        @media (max-width: 900px) {
+            .cat-mascot {
+                display: none;
+            }
+        }
+
+        .modal-container {
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            animation: slideUp 0.4s ease-out;
+            position: relative;
+            z-index: 1; /* Por encima del gato si hubiera superposición */
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .terms-box {
+            background: var(--terms-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            height: 300px;
+            overflow-y: auto;
+            margin: 1.25rem 0;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+            white-space: pre-wrap;
+        }
+        .lang-switch {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .lang-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lang-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .checkbox-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            background: rgba(79, 70, 229, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(79, 70, 229, 0.2);
+        }
+        input[type="checkbox"] {
+            margin-top: 0.25rem;
+            width: 1.2rem;
+            height: 1.2rem;
+            accent-color: var(--primary);
+        }
+        label {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover {
+            background: var(--primary-hover);
+        }
+        .btn-submit:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+            color: var(--text-muted);
+        }
+        .alert {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Botón Cerrar Sesión (Esquina superior izquierda) -->
+<form action="{% url 'logout' %}" method="POST" class="logout-form">
+    {% csrf_token %}
+    <button type="submit" class="btn-logout" title="Cerrar sesión y volver al login">
+        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+    </button>
+</form>
+
+<div class="main-wrapper">
+    <img src="{% static 'catblack.png' %}?v=4" alt="Milanesa Cat" class="cat-mascot">
+    
+    <div class="modal-container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <h1>Actualización de Términos</h1>
+    <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">
+        Para continuar usando Milanesa, debes leer y aceptar los nuevos términos legales.
+    </p>
+
+    <div class="lang-switch">
+        <button type="button" class="lang-btn active" onclick="switchLang('es')">Español</button>
+        <button type="button" class="lang-btn" onclick="switchLang('en')">English</button>
+    </div>
+
+    <div id="terms-es" class="terms-box">{{ es_text }}</div>
+    <div id="terms-en" class="terms-box" style="display: none;">{{ en_text }}</div>
+
+    <form method="POST" action="{% url 'legal:accept_terms' %}">
+        {% csrf_token %}
+        <input type="hidden" name="language" id="lang-input" value="es">
+        
+        <div class="checkbox-wrapper">
+            <input type="checkbox" id="ai_critique" name="ai_critique_accepted" required>
+            <label for="ai_critique">
+                <strong>He leído y acepto los Términos de Servicio.</strong><br>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">
+                    Entiendo el uso de mis datos para el análisis mediante <strong>Milanesa IA</strong> y asumo la responsabilidad sobre el contenido subido.
+                </span>
+            </label>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submit-btn" disabled>Aceptar y Continuar</button>
+    </form>
+    
+    <div style="margin-top: 1.5rem; text-align: center; border-top: 1px solid var(--border); padding-top: 1rem;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">¿No estás de acuerdo con los nuevos términos?</p>
+        <a href="{% url 'legal:delete_account' %}" style="color: var(--danger); font-size: 0.9rem; text-decoration: none; font-weight: 500;">
+            <i class="fas fa-trash-alt me-1"></i> Eliminar mi cuenta
+        </a>
+    </div>
+</div>
+</div>
+
+<script>
+    function switchLang(lang) {
+        document.getElementById('lang-input').value = lang;
+        
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        if (lang === 'es') {
+            document.getElementById('terms-es').style.display = 'block';
+            document.getElementById('terms-en').style.display = 'none';
+        } else {
+            document.getElementById('terms-es').style.display = 'none';
+            document.getElementById('terms-en').style.display = 'block';
+        }
+    }
+
+    const checkbox = document.getElementById('ai_critique');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    checkbox.addEventListener('change', function() {
+        submitBtn.disabled = !this.checked;
+    });
+</script>
+
+</body>
+</html>

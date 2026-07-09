@@ -10,12 +10,17 @@
                 <!-- Info Usuario -->
                 <div class="d-flex align-items-center gap-2">
                     <a href="{% url 'perfil_detalle' username=suggestion.username %}"
-                        class="text-decoration-none text-dark">
+                        class="text-decoration-none text-dark position-relative d-inline-block">
+                        {% if suggestion.is_top_1 %}
+                        <div class="position-absolute" style="top: -6px; right: -4px; transform: rotate(15deg); z-index: 2;">
+                            <i class="fas fa-crown text-warning" style="font-size: 0.8rem; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));"></i>
+                        </div>
+                        {% endif %}
                         {% if suggestion.foto_perfil %}
                         <img src="{{ suggestion.foto_perfil.url }}" alt="{{ suggestion.username }}"
-                            class="rounded-circle border" style="width: 40px; height: 40px; object-fit: cover;">
+                            class="rounded-circle border {% if suggestion.is_top_1 %}border-warning border-2{% endif %}" style="width: 40px; height: 40px; object-fit: cover;">
                         {% else %}
-                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center border"
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center border {% if suggestion.is_top_1 %}border-warning border-2{% endif %}"
                             style="width: 40px; height: 40px;">
                             <i class="fas fa-user text-muted"></i>
                         </div>

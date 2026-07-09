@@ -461,10 +461,21 @@
                 $('#library-list li').filter(function () { $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1) });
             });
 
-            // Prevención de doble envío (anti-rebotes) al publicar
+            // Prevención de doble envío (anti-rebotes) y validación al publicar
             $('.form-publicacion').on('submit', function (e) {
                 var $form = $(this);
                 
+                // Validación: debe haber texto o imágenes
+                var texto = $form.find('textarea[name="descripcion"]').val();
+                var tieneTexto = texto && texto.trim().length > 0;
+                var tieneImagenes = document.getElementById('id_imagenes') && document.getElementById('id_imagenes').files.length > 0;
+                
+                if (!tieneTexto && !tieneImagenes) {
+                    e.preventDefault();
+                    alert('Debes escribir un texto o subir una imagen/video para publicar.');
+                    return false;
+                }
+
                 // Si el formulario ya se está enviando, prevenimos cualquier submit adicional
                 if ($form.data('submitted') === true) {
                     e.preventDefault();

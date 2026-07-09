@@ -10,7 +10,7 @@
 {% if es_feed_infinito and forloop.last and publicaciones.has_next %}
 
 <div class="publicacion {% if publicacion.is_highlighted %}post-highlight{% endif %}"
-    hx-get="{{ feed_url }}?page={{ publicaciones.next_page_number }}" hx-trigger="revealed" hx-swap="afterend">
+    hx-get="{{ feed_url }}{% if '?' in feed_url %}&{% else %}?{% endif %}page={{ publicaciones.next_page_number }}" hx-trigger="revealed" hx-swap="afterend">
 
     {% else %}
 
@@ -22,11 +22,16 @@
 
         <div class="publicacion-header">
 
-            <div class="header-left">
+            <div class="header-left position-relative">
+                {% if publicacion.usuario.is_top_1 %}
+                <div class="position-absolute" style="top: -8px; right: -5px; transform: rotate(15deg); z-index: 2;">
+                    <i class="fas fa-crown text-warning" style="font-size: 1rem; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));"></i>
+                </div>
+                {% endif %}
                 {% if publicacion.usuario.foto_perfil %}
-                <img src="{{ publicacion.usuario.foto_perfil.url }}" alt="Foto" class="publicacion-foto-perfil" />
+                <img src="{{ publicacion.usuario.foto_perfil.url }}" alt="Foto" class="publicacion-foto-perfil {% if publicacion.usuario.is_top_1 %}border border-warning border-2{% endif %}" />
                 {% else %}
-                <img src="/static/img/default-profile.png" alt="Foto default" class="publicacion-foto-perfil" />
+                <img src="/static/img/default-profile.png" alt="Foto default" class="publicacion-foto-perfil {% if publicacion.usuario.is_top_1 %}border border-warning border-2{% endif %}" />
                 {% endif %}
             </div>
 
@@ -175,7 +180,7 @@
         <div class="acciones-container">
             <button class="btn-accion btn-love {% if publicacion.user_reaction == 1 %}active{% endif %}"
                 data-id="{{ publicacion.id }}" data-tipo="1">
-                <i class="bi bi-heart-fill"></i>
+                <i class="fas fa-arrow-up"></i>
                 <span class="count love-count">{{ publicacion.love_count }}</span>
             </button>
 
@@ -199,7 +204,7 @@
             <button class="btn-accion btn-dislike {% if publicacion.user_reaction == 2 %}active{% endif %}"
                 data-id="{{ publicacion.id }}" data-tipo="2">
                 <span class="count fun-count">{{ publicacion.fun_count }}</span>
-                <i class="bi bi-hand-thumbs-down-fill"></i>
+                <i class="fas fa-arrow-down"></i>
             </button>
         </div>
 

@@ -1,0 +1,98 @@
+POLÍTICA DE PRIVACIDAD Y TÉRMINOS DE USO
+
+Última actualización / Fecha de validez: 1 de enero de 2025
+
+1. RESPONSABLE DEL TRATAMIENTO Y CONTACTO
+De acuerdo con el Reglamento General de Protección de Datos (RGPD) y normativas aplicables, el Responsable del Tratamiento de sus datos es:
+- Nombre Legal: Luis Enrique Peñafiel Frias
+- País de Operación: Ecuador
+- Correo electrónico de contacto: luis123master@gmail.com
+Para ejercer cualquiera de sus derechos o si tiene preguntas sobre esta Política de Privacidad, por favor contáctenos a través de dicho correo.
+
+2. INFORMACIÓN QUE RECOPILAMOS
+Recopilamos información que usted nos proporciona directamente al registrarse y utilizar nuestra plataforma:
+- Nombre y Nombre de usuario.
+- Dirección de correo electrónico.
+- Edad o Fecha de nacimiento.
+- Contraseña (almacenada de forma encriptada).
+- Fotografías y contenido generado por el usuario (publicaciones, historias).
+
+Para que la aplicación funcione correctamente solicitaremos permisos para acceder a:
+- La cámara y el micrófono de su dispositivo (para videollamadas).
+- La galería de fotos de su dispositivo (para subir imágenes).
+
+No recopilamos: Números de teléfono, direcciones postales ni información financiera (tarjetas de crédito/débito).
+
+3. BASE LEGAL Y USO DE LA INFORMACIÓN
+El tratamiento de sus datos personales se basa en:
+(a) La ejecución del contrato de servicio (para proveerle las funcionalidades de la plataforma).
+(b) Su consentimiento explícito (al registrarse y otorgar permisos de dispositivo).
+(c) Nuestro interés legítimo del responsable del tratamiento (para mejorar la seguridad y estabilidad del servicio).
+
+Utilizamos su información para:
+- Crear y gestionar su cuenta y servicios de chat/videollamadas.
+- Enviar correos electrónicos transaccionales y boletines.
+- Enviar Notificaciones Push.
+
+4. PERÍODO DE RETENCIÓN DE DATOS
+Los datos se conservarán bajo los siguientes criterios:
+- Cuenta activa: Sus datos se conservarán durante toda la vida útil de la cuenta.
+- Tras eliminación: Los datos se guardarán hasta 30 días adicionales tras la eliminación de la cuenta por razones de seguridad y prevención de fraude, tras lo cual serán borrados permanentemente.
+- Logs del sistema: Se mantienen por un máximo de 90 días.
+
+5. TECNOLOGÍAS DE SEGUIMIENTO Y ANALÍTICA
+Nuestra plataforma utiliza las siguientes tecnologías:
+- Cookies y Sesiones: Obligatorias para mantener su sesión activa. Usted puede configurar su navegador (Chrome, Firefox, Safari) para rechazar cookies, pero esto impedirá que inicie sesión en la plataforma.
+- Almacenamiento Local: Utilizado para guardar tokens de notificaciones.
+- Proveedores de terceros (Sub-encargados): Utilizamos Google LLC (Firebase y Google Analytics) para el envío de notificaciones push y medición de tráfico anónimo. Google actúa como sub-encargado del tratamiento de datos.
+
+6. INICIO DE SESIÓN DE TERCEROS
+Ofrecemos la opción de iniciar sesión a través de Google Sign-In. Para consultar cómo Google maneja sus datos, puede visitar la Política de Privacidad de Google.
+
+7. EDAD MÍNIMA
+Para registrarse y utilizar nuestra plataforma, usted debe tener al menos 18 años de edad o haber alcanzado la mayoría de edad legal en su país de residencia. No recopilamos conscientemente información de menores de edad. Si descubrimos que hemos recopilado datos de un menor de edad, eliminaremos dicha información inmediatamente y cerraremos la cuenta.
+
+8. DERECHOS DE LOS USUARIOS (RGPD - UNIÓN EUROPEA)
+Los residentes del Espacio Económico Europeo (EEE) tienen:
+- Derecho de acceso, rectificación y supresión ("El derecho al olvido").
+- Derecho a restringir y oponerse al procesamiento.
+- Derecho a la portabilidad de los datos.
+
+9. DERECHOS DE LOS USUARIOS (CCPA, CPRA Y CalOPPA - CALIFORNIA)
+Si es residente de California:
+- Derecho a Saber, Eliminación y Corrección de información.
+- "Do Not Sell or Share My Personal Information": No vendemos su información personal a terceros. No compartimos sus datos para publicidad comportamental.
+- Derecho a la No Discriminación.
+
+10. TRANSFERENCIA INTERNACIONAL DE DATOS Y SEGURIDAD
+Sus datos personales son procesados y almacenados en servidores de Amazon Web Services (AWS) ubicados predominantemente en los Estados Unidos. Al utilizar nuestra plataforma, usted consiente la transferencia de sus datos fuera de su país de residencia (incluido desde el EEE hacia EE.UU. bajo cláusulas contractuales estándar adoptadas por los proveedores).
+
+11. CONTENIDO GENERADO POR EL USUARIO Y PROPIEDAD INTELECTUAL
+Los usuarios pueden subir contenido (imágenes, textos, audios o videos) a la plataforma. 
+Al hacerlo, declaran y garantizan que:
+a) Son los propietarios del contenido o tienen licencia/permiso expreso para usarlo y compartirlo.
+b) El contenido no infringe derechos de autor, marcas registradas u otros derechos de terceros.
+c) Tienen el derecho de otorgar a la plataforma la licencia descrita en esta política.
+
+La plataforma no se hace responsable del contenido subido por los usuarios. Sin embargo, eliminará cualquier contenido que infrinja derechos de autor tras recibir una notificación válida.
+
+12. LICENCIA DE CONTENIDO
+Al subir contenido, el usuario nos otorga una licencia mundial, no exclusiva, libre de regalías para:
+- Mostrar, reproducir y distribuir el contenido dentro de la plataforma.
+- Adaptar el contenido para optimización técnica (compresión, formato).
+
+Esta licencia termina cuando el usuario elimina el contenido o su cuenta, salvo que haya sido compartido con otros usuarios y estos no lo hayan eliminado. El usuario conserva todos los derechos de propiedad intelectual sobre su contenido original.
+
+13. PROCESO DE RECLAMACIÓN DMCA / DERECHOS DE AUTOR (PROCEDIMIENTO DE NOTIFICACIÓN Y RETIRADA)
+Si cree que su obra protegida por derechos de autor ha sido publicada sin autorización en nuestra plataforma, envíe una notificación oficial a nuestro Responsable de Tratamiento al siguiente correo:
+
+Correo: luis123master@gmail.com
+
+Su notificación debe incluir obligatoriamente:
+1. Identificación clara de la obra protegida.
+2. URL exacta del contenido infractor dentro de la plataforma.
+3. Sus datos de contacto (nombre y correo electrónico).
+4. Declaración de buena fe de que el uso no está autorizado por el propietario, su agente o la ley.
+5. Firma electrónica o física.
+
+Procesaremos su solicitud en un plazo máximo de 48 a 72 horas.

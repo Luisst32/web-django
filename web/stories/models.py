@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from simple_history.models import HistoricalRecords
 
 class Story(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='stories')
@@ -10,6 +11,7 @@ class Story(models.Model):
     audio_inicio = models.IntegerField(default=0)
     duracion = models.IntegerField(default=30)
     created_at = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'stories'
@@ -23,6 +25,7 @@ class StoryView(models.Model):
     story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name='views')
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     viewed_at = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'story_views'

@@ -108,4 +108,111 @@
     from { transform: translateY(20px); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
 }
+.draggable-call {
+    cursor: grab;
+    user-select: none;
+}
+.draggable-call:active {
+    cursor: grabbing;
+}
 </style>
+
+<script>
+    // Hacer que los overlays de llamada sean arrastrables
+    function makeDraggable(elementId) {
+        const elmnt = document.getElementById(elementId);
+        if (!elmnt) return;
+        
+        elmnt.classList.add('draggable-call');
+
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        
+        elmnt.onmousedown = dragMouseDown;
+        elmnt.ontouchstart = dragTouchStart;
+
+        function dragMouseDown(e) {
+            // No arrastrar si se hace clic en botones
+            if (e.target.tagName.toLowerCase() === 'button' || e.target.closest('button')) return;
+            e = e || window.event;
+            // Solo prevenir default si no es un input o un botón
+            if(e.target.tagName.toLowerCase() !== 'input' && e.target.tagName.toLowerCase() !== 'textarea') {
+                e.preventDefault();
+            }
+            
+            // Si el elemento aún usa bottom/right, lo convertimos a top/left absoluto antes de empezar a mover
+            if (elmnt.style.bottom !== 'auto') {
+                elmnt.style.top = elmnt.offsetTop + "px";
+                elmnt.style.left = elmnt.offsetLeft + "px";
+                elmnt.style.bottom = 'auto';
+                elmnt.style.right = 'auto';
+            }
+
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+
+        function dragTouchStart(e) {
+            if (e.target.tagName.toLowerCase() === 'button' || e.target.closest('button')) return;
+            
+            if (elmnt.style.bottom !== 'auto') {
+                elmnt.style.top = elmnt.offsetTop + "px";
+                elmnt.style.left = elmnt.offsetLeft + "px";
+                elmnt.style.bottom = 'auto';
+                elmnt.style.right = 'auto';
+            }
+
+            const touch = e.touches[0];
+            pos3 = touch.clientX;
+            pos4 = touch.clientY;
+            document.ontouchend = closeDragElement;
+            document.ontouchmove = elementDragTouch;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            // set the element's new position:
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        }
+
+        function elementDragTouch(e) {
+            const touch = e.touches[0];
+            pos1 = pos3 - touch.clientX;
+            pos2 = pos4 - touch.clientY;
+            pos3 = touch.clientX;
+            pos4 = touch.clientY;
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            document.ontouchend = null;
+            document.ontouchmove = null;
+        }
+    }
+
+    // Llamar inmediatamente porque el script está debajo de los elementos
+    makeDraggable('incoming-call-overlay');
+    makeDraggable('active-call-overlay');
+
+    // También reintentar por si se carga después (como con HTMX u otros métodos asíncronos)
+    document.addEventListener("DOMContentLoaded", function() {
+        makeDraggable('incoming-call-overlay');
+        makeDraggable('active-call-overlay');
+    });
+    
+    // Si se inyecta con HTMX
+    document.body.addEventListener('htmx:afterSwap', function() {
+        makeDraggable('incoming-call-overlay');
+        makeDraggable('active-call-overlay');
+    });
+</script>

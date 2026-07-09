@@ -4,6 +4,7 @@ import random
 import string
 from django.utils import timezone
 from datetime import timedelta
+from simple_history.models import HistoricalRecords
 
 class OTPToken(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='otp_tokens')
@@ -11,6 +12,7 @@ class OTPToken(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     is_used = models.BooleanField(default=False)
+    history = HistoricalRecords()
 
     def is_valid(self):
         return not self.is_used and timezone.now() < self.expires_at

@@ -19,706 +19,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{% static 'publications/comments/css/comments.css' %}?v=11">
 
-    <style>
-        body {
-            background-color: #f3f4f6;
-            /* Matching login background */
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* --- Navbar Premium --- */
-        .navbar {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            padding: 0.75rem 0;
-            transition: all 0.3s ease;
-        }
-
-        .navbar-brand img {
-            max-height: 40px;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-        }
-
-        .nav-link {
-            color: #1f2937 !important;
-            font-weight: 500;
-            padding: 0.5rem 1rem !important;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-
-        .nav-link:hover {
-            background-color: #f3f4f6;
-            color: #000 !important;
-        }
-
-        /* --- Search Bar --- */
-        .search-container {
-            flex: 1;
-            max-width: 500px;
-            margin: 0 auto;
-            transition: all 0.3s ease;
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 991.98px) {
-            .navbar {
-                position: sticky !important;
-                top: 0;
-                z-index: 1030;
-            }
-
-            .navbar .container {
-                flex-wrap: nowrap;
-                gap: 8px;
-                position: static;
-                /* Let absolute search relate to .navbar */
-            }
-
-            .search-container {
-                display: none;
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 60px;
-                /* Increased height for better alignment */
-                background: #fff;
-                z-index: 1001;
-                padding: 10px 12px 0 12px;
-                /* Pushes content down */
-                align-items: center;
-                margin: 0 !important;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            }
-
-            .navbar.search-active .search-container {
-                display: flex;
-            }
-
-            .navbar.search-active .navbar-brand,
-            .navbar.search-active #rightActions {
-                display: none !important;
-            }
-
-            .btn-back-search {
-                border: none;
-                background: transparent;
-                margin-right: 8px;
-                color: #1f2937;
-                font-size: 1.1rem;
-                display: flex;
-                align-items: center;
-                padding: 4px;
-            }
-
-            .search-container .position-relative {
-                flex: 1;
-            }
-
-            #userSearch {
-                width: 100%;
-                height: 38px;
-                font-size: 0.95rem;
-                border: 1px solid #e5e7eb;
-                background: #f9fafb;
-                border-radius: 20px;
-                padding: 0 15px;
-            }
-
-            .navbar-brand {
-                flex: 0 1 auto;
-                min-width: 0;
-            }
-
-            .navbar-brand img {
-                max-height: 32px;
-            }
-
-            .nav-user-img,
-            .nav-user-fallback {
-                width: 32px;
-                height: 32px;
-            }
-
-            .btn-profile {
-                padding: 2px;
-            }
-
-        }
-
-        /* Small Desktop / Desktop */
-        @media (min-width: 992.01px) {
-
-            .btn-search-mobile,
-            .btn-back-search {
-                display: none !important;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            .navbar {
-                padding: 0.5rem 0;
-            }
-            .navbar .container {
-                position: relative;
-            }
-            #rightActions .dropdown {
-                position: static !important;
-            }
-            #rightActions .dropdown-menu {
-                position: absolute !important;
-                right: 10px !important;
-                left: auto !important;
-                transform: none !important;
-                top: 100% !important;
-                width: 320px !important;
-                max-width: calc(100vw - 20px) !important;
-                margin-top: 5px !important;
-            }
-        }
-
-        #userSearch {
-            background-color: #f3f4f6;
-            border: 1px solid transparent;
-            border-radius: 12px;
-            padding: 10px 20px;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-        }
-
-        #userSearch:focus {
-            background-color: #fff;
-            border-color: #000;
-            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
-            outline: none;
-        }
-
-        /* --- Custom Buttons --- */
-        .btn-black {
-            background-color: #000;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 8px 20px;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-
-        .btn-black:hover {
-            background-color: #333;
-            color: #fff;
-            transform: translateY(-1px);
-        }
-
-        .btn-light-custom {
-            background-color: #f3f4f6;
-            color: #1f2937;
-            border: none;
-            border-radius: 10px;
-            padding: 8px 12px;
-            transition: all 0.2s ease;
-        }
-
-        .btn-light-custom:hover {
-            background-color: #e5e7eb;
-            color: #000;
-        }
-
-        .btn-nav-icon {
-            border: none;
-            background: transparent;
-            color: #1f2937;
-            font-size: 1.2rem;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .btn-nav-icon:hover {
-            background-color: #f3f4f6;
-            color: #000;
-        }
-
-        /* --- Profile Button Refined --- */
-        .btn-profile {
-            display: flex;
-            align-items: center;
-            background: transparent;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-weight: 500;
-            color: #1f2937;
-            transition: all 0.2s ease;
-        }
-
-        .btn-profile:hover {
-            background-color: #f3f4f6;
-            color: #000;
-        }
-
-        .nav-user-img {
-            width: 32px;
-            height: 32px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-user-fallback {
-            width: 32px;
-            height: 32px;
-            background: #e5e7eb;
-            color: #6b7280;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            font-size: 1.2rem;
-        }
-
-        #userList {
-            max-height: 300px;
-            overflow-y: auto;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            margin-top: 10px;
-        }
-
-        .search-result-item {
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .search-result-item:hover {
-            background-color: #f3f4f6;
-        }
-
-        .search-result-img {
-            width: 45px;
-            height: 45px;
-            object-fit: cover;
-            border-radius: 50%;
-            margin-right: 15px;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .search-result-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .search-result-name {
-            font-weight: 600;
-            color: #1f2937;
-            font-size: 0.95rem;
-            line-height: 1.2;
-        }
-
-        .search-result-user {
-            font-size: 0.85rem;
-            color: #6b7280;
-        }
-
-        /* Estilos del Modal */
-        .modal-overlay {
-            /* ... (keep existing modal styles if any) ... */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-container {
-            background: white;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            border-radius: 12px;
-            /* overflow-y: auto;  <-- REMOVED to prevent full modal scrolling */
-            position: relative;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            /* ADDED for Sticky Footer support */
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        #contenido-modal-comentarios {
-            flex: 1;
-            overflow: hidden;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .btn-cerrar-modal {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            border: none;
-            background: transparent;
-            font-size: 1.5rem;
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        /* --- Animación de Destello (Flash) Espacioso --- */
-        @keyframes highlight-destello {
-            0% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-                filter: brightness(1);
-            }
-
-            20% {
-                transform: scale(1.04);
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-                filter: brightness(1.1);
-            }
-
-            100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-                filter: brightness(1);
-            }
-        }
-
-        .post-highlight {
-            animation: highlight-destello 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-            z-index: 10;
-            position: relative;
-            padding: 25px !important;
-            /* Más aire interno */
-            margin: 20px 0 35px 0 !important;
-            /* Más separación */
-            background-color: #fff;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 0, 0, 0.05) !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
-        }
-
-        /* --- Premium Shimmer Skeleton Loader --- */
-        .skeleton-shimmer {
-            background: linear-gradient(
-                90deg,
-                #eceef1 25%,
-                #f6f7f9 50%,
-                #eceef1 75%
-            );
-            background-size: 200% 100%;
-            animation: skeleton-metallic-shimmer 1.5s infinite linear;
-        }
-
-        .skeleton-shimmer-dark {
-            background: linear-gradient(
-                90deg,
-                #22252a 25%,
-                #2d3139 50%,
-                #22252a 75%
-            );
-            background-size: 200% 100%;
-            animation: skeleton-metallic-shimmer 1.5s infinite linear;
-        }
-
-        @keyframes skeleton-metallic-shimmer {
-            0% {
-                background-position: 200% 0;
-            }
-            100% {
-                background-position: -200% 0;
-            }
-        }
-
-        /* Post Skeleton Layout */
-        .skeleton-post {
-            background: #fff;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            width: 100%;
-        }
-
-        .skeleton-post-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .skeleton-post-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .skeleton-post-meta {
-            flex-grow: 1;
-            margin-left: 12px;
-        }
-
-        .skeleton-post-line-title {
-            height: 12px;
-            width: 35%;
-            border-radius: 4px;
-            margin-bottom: 8px;
-        }
-
-        .skeleton-post-line-subtitle {
-            height: 8px;
-            width: 20%;
-            border-radius: 4px;
-        }
-
-        .skeleton-post-body {
-            margin-bottom: 16px;
-        }
-
-        .skeleton-post-line {
-            height: 10px;
-            border-radius: 4px;
-            margin-bottom: 8px;
-        }
-
-        .skeleton-post-image {
-            height: 250px;
-            border-radius: 8px;
-            margin-top: 12px;
-            width: 100%;
-        }
-
-        .skeleton-post-footer {
-            display: flex;
-            justify-content: space-between;
-            border-top: 1px solid #f0f2f5;
-            padding-top: 12px;
-            margin-top: 12px;
-        }
-
-        .skeleton-post-button {
-            height: 32px;
-            width: 25%;
-            border-radius: 16px;
-        }
-
-        /* Sidebar AI Skeleton Card */
-        .skeleton-ai-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            border: 1px solid rgba(0,0,0,0.05);
-            margin-bottom: 16px;
-        }
-
-        .skeleton-ai-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .skeleton-ai-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .skeleton-ai-title {
-            height: 10px;
-            width: 60%;
-            border-radius: 4px;
-        }
-
-        .skeleton-ai-comment {
-            height: 50px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            border-left: 4px solid #ffc107;
-        }
-
-        .skeleton-ai-post {
-            border: 1px solid #f0f2f5;
-            border-radius: 8px;
-            padding: 8px;
-        }
-
-        .skeleton-ai-post-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .skeleton-ai-post-avatar {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 6px;
-        }
-
-        .skeleton-ai-post-meta {
-            height: 8px;
-            width: 40%;
-            border-radius: 3px;
-        }
-
-        .skeleton-ai-post-image {
-            height: 100px;
-            border-radius: 6px;
-            margin-bottom: 6px;
-        }
-
-        .skeleton-ai-post-text {
-            height: 8px;
-            width: 80%;
-            border-radius: 3px;
-        }
-
-        /* Story Visor Loader */
-        .skeleton-story-viewer {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: #0b0b0b;
-            padding: 24px;
-        }
-
-        .skeleton-story-circle {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            margin-bottom: 16px;
-        }
-
-        .skeleton-story-title {
-            width: 150px;
-            height: 12px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-
-        .skeleton-story-line {
-            width: 100px;
-            height: 8px;
-            border-radius: 4px;
-        }
-
-        /* HTMX Indicator display styles */
-        .htmx-indicator {
-            display: none;
-        }
-        .htmx-request .htmx-indicator, .htmx-request.htmx-indicator {
-            display: block !important;
-        }
-
-        /* Responsive Sidebar Styles */
-        #left-sidebar-col, #main-content-col {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @media (min-width: 992px) {
-            .sidebar-col {
-                width: 25%;
-                flex: 0 0 25%;
-                max-width: 25%;
-                display: block !important;
-                position: sticky;
-                top: 100px;
-                height: calc(100vh - 100px);
-                overflow-y: visible;
-                scrollbar-width: none;
-                z-index: 1000;
-            }
-            .sidebar-col.collapsed {
-                width: 0 !important;
-                flex: 0 0 0 !important;
-                max-width: 0 !important;
-                padding: 0 !important;
-                overflow: hidden;
-            }
-            #toggle-btn-container {
-                position: absolute;
-                right: -20px;
-                top: 80px;
-                z-index: 1001;
-                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            .sidebar-col.collapsed #toggle-btn-container {
-                right: -55px; /* Float on the left side of content */
-            }
-            .main-content-expanded {
-                width: 75% !important;
-                flex: 0 0 75% !important;
-                max-width: 75% !important;
-            }
-        }
-
-        @media (max-width: 991.98px) {
-            .sidebar-col {
-                position: fixed !important;
-                top: 0 !important;
-                left: -280px; /* Hidden off-canvas */
-                width: 280px !important;
-                height: 100vh !important;
-                background: #fff;
-                z-index: 1020 !important;
-                transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-                overflow-y: visible !important;
-                padding-top: 60px; /* Spacer for navbar height */
-                display: block !important;
-            }
-            .sidebar-col.open {
-                left: 0 !important;
-            }
-            /* Show the toggle button on mobile permanently floated outside to prevent stretching illusion */
-            #toggle-btn-container {
-                right: -55px !important;
-                transition: none !important;
-            }
-            /* Style the inner sidebar container to not have translation offsets */
-            #sidebar-container {
-                transform: none !important;
-            }
-            #sidebar-container .bg-white {
-                margin-left: 0 !important;
-                width: 100% !important;
-                padding-left: 0 !important;
-                margin-top: 0 !important;
-                padding-top: 0 !important;
-                border-right: none !important;
-            }
-        }
-    </style>
+    {% load static %}
+<link rel="stylesheet" href="{% static 'home/css/index.css' %}">
 
     <script>
         function searchUsers() {
@@ -893,6 +195,11 @@
                         <li>
                             <a class="dropdown-item py-2" href="{% url 'perfil_detalle' username=user.username %}">
                                 <i class="fas fa-user-circle me-2 text-muted"></i> Mi Perfil
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2" href="#" onclick="abrirModalConfiguracion(event)">
+                                <i class="fas fa-cog me-2 text-muted"></i> Configuración
                             </a>
                         </li>
                         <li>
@@ -1092,6 +399,102 @@
                     </div>
                 </div>
 
+                <!-- AI ANALYSIS (MOBILE ONLY) -->
+                <div class="d-lg-none mb-4 mx-auto" style="max-width: 600px;">
+                    <div hx-get="{% url 'trending_analysis' %}" hx-trigger="load" hx-swap="innerHTML">
+                        <!-- Shimmering metallic skeleton for AI Analysis -->
+                        <div class="skeleton-ai-card">
+                            <div class="skeleton-ai-header">
+                                <div class="skeleton-ai-icon skeleton-shimmer"></div>
+                                <div class="skeleton-ai-title skeleton-shimmer"></div>
+                            </div>
+                            <div class="skeleton-ai-comment skeleton-shimmer"></div>
+                            <div class="skeleton-ai-post">
+                                <div class="skeleton-ai-post-header">
+                                    <div class="skeleton-ai-post-avatar skeleton-shimmer"></div>
+                                    <div class="skeleton-ai-post-meta skeleton-shimmer"></div>
+                                </div>
+                                <div class="skeleton-ai-post-image skeleton-shimmer"></div>
+                                <div class="skeleton-ai-post-text skeleton-shimmer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <style>
+                    /* Segmented Control Styles */
+                    .segmented-control {
+                        position: relative;
+                        display: flex;
+                        width: 100%;
+                        background-color: #f0f2f5;
+                        border-radius: 50px;
+                        padding: 4px;
+                        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+                    }
+                    .segmented-control button {
+                        flex: 1;
+                        border: none;
+                        background: transparent;
+                        color: #65676b;
+                        font-weight: 600;
+                        padding: 10px 0;
+                        border-radius: 50px;
+                        z-index: 2;
+                        position: relative;
+                        transition: color 0.3s ease;
+                        cursor: pointer;
+                    }
+                    .segmented-control button.active {
+                        color: #050505;
+                    }
+                    .segmented-control .slider {
+                        position: absolute;
+                        top: 4px;
+                        bottom: 4px;
+                        left: 4px;
+                        width: calc(50% - 4px);
+                        background-color: #fff;
+                        border-radius: 50px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+                        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                        z-index: 1;
+                    }
+                </style>
+
+                <div class="d-flex justify-content-center mb-3 mt-2 px-2 mx-auto" style="max-width: 600px;">
+                    <div class="segmented-control" id="feed-sort-tabs">
+                        <div class="slider" id="tabs-slider" style="transform: translateX({% if request.GET.sort == 'ranked' %}100%{% else %}0{% endif %});"></div>
+                        <button hx-get="?sort=recent" 
+                                hx-target="#publicaciones-feed-container" 
+                                hx-indicator=".htmx-indicator"
+                                onclick="updateSortTabs(this, 0)"
+                                class="{% if request.GET.sort != 'ranked' %}active{% endif %}">
+                            <i class="fas fa-clock me-2"></i>Recientes
+                        </button>
+                        <button hx-get="?sort=ranked" 
+                                hx-target="#publicaciones-feed-container" 
+                                hx-indicator=".htmx-indicator"
+                                onclick="updateSortTabs(this, 1)"
+                                class="{% if request.GET.sort == 'ranked' %}active{% endif %}">
+                            <i class="fas fa-fire me-2"></i>Populares
+                        </button>
+                    </div>
+                </div>
+
+                <script>
+                    function updateSortTabs(clickedBtn, index) {
+                        const tabs = document.querySelectorAll('#feed-sort-tabs button');
+                        tabs.forEach(btn => btn.classList.remove('active'));
+                        clickedBtn.classList.add('active');
+                        
+                        const slider = document.getElementById('tabs-slider');
+                        slider.style.transform = index === 1 ? 'translateX(100%)' : 'translateX(0)';
+                        
+                        document.getElementById('publicaciones-feed-container').innerHTML = '';
+                    }
+                </script>
+
                 <div class="publicaciones-container" id="publicaciones-feed-container" {% if feed_full_width %}style="max-width: 100%;" {% endif %}>
                     
                     {% include 'publications/lista_publicaciones.html' %}
@@ -1255,6 +658,218 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONFIGURACIÓN -->
+    <div id="modal-configuracion-global" class="modal-overlay" style="display: none; z-index: 10000;">
+        <div class="modal-container" style="max-width: 500px; padding: 25px; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.08);">
+            <button class="btn-cerrar-modal" onclick="cerrarModalConfiguracion()" style="top: 15px; right: 15px; border: none; background: transparent; font-size: 1.25rem;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="modal-header-custom mb-4">
+                <h4 class="fw-bold text-dark m-0 d-flex align-items-center gap-2" style="font-size: 1.35rem;">
+                    <i class="fas fa-cog text-primary" style="font-size: 1.1rem;"></i>
+                    <span>Configuración</span>
+                </h4>
+                <p class="text-muted small m-0 mt-1" style="font-size: 0.85rem;">Aquí podrás ajustar tus preferencias.</p>
+            </div>
+            
+            <div class="py-4 px-3">
+                <!-- Sección de Notificaciones -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-bell text-warning me-2"></i> Notificaciones Push</h6>
+                        <small class="text-muted ms-4">Recibe alertas de nuevos mensajes</small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="push-notifications-switch" style="width: 2.5em; height: 1.25em; cursor: pointer;">
+                    </div>
+                </div>
+
+                <hr class="text-muted opacity-25 mb-4">
+
+                <!-- Sección de Gestión de Cookies (Controles Reales) -->
+                <div class="mb-2">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-cookie-bite text-info me-2"></i> Privacidad y Cookies</h6>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="mb-0 fw-bold" style="font-size: 0.95rem;">Cookies Estrictamente Necesarias</h6>
+                            <small class="text-muted" style="font-size: 0.8rem;">Requeridas para el funcionamiento de la plataforma.</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" checked disabled style="width: 2.5em; height: 1.25em;">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="mb-0 fw-bold" style="font-size: 0.95rem;">Cookies de Análisis (Analytics)</h6>
+                            <small class="text-muted" style="font-size: 0.8rem;">Nos ayudan a mejorar midiendo el uso del sitio.</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input cookie-preference-switch" type="checkbox" id="analytics-cookies-switch" checked style="width: 2.5em; height: 1.25em; cursor: pointer;">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h6 class="mb-0 fw-bold" style="font-size: 0.95rem;">Cookies de Publicidad / Marketing</h6>
+                            <small class="text-muted" style="font-size: 0.8rem;">Utilizadas para rastrear preferencias de anuncios.</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input cookie-preference-switch" type="checkbox" id="marketing-cookies-switch" style="width: 2.5em; height: 1.25em; cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+                <hr class="text-muted opacity-25 mb-4">
+
+                <!-- Sección de Zona Peligrosa -->
+                <div class="mb-2">
+                    <h6 class="fw-bold mb-3 text-danger"><i class="fas fa-exclamation-triangle me-2"></i> Zona Peligrosa</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0 fw-bold" style="font-size: 0.95rem;">Eliminar Cuenta</h6>
+                            <small class="text-muted" style="font-size: 0.8rem;">Borrar permanentemente tu perfil y datos.</small>
+                        </div>
+                        <div>
+                            <a href="{% url 'legal:delete_account' %}" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;">Eliminar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lógica de control de Cookies -->
+            <script>
+                (function() {
+                    function initCookies() {
+                        const analyticsSwitch = document.getElementById('analytics-cookies-switch');
+                        const marketingSwitch = document.getElementById('marketing-cookies-switch');
+
+                        if (analyticsSwitch) {
+                            const analyticsPref = localStorage.getItem('cookies_analytics');
+                            // Por defecto true
+                            analyticsSwitch.checked = analyticsPref !== 'false';
+                            
+                            analyticsSwitch.onchange = function() {
+                                localStorage.setItem('cookies_analytics', this.checked);
+                                if (typeof window['ga-disable-'] !== 'undefined') {
+                                    window['ga-disable-'] = !this.checked;
+                                }
+                            };
+                        }
+
+                        if (marketingSwitch) {
+                            const marketingPref = localStorage.getItem('cookies_marketing');
+                            // Por defecto false
+                            marketingSwitch.checked = marketingPref === 'true';
+                            
+                            marketingSwitch.onchange = function() {
+                                localStorage.setItem('cookies_marketing', this.checked);
+                            };
+                        }
+                    }
+
+                    // Ejecutar inmediatamente
+                    initCookies();
+                    
+                    // Si el elemento aún no existe o el framework HTMX interfiere
+                    document.addEventListener("DOMContentLoaded", initCookies);
+                    document.body.addEventListener("htmx:afterSwap", initCookies);
+                })();
+            </script>
+
+            <div class="d-flex justify-content-end mt-4 pt-2 border-top">
+                <button type="button" class="btn btn-light-custom px-4 py-2" onclick="cerrarModalConfiguracion()" style="border-radius: 10px; font-size: 0.9rem; font-weight: 500;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB29uXCTf2xtf-qqPLfLSOYjLUW1mQ3enI",
+            authDomain: "app1-29128.firebaseapp.com",
+            projectId: "app1-29128",
+            storageBucket: "app1-29128.firebasestorage.app",
+            messagingSenderId: "582131743674",
+            appId: "1:582131743674:web:b7f90ed11490ad8f19bb83"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+
+        const vapidKey = "BFaTINahA2PeR726iOGxZJ-jTK8st0hH6hLUce4rKew_Qzv_h640stiHW31IT8C3QoRgUVVIPWWjjhVe7yfmev0";
+
+        async function requestPushPermission() {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    // Usar el worker en /sw.js que mapeamos en urls.py
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    const token = await getToken(messaging, { 
+                        vapidKey: vapidKey, 
+                        serviceWorkerRegistration: registration 
+                    });
+                    
+                    if (token) {
+                        // Enviar al backend
+                        await fetch('/notificacion/register-fcm/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ token: token })
+                        });
+                        console.log("Notificaciones Push activadas y registradas.");
+                        return true;
+                    }
+                }
+                return false;
+            } catch (e) {
+                console.error("Error activando notificaciones: ", e);
+                return false;
+            }
+        }
+
+        // Listener del switch
+        const pushSwitch = document.getElementById('push-notifications-switch');
+        if (pushSwitch) {
+            // Revisar si ya tiene permiso
+            if (Notification.permission === 'granted') {
+                pushSwitch.checked = true;
+                // Si ya estaba otorgado, nos aseguramos de registrar el token en cada inicio
+                requestPushPermission(); 
+            }
+
+            pushSwitch.addEventListener('change', async function() {
+                if (this.checked) {
+                    if (vapidKey === "REEMPLAZAR_CON_TU_KEY_PAIR_VAPID_DE_FIREBASE") {
+                        alert("Falta configurar la VAPID Key de Firebase en el código.");
+                        this.checked = false;
+                        return;
+                    }
+                    const success = await requestPushPermission();
+                    if (!success) {
+                        this.checked = false;
+                        alert("No se pudo activar las notificaciones. Asegúrate de dar permisos al navegador.");
+                    }
+                } else {
+                    // Lógica para apagar notificaciones (eliminar token)
+                    // Podríamos enviar petición al servidor para borrar el FCMDevice
+                    alert("Para desactivarlas completamente bloquea los permisos desde tu navegador.");
+                }
+            });
+        }
+
+        // Manejar mensajes en primer plano
+        onMessage(messaging, (payload) => {
+            console.log("Mensaje recibido en primer plano: ", payload);
+            // Aquí podríamos mostrar un toast en la UI
+        });
+    </script>
+
     <script>
         function mostrarImagen(url) {
             var modal = document.getElementById("modal-imagen-global");
@@ -1269,6 +884,15 @@
             if (modal) {
                 modal.style.display = "none";
             }
+        }
+        function abrirModalConfiguracion(e) {
+            if (e) {
+                e.preventDefault();
+            }
+            $('#modal-configuracion-global').fadeIn('fast').css('display', 'flex');
+        }
+        function cerrarModalConfiguracion() {
+            $('#modal-configuracion-global').fadeOut('fast');
         }
         function abrirModalCrearPublicacion() {
             $('#modal-crear-publicacion-global').fadeIn('fast').css('display', 'flex');
@@ -1379,34 +1003,7 @@
     {% endblock scripts %}
 
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
-    <style>
-        /* Force Plyr to respect max-height and fit like images */
-        .plyr {
-            height: 100%;
-            max-height: 500px;
-            /* Match image max-height */
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .plyr__video-wrapper {
-            height: 100%;
-        }
-
-        .plyr video {
-            object-fit: contain;
-            /* Ensure video is fully visible */
-            height: 100% !important;
-        }
-
-        /* Make the container rounded */
-        .plyr-wrapper {
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 5px;
-            background: #000;
-        }
-    </style>
+    
     <script>
         const plyrOptions = {
             controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'pip', 'fullscreen'],
@@ -1608,314 +1205,14 @@
     });
 </script>
 
-<style>
-    #webpush-subscribe-button {
-        background: transparent !important;
-        /* Sin fondo */
-        border: none !important;
-        /* Sin bordes */
-        padding: 0 !important;
-        /* Sin relleno */
-        font-size: 0 !important;
-        /* Ocultamos el texto "Subscribe" */
-        cursor: pointer;
-        /* Manito al pasar el mouse */
-        line-height: 0;
-        display: inline-block;
-        color: #555;
-        /* Color por defecto (Gris) */
-        transition: color 0.3s ease;
-    }
 
-    #webpush-subscribe-button:hover {
-        color: #000;
-        /* Color al pasar el mouse */
-    }
-
-    /* --- NOTIFICATION BADGE --- */
-    #noti-badge {
-        font-weight: bold;
-        border: 2px solid #fff;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .noti-unread {
-        background-color: #f0f7ff !important;
-    }
-
-    /* Animation for new notification */
-    @keyframes pulse-bell {
-        0% {
-            transform: scale(1);
-        }
-
-        50% {
-            transform: scale(1.2);
-        }
-
-        100% {
-            transform: scale(1);
-        }
-    }
-
-    .bell-animate {
-        animation: pulse-bell 0.5s ease;
-    }
-
-    /* Estilo para cuando está activo (Suscrito) */
-    #webpush-subscribe-button.suscrito {
-        color: #ffffff;
-        /* Azul o el color que quieras para "Activado" */
-    }
-
-    /* Aseguramos que tus SVGs se vean bien */
-    #webpush-subscribe-button svg {
-        font-size: 20px !important;
-        /* Tamaño del ícono */
-        width: 20px !important;
-        height: 20px !important;
-    }
-</style>
 
 <script>
-    // === AUDIO GLOBAL ===
-    // Creamos la referencia de audio UNA sola vez para poder desbloquerala
-    window._chatAudioRef = new Audio("{% static 'song/dragon-studio-new-notification-3-398649.mp3' %}");
-    window._chatAudioRef.preload = 'auto';
-    window._chatAudioRef.volume = 1.0;
-
-    window.playNotificationSound = function() {
-        try {
-            window._chatAudioRef.currentTime = 0;
-            var p = window._chatAudioRef.play();
-            if (p) p.catch(function(e) { console.warn('[Sound] bloqueado:', e.message); });
-        } catch(e) { console.warn('[Sound] error:', e); }
+    window.DjangoVars = {
+        chatAudioUrl: "{% static 'song/dragon-studio-new-notification-3-398649.mp3' %}"
     };
-
-    window.playCallRingtone = function() {
-        try {
-            var r = document.getElementById('call-ringtone');
-            if (r) { r.currentTime = 0; r.play().catch(function(e){}); }
-        } catch(e) {}
-    };
-
-    window.stopCallRingtone = function() {
-        try {
-            var r = document.getElementById('call-ringtone');
-            if (r) { r.pause(); r.currentTime = 0; }
-        } catch(e) {}
-    };
-
-    // Desbloquear en primer toque/click
-    (function() {
-        var unlocked = false;
-        function unlock() {
-            if (unlocked) return;
-            unlocked = true;
-            window._chatAudioRef.play().then(function() {
-                window._chatAudioRef.pause();
-                window._chatAudioRef.currentTime = 0;
-                console.log('[Sound] audio desbloqueado OK');
-            }).catch(function(e) { console.warn('[Sound] unlock failed:', e.message); });
-        }
-        document.addEventListener('click', unlock, { once: true });
-        document.addEventListener('touchstart', unlock, { once: true });
-        document.addEventListener('keydown', unlock, { once: true });
-    })();
-
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-
-        // Elemento de audio base para obtener la URL
-        const chatAudioUrl = "{% static 'song/dragon-studio-new-notification-3-398649.mp3' %}";
-
-        // ---- NOTI SOCKET CON AUTO-RECONEXIÓN Y KEEPALIVE ----
-        let notiSocket = null;
-        let notiReconnectTimer = null;
-        let notiHeartbeat = null;
-
-        function connectNotiSocket() {
-            // Limpiar reconexión pendiente
-            if (notiReconnectTimer) {
-                clearTimeout(notiReconnectTimer);
-                notiReconnectTimer = null;
-            }
-
-            notiSocket = new WebSocket(protocol + window.location.host + '/ws/notifications/');
-
-            notiSocket.onopen = function () {
-                console.log('[NotiSocket] Conectado');
-                // Keepalive ping cada 25 segundos para evitar timeout del servidor
-                notiHeartbeat = setInterval(function () {
-                    if (notiSocket && notiSocket.readyState === WebSocket.OPEN) {
-                        notiSocket.send(JSON.stringify({ action: 'heartbeat' }));
-                    }
-                }, 25000);
-            };
-
-            notiSocket.onmessage = function (e) {
-                const data = JSON.parse(e.data);
-                if (data.type === 'notification') {
-                    updateNotiBadge(1);
-                    const bell = document.querySelector('#notiDropdown i');
-                    if (bell) {
-                        bell.classList.add('bell-animate');
-                        setTimeout(() => bell.classList.remove('bell-animate'), 500);
-                    }
-                    const notiList = document.getElementById('notiList');
-                    if (notiList && notiList.classList.contains('show')) {
-                        htmx.trigger('#notiDropdown', 'click');
-                    }
-                } else if (data.type === 'chat_count_update') {
-                    // Reproducir sonido siempre que llegue un mensaje nuevo (count > 0)
-                    if (data.count > 0) {
-                        window.playNotificationSound();
-                    }
-
-                    // 1. Badge Global
-                    updateChatBadge(data.count);
-
-                    // 2. Badge Individual (Si existe en la lista)
-                    if (data.sender_id) {
-                        updateUserBadge(data.sender_id);
-                    }
-                }
-            };
-
-            notiSocket.onerror = function (e) {
-                console.warn('[NotiSocket] Error:', e);
-            };
-
-            notiSocket.onclose = function (e) {
-                console.warn('[NotiSocket] Cerrado (code ' + e.code + '). Reconectando en 3s...');
-                if (notiHeartbeat) { clearInterval(notiHeartbeat); notiHeartbeat = null; }
-                // Reconectar automáticamente a los 3 segundos
-                notiReconnectTimer = setTimeout(connectNotiSocket, 3000);
-            };
-        }
-
-        // Conectar al iniciar
-        connectNotiSocket();
-
-        function updateChatBadge(count) {
-            const badge = document.getElementById('chat-badge');
-            if (badge) {
-                badge.textContent = count;
-                if (count > 0) badge.classList.remove('d-none');
-                else badge.classList.add('d-none');
-            }
-        }
-
-        function updateUserBadge(senderId) {
-            // Buscar badge específico del usuario en la lista de contactos
-            const userBadge = document.getElementById('unread-badge-' + senderId);
-            const userMsgPreview = document.getElementById('msg-preview-' + senderId);
-
-            if (userBadge) {
-                // Incrementar visualmente
-                let current = parseInt(userBadge.textContent) || 0;
-                userBadge.textContent = current + 1;
-                userBadge.classList.remove('d-none');
-            }
-
-            if (userMsgPreview) {
-                userMsgPreview.classList.add('fw-bold', 'text-dark');
-                userMsgPreview.classList.remove('text-muted');
-                userMsgPreview.textContent = "Nuevo mensaje..."; // Opcional: cambiar texto momentáneamente
-            }
-        }
-
-        function updateNotiBadge(count) {
-            const badge = document.getElementById('noti-badge');
-            if (badge) {
-                let current = parseInt(badge.textContent) || 0;
-                let total = current + count;
-                badge.textContent = total;
-                if (total > 0) {
-                    badge.classList.remove('d-none');
-                } else {
-                    badge.classList.add('d-none');
-                }
-            }
-        }
-
-        // Clear badge when opening dropdown
-        const notiBtn = document.getElementById('notiDropdown');
-        if (notiBtn) {
-            notiBtn.addEventListener('click', function () {
-                const badge = document.getElementById('noti-badge');
-                if (badge) {
-                    badge.textContent = '0';
-                    badge.classList.add('d-none');
-                }
-            });
-        }
-    });
-
-    function toggleMessagePanel() {
-        const panel = document.getElementById('message-panel');
-        const trigger = document.getElementById('chat-compact-trigger');
-        const badge = document.getElementById('chat-badge');
-
-        // Determinar si estamos cerrando
-        const closing = panel && panel.classList.contains('active');
-
-        // Toggle Visual
-        if (closing) {
-            panel.classList.remove('active');
-            if (trigger) trigger.classList.remove('hidden');
-        } else {
-            if (panel) panel.classList.add('active');
-            if (trigger) trigger.classList.add('hidden');
-
-            // LIMPIAR BADGE Y LLAMAR BACKEND
-            if (badge) {
-                badge.classList.add('d-none');
-                badge.innerText = '0';
-
-                // Intento robusto de obtener CSRF
-                let token = '';
-                const input = document.querySelector('[name=csrfmiddlewaretoken]');
-                if (input) token = input.value;
-
-                if (token) {
-                    fetch("{% url 'update_messages_check_time' %}", {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': token,
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                        .then(r => {
-                            if (r.ok) console.log('✅ Badge reset OK');
-                            else console.error('❌ Badge reset failed', r.status);
-                        })
-                        .catch(console.error);
-                } else {
-                    console.error('⚠️ CSRF Token not found for badge reset');
-                }
-            }
-        }
-    }
-
-    function clearUserBadgeAndBold(userId) {
-        // 3. Clear Badge & Bold
-        const badge = document.getElementById('unread-badge-' + userId);
-        const msgPreview = document.getElementById('msg-preview-' + userId);
-
-        if (badge) {
-            badge.classList.add('d-none');
-            badge.textContent = '0';
-        }
-        if (msgPreview) {
-            // Remover negrita y color oscuro
-            msgPreview.classList.remove('fw-bold', 'text-dark');
-            // Agregar color gris (leído)
-            msgPreview.classList.add('text-muted');
-        }
-    }
 </script>
+<script src="{% static 'home/js/index.js' %}"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

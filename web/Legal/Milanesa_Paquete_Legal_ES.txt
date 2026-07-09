@@ -1,0 +1,540 @@
+================================================================================
+                         MILANESA - PAQUETE LEGAL COMPLETO
+                              Versión en Español
+                        Última actualización: 24 de junio de 2025
+================================================================================
+
+
+================================================================================
+DOCUMENTO 1: POLÍTICA DE PRIVACIDAD
+================================================================================
+
+POLÍTICA DE PRIVACIDAD DE MILANESA
+Última actualización: 24 de junio de 2025
+Versión: 2.1
+
+--------------------------------------------------------------------------------
+1. RESPONSABLE DEL TRATAMIENTO Y CONTACTO
+--------------------------------------------------------------------------------
+De acuerdo con el Reglamento General de Protección de Datos (RGPD) y normativas
+aplicables, el Responsable del Tratamiento de sus datos es:
+
+  - Nombre Legal      : Luis Enrique Peñafiel Frias
+  - Plataforma        : Milanesa.sbs
+  - País de Operación : Ecuador
+  - Correo de contacto: luis123master@gmail.com
+  - Correo DMCA       : luis123master@gmail.com
+
+Para ejercer cualquiera de sus derechos, contáctenos a través de los correos
+indicados según el motivo de su consulta.
+
+--------------------------------------------------------------------------------
+2. INFORMACIÓN QUE RECOPILAMOS
+--------------------------------------------------------------------------------
+Recopilamos información que usted nos proporciona directamente al registrarse
+y utilizar nuestra plataforma:
+
+  - Nombre y nombre de usuario.
+  - Dirección de correo electrónico.
+  - Fecha de nacimiento (para verificación de edad).
+  - Contraseña (almacenada de forma encriptada con hash bcrypt o equivalente).
+  - Fotografías, audios y contenido generado por el usuario.
+
+Para el correcto funcionamiento de la aplicación, solicitaremos permisos para:
+  - La cámara y micrófono de su dispositivo (para videollamadas).
+  - La galería de fotos y archivos de audio de su dispositivo.
+
+NO recopilamos: Números de teléfono, direcciones postales ni información
+financiera de ningún tipo.
+
+--------------------------------------------------------------------------------
+3. BASE LEGAL Y USO DE LA INFORMACIÓN
+--------------------------------------------------------------------------------
+El tratamiento de sus datos personales se basa en:
+
+  a) La ejecución del contrato de servicio (proveer las funcionalidades
+     de la plataforma).
+  b) Su consentimiento explícito (al registrarse y otorgar permisos).
+  c) Nuestro interés legítimo (mejorar la seguridad y estabilidad
+     del servicio).
+
+Utilizamos su información para:
+  - Crear y gestionar su cuenta, chat y videollamadas.
+  - Enviar correos electrónicos transaccionales y boletines.
+  - Enviar notificaciones push (solo con permiso expreso).
+  - Analizar el uso de la plataforma para mejorar nuestros servicios.
+
+--------------------------------------------------------------------------------
+4. PERÍODO DE RETENCIÓN DE DATOS
+--------------------------------------------------------------------------------
+  - Cuenta activa       : Sus datos se conservan durante toda la vida
+                          útil de la cuenta.
+  - Tras eliminación    : Hasta 30 días adicionales por seguridad y
+                          prevención de fraude, luego se eliminan
+                          permanentemente.
+  - Logs del sistema    : Máximo 90 días.
+  - Contenido de audio  : Eliminado inmediatamente al borrar la
+                          publicación o la cuenta.
+
+--------------------------------------------------------------------------------
+5. TECNOLOGÍAS DE SEGUIMIENTO Y ANALÍTICA
+--------------------------------------------------------------------------------
+Nuestra plataforma utiliza:
+
+  - Cookies y Sesiones: Necesarias para mantener su sesión activa.
+    Puede configurar su navegador para rechazarlas, pero esto impedirá
+    el acceso a la plataforma. Consulte nuestra Política de Cookies.
+
+  - Almacenamiento Local (LocalStorage / IndexedDB): Para tokens de
+    notificaciones push vía Firebase.
+
+  - Google LLC (Firebase y Google Analytics): Sub-encargado del
+    tratamiento para notificaciones push y analítica anónima de tráfico.
+
+No utilizamos publicidad, píxel de Facebook ni retargeting.
+
+--------------------------------------------------------------------------------
+6. INICIO DE SESIÓN DE TERCEROS
+--------------------------------------------------------------------------------
+Ofrecemos inicio de sesión mediante Google Sign-In. Al utilizarlo, Google
+nos proporciona su nombre y correo electrónico para crear su perfil.
+Política de privacidad de Google: https://policies.google.com/privacy
+
+--------------------------------------------------------------------------------
+7. EDAD MÍNIMA
+--------------------------------------------------------------------------------
+Para registrarse en Milanesa, usted debe tener al menos 18 años de edad
+o haber alcanzado la mayoría de edad legal en su país de residencia.
+
+No recopilamos conscientemente información de menores. Si detectamos que
+un usuario es menor, eliminaremos sus datos y cerraremos la cuenta.
+
+--------------------------------------------------------------------------------
+8. DERECHOS DE LOS USUARIOS (RGPD - UNIÓN EUROPEA)
+--------------------------------------------------------------------------------
+Los residentes del Espacio Económico Europeo (EEE) tienen derecho a:
+
+  - Acceso          : Solicitar copia de sus datos personales.
+  - Rectificación   : Solicitar corrección de datos inexactos.
+  - Supresión       : Solicitar la eliminación de sus datos.
+  - Restricción     : Limitar el tratamiento de sus datos.
+  - Oposición       : Oponerse al tratamiento por interés legítimo.
+  - Portabilidad    : Recibir sus datos en formato estructurado.
+
+Para ejercer estos derechos: luis123master@gmail.com
+Puede presentar reclamaciones ante la autoridad de control de su país.
+
+--------------------------------------------------------------------------------
+9. DERECHOS DE LOS USUARIOS (CCPA, CPRA Y CalOPPA - CALIFORNIA)
+--------------------------------------------------------------------------------
+Si es residente de California, tiene derecho a:
+
+  - Saber qué datos hemos recopilado en los últimos 12 meses.
+  - Solicitar eliminación o corrección de su información.
+  - "Do Not Sell or Share My Personal Information": No vendemos ni
+    compartimos sus datos para publicidad de comportamiento cruzado.
+  - No Discriminación por ejercer sus derechos de privacidad.
+  - Señales DNT: No realizamos rastreo publicitario entre sitios.
+
+--------------------------------------------------------------------------------
+10. TRANSFERENCIA INTERNACIONAL DE DATOS Y SEGURIDAD
+--------------------------------------------------------------------------------
+Sus datos son procesados en servidores de Amazon Web Services (AWS)
+ubicados principalmente en los Estados Unidos. Al usar Milanesa, usted
+consiente esta transferencia bajo cláusulas contractuales estándar
+conforme al RGPD.
+
+Adoptamos encriptación en tránsito (TLS) y en reposo para proteger
+su información.
+
+--------------------------------------------------------------------------------
+11. CONTENIDO GENERADO POR EL USUARIO Y PROPIEDAD INTELECTUAL
+--------------------------------------------------------------------------------
+Al subir contenido (imágenes, textos, audios, videos), usted declara y
+garantiza que:
+
+  a) Es propietario del contenido o tiene licencia/permiso expreso.
+  b) El contenido no infringe derechos de autor ni de terceros.
+  c) Tiene el derecho de otorgar a Milanesa la licencia descrita
+     en esta política.
+
+Milanesa no se hace responsable del contenido subido por usuarios, pero
+eliminará manualmente el contenido infractor tras recibir y revisar
+una notificación válida en un plazo de 48 a 72 horas.
+
+--------------------------------------------------------------------------------
+12. LICENCIA DE CONTENIDO
+--------------------------------------------------------------------------------
+Al subir contenido, el usuario otorga a Milanesa una licencia mundial,
+no exclusiva y libre de regalías para:
+
+  - Mostrar, reproducir y distribuir el contenido dentro de la plataforma.
+  - Adaptar el contenido para optimización técnica (compresión, formato).
+
+Esta licencia termina cuando el usuario elimina el contenido o su cuenta.
+El usuario conserva todos los derechos de propiedad intelectual sobre
+su contenido original.
+
+--------------------------------------------------------------------------------
+13. PROCESO DE RECLAMACIÓN DMCA / DERECHOS DE AUTOR
+--------------------------------------------------------------------------------
+Si su obra protegida fue publicada sin autorización, envíe una notificación a:
+luis123master@gmail.com
+
+Su notificación debe incluir:
+  1. Identificación clara de la obra protegida.
+  2. URL exacta del contenido infractor.
+  3. Sus datos de contacto (nombre y correo electrónico).
+  4. Declaración de buena fe de que el uso no está autorizado.
+  5. Firma electrónica o física.
+
+Procesaremos su solicitud en 48 a 72 horas hábiles.
+
+--------------------------------------------------------------------------------
+14. CAMBIOS A ESTA POLÍTICA
+--------------------------------------------------------------------------------
+Notificaremos cambios significativos con al menos 15 días de anticipación
+mediante correo electrónico o aviso en la plataforma.
+
+--------------------------------------------------------------------------------
+15. "Milanesa  IA": TRATAMIENTO DE DATOS Y ADVERTENCIA DE CONTENIDO
+--------------------------------------------------------------------------------
+Milanesa incorpora de forma permanente en el feed una función denominada
+"Milanesa IA", impulsada por Google Gemini (Google LLC). Esta función selecciona
+publicaciones aleatorias de usuarios registrados y genera críticas automáticas
+visibles para todos los usuarios de la plataforma.
+
+ADVERTENCIA: Esta función está siempre activa y es parte esencial del
+servicio. Al registrarse en Milanesa, el usuario acepta que sus publicaciones
+pueden ser seleccionadas aleatoriamente y analizadas por esta IA, y que la
+crítica resultante será visible en el feed de todos los usuarios registrados.
+
+El prompt de comportamiento de esta IA está diseñado intencionalmente para
+producir críticas de estilo agresivo, sarcástico y sin filtros de cortesía.
+El usuario acepta esta condición como parte del servicio al registrarse.
+
+Respecto al tratamiento de datos:
+
+  - Las publicaciones seleccionadas son enviadas a los servidores de Google
+    LLC para su procesamiento. Aplica la política de privacidad de Google:
+    https://policies.google.com/privacy
+  - Milanesa no controla qué publicación será seleccionada por el algoritmo
+    aleatorio ni el contenido exacto que Google Gemini generará sobre ella.
+
+
+================================================================================
+DOCUMENTO 2: TÉRMINOS Y CONDICIONES DE USO
+================================================================================
+
+TÉRMINOS Y CONDICIONES DE USO DE MILANESA
+Última actualización: 24 de junio de 2025
+Versión: 1.1
+
+--------------------------------------------------------------------------------
+1. ACEPTACIÓN DE LOS TÉRMINOS
+--------------------------------------------------------------------------------
+Al acceder o utilizar Milanesa, usted acepta quedar vinculado por estos
+Términos y Condiciones, nuestra Política de Privacidad y Política de Cookies.
+Si no está de acuerdo, no utilice la Plataforma.
+
+--------------------------------------------------------------------------------
+2. DESCRIPCIÓN DEL SERVICIO
+--------------------------------------------------------------------------------
+Milanesa es una red social que permite a los usuarios:
+  - Crear perfiles y publicar contenido (imágenes, texto, audio, video).
+  - Comunicarse mediante chat en tiempo real.
+  - Realizar videollamadas con otros usuarios.
+  - Compartir historias y publicaciones.
+
+El servicio se proporciona "tal cual" y puede estar sujeto a cambios
+o discontinuación sin previo aviso.
+
+--------------------------------------------------------------------------------
+3. REQUISITOS DE REGISTRO
+--------------------------------------------------------------------------------
+Para usar Milanesa usted debe:
+
+  a) Tener al menos 18 años de edad.
+  b) Proporcionar información veraz y actualizada.
+  c) Mantener la confidencialidad de su contraseña.
+  d) No crear más de una cuenta personal.
+  e) No crear cuentas en nombre de terceros sin su autorización.
+
+Usted es responsable de todas las actividades en su cuenta. Notifíquenos
+inmediatamente si detecta uso no autorizado a: luis123master@gmail.com
+
+--------------------------------------------------------------------------------
+4. CONDUCTA DEL USUARIO
+--------------------------------------------------------------------------------
+Al usar Milanesa, usted se compromete a NO:
+
+  a) Publicar contenido ilegal, difamatorio, acosador, amenazante,
+     obsceno, pornográfico o que incite al odio.
+  b) Subir contenido que infrinja derechos de autor o propiedad
+     intelectual.
+  c) Suplantar la identidad de otras personas u organizaciones.
+  d) Usar bots, scripts o medios automatizados para interactuar
+     con la Plataforma.
+  e) Intentar acceder sin autorización a sistemas o datos de otros
+     usuarios.
+  f) Distribuir malware, spam o contenido malicioso.
+  g) Realizar actividades comerciales no autorizadas.
+  h) Publicar información personal de terceros sin consentimiento
+     (doxxing).
+  i) Acosar, intimidar o amenazar a otros usuarios.
+
+--------------------------------------------------------------------------------
+5. CONTENIDO DE AUDIO Y DERECHOS DE AUTOR
+--------------------------------------------------------------------------------
+Al subir contenido de audio usted debe:
+
+  - Ser el autor original o tener licencia explícita para compartirlo.
+  - No subir canciones o grabaciones protegidas por derechos de autor
+    sin autorización del titular.
+
+Milanesa revisa y elimina manualmente el contenido de audio infractor
+tras recibir una notificación válida. No contamos con sistemas
+automatizados de detección de copyright.
+
+Política de "tres avisos":
+  - 1.ª infracción: Advertencia y eliminación del contenido.
+  - 2.ª infracción: Suspensión temporal (7 a 30 días).
+  - 3.ª infracción: Eliminación permanente de la cuenta.
+
+--------------------------------------------------------------------------------
+6. MODERACIÓN Y SUSPENSIÓN DE CUENTAS
+--------------------------------------------------------------------------------
+Milanesa se reserva el derecho de, sin previo aviso:
+
+  - Eliminar cualquier contenido que viole estos Términos.
+  - Suspender temporalmente una cuenta bajo investigación.
+  - Eliminar permanentemente cuentas con infracciones reiteradas.
+
+En casos graves (contenido ilegal, abuso, amenazas), la eliminación
+será inmediata y sin advertencia previa.
+
+--------------------------------------------------------------------------------
+7. APELACIONES
+--------------------------------------------------------------------------------
+Si considera que su contenido fue eliminado o cuenta suspendida injustamente,
+puede apelar dentro de los 14 días siguientes escribiendo a:
+luis123master@gmail.com con el asunto:
+"APELACIÓN - [su nombre de usuario]"
+
+Revisaremos su caso en un plazo de 5 días hábiles.
+
+--------------------------------------------------------------------------------
+8. PROPIEDAD INTELECTUAL DE MILANESA
+--------------------------------------------------------------------------------
+Todo el diseño, código, logotipos, marcas e interfaces de Milanesa son
+propiedad exclusiva de Luis Enrique Peñafiel Frias. Queda prohibido:
+
+  - Copiar, reproducir o distribuir el diseño o código de la Plataforma.
+  - Usar el nombre o logotipo de Milanesa sin autorización escrita.
+  - Realizar ingeniería inversa sobre la Plataforma.
+
+--------------------------------------------------------------------------------
+9. LIMITACIÓN DE RESPONSABILIDAD
+--------------------------------------------------------------------------------
+En la máxima medida permitida por la ley, Milanesa no será responsable por:
+
+  - Contenido publicado por usuarios.
+  - Pérdidas de datos o interrupciones del servicio.
+  - Daños directos, indirectos o consecuentes del uso de la Plataforma.
+  - Acciones de terceros (incluyendo ataques externos).
+
+La Plataforma se proporciona "tal cual" y "según disponibilidad".
+
+--------------------------------------------------------------------------------
+10. INDEMNIZACIÓN
+--------------------------------------------------------------------------------
+Usted acepta indemnizar y mantener indemne a Milanesa frente a cualquier
+reclamación, daño o gasto que surja del uso indebido de la Plataforma
+o de la violación de estos Términos.
+
+--------------------------------------------------------------------------------
+11. MODIFICACIONES
+--------------------------------------------------------------------------------
+Milanesa puede modificar estos Términos en cualquier momento. Los cambios
+significativos serán notificados con al menos 15 días de anticipación.
+El uso continuado de la Plataforma implica la aceptación de los nuevos
+Términos.
+
+--------------------------------------------------------------------------------
+12. TERMINACIÓN Y ELIMINACIÓN DE CUENTA
+--------------------------------------------------------------------------------
+Usted puede eliminar su cuenta en cualquier momento desde:
+
+  (a) La configuración de la Plataforma, si tiene acceso activo.
+  (b) La pantalla de aceptación de Términos, si aún no ha aceptado
+      la versión vigente, haciendo clic en "Eliminar mi cuenta".
+      Esta opción está disponible sin necesidad de aceptar los Términos
+      ni de acceder al contenido de la Plataforma.
+
+Milanesa puede terminar o suspender su acceso en cualquier momento por
+violación de estos Términos, sin previo aviso ni responsabilidad.
+
+Tras la terminación, sus datos serán eliminados conforme al período de
+retención descrito en la Política de Privacidad (hasta 30 días adicionales
+por razones de seguridad).
+
+--------------------------------------------------------------------------------
+12.1 USUARIOS REGISTRADOS ANTES DE LA PUBLICACIÓN DE ESTOS TÉRMINOS
+--------------------------------------------------------------------------------
+Para los usuarios registrados antes de la fecha de publicación de estos
+Términos, el uso continuado de la Plataforma Milanesa tras haber sido
+notificados de los mismos constituye la aceptación expresa de los Términos,
+la Política de Privacidad y la Política de Cookies vigentes.
+
+Los usuarios que no estén de acuerdo podrán eliminar su cuenta directamente
+desde la pantalla de aceptación de Términos, sin necesidad de acceder a la
+aplicación, haciendo clic en "Eliminar mi cuenta".
+
+--------------------------------------------------------------------------------
+13. LEY APLICABLE Y JURISDICCIÓN
+--------------------------------------------------------------------------------
+Estos Términos se rigen por las leyes de la República del Ecuador. Cualquier
+disputa será sometida a los tribunales competentes de Ecuador.
+
+--------------------------------------------------------------------------------
+14. "MILANESA IA": FUNCIÓN PERMANENTE DEL FEED, CONSENTIMIENTO Y EXENCIÓN
+    DE RESPONSABILIDAD
+--------------------------------------------------------------------------------
+Milanesa incorpora de forma permanente en el feed principal una función
+denominada "Milanesa IA". Esta función, impulsada por Google Gemini (Google LLC),
+selecciona publicaciones de usuarios registrados de forma aleatoria y genera
+críticas automáticas sobre ellas, visibles para todos los usuarios de la
+plataforma. Esta función no es opcional: es una característica activa y
+permanente del servicio.
+
+14.1 NATURALEZA INTENCIONALMENTE AGRESIVA DEL CONTENIDO
+El usuario declara haber leído y comprendido, antes de completar su registro,
+que la función "Milanesa IA":
+
+  - Opera mediante un prompt de comportamiento diseñado deliberadamente
+    para generar críticas de estilo agresivo, sarcástico, tóxico y sin
+    filtros de cortesía.
+  - Puede producir lenguaje ofensivo, hiriente o duro sobre cualquier
+    publicación seleccionada, incluyendo las propias del usuario.
+  - Selecciona publicaciones de forma aleatoria, sin que Milanesa ni el
+    usuario puedan predecir ni elegir cuál será analizada.
+  - El contenido generado es visible para todos los usuarios registrados
+    en el feed de la plataforma.
+
+Esto NO es un fallo del sistema. Es el comportamiento esperado, deliberado
+e informado de la función.
+
+14.2 CONSENTIMIENTO COMO CONDICIÓN DE REGISTRO
+Al completar el registro en Milanesa, el usuario otorga su consentimiento
+expreso e informado a las siguientes condiciones, mediante aceptación activa
+en la pantalla de registro:
+
+  "He leído y entiendo que Milanesa incluye de forma permanente en su feed
+  una función de Inteligencia Artificial que selecciona publicaciones
+  aleatorias — incluyendo las mías — y genera críticas automáticas con
+  lenguaje intencionalmente agresivo, sarcástico y sin filtros. Entiendo
+  que este contenido será visible para todos los usuarios registrados.
+  Acepto estas condiciones como parte del uso del servicio y libero a
+  Milanesa de toda responsabilidad por el contenido generado por la IA."
+
+Sin la aceptación de esta declaración, el registro no podrá completarse.
+
+14.3 EXENCIÓN DE RESPONSABILIDAD DE MILANESA
+Habiendo otorgado el consentimiento conforme al punto 14.2, Milanesa queda
+total y expresamente exenta de responsabilidad por:
+
+  a) El lenguaje ofensivo, tóxico, sarcástico o hiriente generado sobre
+     cualquier publicación, propia o ajena.
+  b) La selección aleatoria de la publicación del usuario para ser analizada
+     y criticada públicamente por la IA.
+  c) El impacto emocional, psicológico o reputacional derivado de la crítica
+     generada y su visibilidad en el feed.
+  d) Cualquier reclamo por el contenido producido por Google Gemini, dado
+     que el usuario fue advertido y consintió expresamente al registrarse.
+
+Milanesa actúa como integrador técnico del servicio de Google Gemini.
+El comportamiento del modelo de IA es responsabilidad de Google LLC.
+
+14.4 SOLICITUD DE ELIMINACIÓN DE CRÍTICA
+Si el usuario desea solicitar la eliminación de una crítica generada sobre
+su publicación, puede hacerlo escribiendo a: luis123master@gmail.com
+
+Milanesa evaluará la solicitud en un plazo de 5 días hábiles. La eliminación
+no está garantizada, ya que el contenido fue generado bajo condiciones
+aceptadas por el propio usuario al momento del registro.
+
+--------------------------------------------------------------------------------
+15. CONTACTO
+--------------------------------------------------------------------------------
+  - Correo general : luis123master@gmail.com
+  - Correo DMCA    : luis123master@gmail.com
+
+
+================================================================================
+DOCUMENTO 3: POLÍTICA DE COOKIES
+================================================================================
+
+POLÍTICA DE COOKIES DE MILANESA
+Última actualización: 1 de enero de 2025
+Versión: 1.0
+
+--------------------------------------------------------------------------------
+1. ¿QUÉ SON LAS COOKIES?
+--------------------------------------------------------------------------------
+Las cookies son pequeños archivos de texto almacenados en su dispositivo
+cuando visita un sitio web. Nos ayudan a recordar sus preferencias y a
+garantizar el correcto funcionamiento de la Plataforma.
+
+--------------------------------------------------------------------------------
+2. TIPOS DE COOKIES QUE USAMOS
+--------------------------------------------------------------------------------
+COOKIES ESTRICTAMENTE NECESARIAS (No requieren consentimiento)
+  - Sesión de usuario        : Mantienen su sesión activa.
+  - Token de autenticación   : Verifica su identidad de forma segura.
+  - Protección CSRF          : Protege contra ataques de falsificación
+                                de solicitudes entre sitios.
+  Sin estas cookies, la Plataforma no funcionará correctamente.
+
+COOKIES FUNCIONALES (Requieren consentimiento)
+  - Preferencias de idioma   : Recuerdan su idioma preferido.
+  - Tokens de notificaciones : Almacenados vía Firebase para push.
+
+COOKIES ANALÍTICAS (Requieren consentimiento)
+  - Google Analytics         : Miden el tráfico de forma anónima.
+                                No identifican al usuario individualmente.
+
+NO utilizamos cookies publicitarias ni de retargeting.
+
+--------------------------------------------------------------------------------
+3. CÓMO GESTIONAR LAS COOKIES
+--------------------------------------------------------------------------------
+Puede controlar las cookies desde su navegador:
+
+  - Google Chrome    : Configuración > Privacidad > Cookies
+  - Mozilla Firefox  : Preferencias > Privacidad > Cookies
+  - Safari           : Preferencias > Privacidad > Cookies
+  - Microsoft Edge   : Configuración > Privacidad > Cookies
+
+También puede gestionar sus preferencias en la Plataforma desde:
+Configuración > Privacidad > Gestión de Cookies.
+
+IMPORTANTE: Deshabilitar las cookies necesarias impedirá el acceso
+a la Plataforma.
+
+--------------------------------------------------------------------------------
+4. COOKIES DE TERCEROS
+--------------------------------------------------------------------------------
+  - Google LLC (Analytics / Firebase): Sub-encargado del tratamiento
+    bajo el RGPD.
+    Más información: https://policies.google.com/privacy
+
+--------------------------------------------------------------------------------
+5. CONTACTO
+--------------------------------------------------------------------------------
+Para consultas sobre cookies: luis123master@gmail.com
+
+
+================================================================================
+                         FIN DEL PAQUETE LEGAL EN ESPAÑOL
+                               Milanesa © 2025
+================================================================================

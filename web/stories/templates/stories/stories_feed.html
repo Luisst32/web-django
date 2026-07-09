@@ -424,12 +424,26 @@
 <!-- ESTILOS CSS                                -->
 <!-- ========================================== -->
 <style>
-    /* Efecto Hover en las Tarjetas del Carrusel */
-    .story-card:hover {
-        transform: scale(1.03);
+    .stories-container {
+        cursor: grab;
+        user-select: none;
+        scroll-behavior: auto !important;
     }
-    .story-card:hover img {
-        transform: scale(1.05);
+    .stories-container * {
+        -webkit-user-drag: none;
+    }
+    .stories-container.active {
+        cursor: grabbing;
+    }
+
+    /* Efecto Hover en las Tarjetas del Carrusel */
+    @media (hover: hover) and (pointer: fine) {
+        .story-card:hover {
+            transform: scale(1.03);
+        }
+        .story-card:hover img {
+            transform: scale(1.05);
+        }
     }
 
     /* Estilos del Creador de Historias Celular Premium */
@@ -2084,4 +2098,59 @@
             }
         });
     }
+
+    // --- Drag to scroll para carrusel de historias ---
+    $(document).ready(function() {
+        const slider = document.querySelector('.stories-container');
+        if (!slider) return;
+        
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+        let isDragging = false;
+
+        slider.addEventListener('pointerdown', (e) => {
+            if (e.pointerType !== 'mouse') return;
+            isDown = true;
+            isDragging = false;
+            slider.classList.add('active');
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        });
+
+        slider.addEventListener('pointerleave', (e) => {
+            if (e.pointerType !== 'mouse') return;
+            isDown = false;
+            slider.classList.remove('active');
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (e.pointerType !== 'mouse') return;
+            if (isDown) {
+                isDown = false;
+                slider.classList.remove('active');
+            }
+        });
+
+        slider.addEventListener('pointermove', (e) => {
+            if (e.pointerType !== 'mouse') return;
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2;
+            if (Math.abs(walk) > 5) {
+                isDragging = true;
+            }
+            slider.scrollLeft = scrollLeft - walk;
+        });
+
+        slider.addEventListener('click', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                e.stopPropagation();
+                // Resetear estado
+                setTimeout(() => { isDragging = false; }, 0);
+            }
+        }, true);
+    });
 </script>

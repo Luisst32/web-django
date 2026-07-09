@@ -110,6 +110,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         'message_id': msg_id
                     }
                 )
+                
+                # Enviar Push Notification (Background)
+                asyncio.create_task(self.send_push_notification(user, self.chat_id, message))
             else:
                 await self.send(text_data=json.dumps({
                     'type': 'error',
@@ -191,6 +194,36 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Marcar como leídos los mensajes que NO son del usuario actual
         count = Mensaje.objects.filter(chat=chat, es_leido=False).exclude(user=user).update(es_leido=True)
         print(f"DEBUG: Updated {count} messages as read for user {user.id} in chat {self.chat_id}")
+
+    @database_sync_to_async
+    def send_push_notification(self, sender, chat_id, message_text):
+        try:
+            from fcm_django.models import FCMDevice
+            from firebase_admin.messaging import Message, Notification
+            
+            chat = Chat.objects.get(id=chat_id)
+            recipient = chat.user2 if chat.user1 == sender else chat.user1
+            
+            devices = FCMDevice.objects.filter(user=recipient, active=True)
+            device_count = devices.count()
+            print(f"[FCM] Enviando notificación a {device_count} dispositivo(s) de user {recipient.id} ({recipient.username})")
+            for d in devices:
+                print(f"[FCM]   -> device id={d.id} registration_id={d.registration_id[:20]}...")
+            
+            if device_count > 0:
+                sender_name = f"{sender.first_name} {sender.last_name}".strip() or sender.username
+                message = Message(
+                    notification=Notification(
+                        title=sender_name,
+                        body=message_text,
+                    ),
+                    data={
+                        'url': f'/chat/?chat_id={chat_id}'
+                    }
+                )
+                devices.send_message(message)
+        except Exception as e:
+            print(f"Error enviando push notification FCM: {e}")
 
     @database_sync_to_async
     def mark_message_as_received(self, msg_id):

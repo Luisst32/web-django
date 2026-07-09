@@ -14,7 +14,7 @@ from django.urls import reverse
 
 @never_cache
 def perfil_detalle(request, username):
-    usuario = get_object_or_404(Usuarios, username=username)
+    usuario = get_object_or_404(Usuarios, username=username, is_active=True)
     perfil = get_object_or_404(Perfil, usuario=usuario)
     
     # 1. QUERYSET
@@ -24,7 +24,7 @@ def perfil_detalle(request, username):
 
     # 2. CONTEXTO DE PERFIL (Para la carga inicial)
     esta_siguiendo = Seguidores.objects.filter(usuario=request.user, seguido=usuario).exists()
-    cantidad_seguidores = usuario.seguidores.count()
+    cantidad_seguidores = usuario.seguidores.filter(usuario__is_active=True).count()
     es_perfil_del_usuario_logueado = request.user.username == username
     
     # URL para el scroll infinito (se llama a sí misma)
@@ -52,13 +52,14 @@ def perfil_detalle(request, username):
     # AMIGOS MUTUOS (Seguidores mutuos)
     todos_amigos_mutuos = Usuarios.objects.filter(
         seguidores__usuario=usuario,
-        siguiendo__seguido=usuario
+        siguiendo__seguido=usuario,
+        is_active=True
     ).distinct()
     amigos_mutuos = todos_amigos_mutuos[:9]
     total_amigos = todos_amigos_mutuos.count()
 
     # TODOS LOS SEGUIDORES
-    todos_seguidores = Usuarios.objects.filter(siguiendo__seguido=usuario).distinct()
+    todos_seguidores = Usuarios.objects.filter(siguiendo__seguido=usuario, is_active=True).distinct()
 
     # 3. EXTRA CONTEXT PARA LAYOUT EXPANDIDO
     extra_context.update({
@@ -112,7 +113,7 @@ def dejar_de_seguir(request, usuario_id):
 @login_required
 @never_cache
 def editar_perfil(request, username):
-    usuario = get_object_or_404(Usuarios, username=username)
+    usuario = get_object_or_404(Usuarios, username=username, is_active=True)
     perfil = get_object_or_404(Perfil, usuario=usuario)
 
     if request.method == 'POST':
@@ -195,8 +196,8 @@ def editar_perfil(request, username):
 def top_seguidores(request):
     # FIX POSTGRES: Usar values('id') para evitar error de GROUP BY con campos complejos
     # 1. Obtener IDs y Conteos
-    top_data = Usuarios.objects.annotate(
-        num_seguidores=Count('seguidores')
+    top_data = Usuarios.objects.filter(is_active=True).annotate(
+        num_seguidores=Count('seguidores', filter=Q(seguidores__usuario__is_active=True))
     ).order_by('-num_seguidores').values('id', 'num_seguidores')[:10]
     
     # 2. Crear mapa {user_id: count}
@@ -220,8 +221,8 @@ def top_fracasados(request):
     from django.db.models import Count, Q, F, IntegerField, ExpressionWrapper
     
     # 1. Obtener IDs y Conteos de Seguidores, Likes y Dislikes (tipo=2 es Me divierte/Dislike)
-    top_data = Usuarios.objects.annotate(
-        num_seguidores=Count('seguidores', distinct=True),
+    top_data = Usuarios.objects.filter(is_active=True).annotate(
+        num_seguidores=Count('seguidores', filter=Q(seguidores__usuario__is_active=True), distinct=True),
         num_likes=Count('posts__reacciones', filter=Q(posts__reacciones__tipo=1), distinct=True),
         num_dislikes=Count('posts__reacciones', filter=Q(posts__reacciones__tipo=2), distinct=True),
     ).order_by('-num_dislikes', 'num_seguidores').values('id', 'num_seguidores', 'num_likes', 'num_dislikes')[:10]

@@ -19,8 +19,8 @@ class RecommendationService:
         # FIX POSTGRES: Usar values('id') para evitar error de GROUP BY con todos los campos
         suggested_ids = Usuarios.objects.exclude(
             id__in=following_ids
-        ).annotate(
-            mutual_count=Count('seguidores', filter=Q(seguidores__usuario_id__in=following_ids))
+        ).filter(is_active=True).annotate(
+            mutual_count=Count('seguidores', filter=Q(seguidores__usuario_id__in=following_ids, seguidores__usuario__is_active=True))
         ).order_by('-mutual_count', '-id').values_list('id', flat=True)[:limit]
         
         # Recuperar objetos reales (en el orden correcto)

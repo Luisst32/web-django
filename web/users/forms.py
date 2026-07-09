@@ -18,6 +18,16 @@ class UserRegisterForm(forms.ModelForm):
                 raise forms.ValidationError("Este nombre de usuario ya está registrado.")
         return username
 
+    def clean_fech_nacimiento(self):
+        fech_nacimiento = self.cleaned_data.get('fech_nacimiento')
+        if fech_nacimiento:
+            from datetime import date
+            today = date.today()
+            age = today.year - fech_nacimiento.year - ((today.month, today.day) < (fech_nacimiento.month, fech_nacimiento.day))
+            if age < 18:
+                raise forms.ValidationError("Debes tener al menos 18 años para registrarte.")
+        return fech_nacimiento
+
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")

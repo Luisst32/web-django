@@ -30,14 +30,41 @@ from django.urls import reverse
 
 @login_required
 def index(request):
+    sort_by = request.GET.get('sort', 'recent')
+    
     # 1. QUERYSET BASE
-    posts_list = Post.objects.filter(estado=True).select_related(
+    posts_list = Post.objects.filter(estado=True, usuario__is_active=True).select_related(
         'usuario', 'usuario__perfil'
     ).prefetch_related(
         'usuarios_etiquetados', 
         'reacciones',
         'imagenes'
-    ).order_by('-fecha_publicacion')
+    )
+    
+    if sort_by == 'ranked':
+        from django.db.models import Count, OuterRef, Subquery, IntegerField, Sum, Case, When, Value
+        from django.db.models.functions import Coalesce
+        from publications.models import Reaccion
+        
+        # Calcular puntuación estilo Reddit: Likes (+1) - Dislikes (-1)
+        reacciones_subquery = Reaccion.objects.filter(
+            post=OuterRef('pk')
+        ).values('post').annotate(
+            score=Sum(
+                Case(
+                    When(tipo=1, then=Value(1)),
+                    When(tipo=2, then=Value(-1)),
+                    default=Value(0),
+                    output_field=IntegerField()
+                )
+            )
+        ).values('score')
+        
+        posts_list = posts_list.annotate(
+            net_score=Coalesce(Subquery(reacciones_subquery, output_field=IntegerField()), 0)
+        ).order_by('-net_score', '-fecha_publicacion')
+    else:
+        posts_list = posts_list.order_by('-fecha_publicacion')
 
     # --- LÓGICA DE RESALTAR POST ---
     highlight_id = request.GET.get('highlight_post')
@@ -52,7 +79,7 @@ def index(request):
                 posts_list = Post.objects.filter(id__in=[p.id for p in highlighted_post] + [p.id for p in others[:50]]) # Limitamos para evitar queries gigantescas en SQL Server si hay miles
                 
                 # Una forma más eficiente sin cargar IDs: usar order_by con case
-                posts_list = Post.objects.all().select_related(
+                posts_list = Post.objects.filter(usuario__is_active=True).select_related(
                     'usuario', 'usuario__perfil'
                 ).prefetch_related(
                     'usuarios_etiquetados', 
@@ -77,6 +104,8 @@ def index(request):
     
     # URL para el scroll infinito (se llama a sí misma)
     feed_url = reverse('index') 
+    if sort_by == 'ranked':
+        feed_url += '?sort=ranked'
     
     # SERVICIO DE RECOMENDACIONES
     from recommendations.services import RecommendationService
@@ -89,7 +118,8 @@ def index(request):
 
     limite_24h = timezone.now() - timedelta(hours=24)
     historias_activas = Story.objects.filter(
-        created_at__gte=limite_24h
+        created_at__gte=limite_24h,
+        usuario__is_active=True
     ).select_related('usuario')
 
     # Obtener los IDs de las historias vistas por el usuario actual en las últimas 24 horas

@@ -2,6 +2,7 @@ from django.db import models
 from users.models import Usuarios
 from profiles.models import Perfil   
 from PIL import Image
+from simple_history.models import HistoricalRecords
 
 # ... (Tu modelo Musica queda igual) ...
 class Musica(models.Model):
@@ -9,6 +10,7 @@ class Musica(models.Model):
     archivo_musica = models.FileField(upload_to='musica/')
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name="mis_audios")
     fecha_subida = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'musica'
@@ -35,6 +37,7 @@ class Post(models.Model):
     estado = models.BooleanField(default=True)
     tipo = models.CharField(max_length=50, choices=[('publico', 'Público'), ('privado', 'Privado')])
     usuarios_etiquetados = models.ManyToManyField(Usuarios, related_name="etiquetados_en_posts", blank=True)
+    history = HistoricalRecords()
     
     class Meta:
         db_table = 'post'
@@ -49,6 +52,7 @@ class PostImagen(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='imagenes')
     imagen = models.FileField(upload_to='posts/imagenes/')
     orden = models.PositiveIntegerField(default=0)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'post_imagen'
@@ -72,6 +76,7 @@ class Comentario(models.Model):
     reacciones = models.IntegerField(choices=REACCIONES_CHOICES, default=1)
     estado = models.BooleanField(default=True)
     usuarios_etiquetados = models.ManyToManyField(Usuarios, related_name="etiquetados_en_comentarios", blank=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'comentarios'
@@ -90,6 +95,7 @@ class Reaccion(models.Model):
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, related_name="reacciones")
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reacciones")
     tipo = models.IntegerField(choices=REACCIONES_CHOICES)
+    history = HistoricalRecords()
 
     class Meta:
         unique_together = ('usuario', 'post')  

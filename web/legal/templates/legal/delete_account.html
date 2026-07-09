@@ -1,0 +1,146 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eliminar Cuenta - Milanesa</title>
+    <!-- Incluir Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;        /* Fondo claro */
+            --surface: #ffffff;   /* Tarjeta blanca */
+            --text: #0f172a;      /* Texto oscuro */
+            --text-muted: #475569;/* Texto secundario */
+            --border: #cbd5e1;    /* Borde claro */
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+        }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: url("{% static 'catblack.png' %}?v=3") no-repeat center center fixed !important;
+            background-size: cover !important;
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            animation: slideUp 0.4s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        h1 { 
+            margin-top: 0; 
+            font-size: 1.4rem; 
+            color: var(--danger); 
+            font-weight: 700;
+        }
+        .alert {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--danger);
+        }
+        .btn-submit {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover {
+            background: var(--danger-hover);
+        }
+        .btn-cancel {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .btn-cancel:hover {
+            color: var(--text);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1><i class="fas fa-exclamation-triangle me-2"></i> Eliminar Cuenta</h1>
+    
+    <div class="alert">
+        <strong>¡Advertencia!</strong> Esta acción cerrará tu sesión y desactivará tu cuenta para que no puedas volver a ingresar. Se enviará una solicitud al equipo para que procedan a borrar tus datos de forma manual, manteniendo únicamente tu registro legal anonimizado.
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert" style="background: rgba(239, 68, 68, 0.15); border-color: var(--danger);">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'legal:delete_account' %}" onsubmit="return confirm('¿Estás ABSOLUTAMENTE seguro de que deseas desactivar tu cuenta? Esta acción NO se puede deshacer de forma automática.');">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="password">Para confirmar tu identidad, ingresa tu contraseña:</label>
+            <input type="password" id="password" name="password" required placeholder="Tu contraseña actual">
+        </div>
+        <button type="submit" class="btn-submit">
+            <i class="fas fa-trash-alt me-2"></i> Eliminar Mi Cuenta
+        </button>
+        <a href="/" class="btn-cancel">Cancelar y Volver</a>
+    </form>
+</div>
+
+</body>
+</html>

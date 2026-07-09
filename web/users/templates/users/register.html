@@ -105,6 +105,17 @@
                                 </div>
                             </div>
 
+                            <div class="mb-3 form-check d-flex align-items-center justify-content-center">
+                                <input type="hidden" name="terms_language" id="terms_language_input" value="es">
+                                <input type="checkbox" class="form-check-input me-2 mt-0" id="terms_accepted" name="terms_accepted" required style="cursor: pointer;">
+                                <label class="form-check-label mb-0" for="terms_accepted" style="font-size: 0.9rem; cursor: pointer;">
+                                    He leído y acepto los 
+                                    <a href="#" class="text-primary fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#termsModal">
+                                        Términos de Servicio
+                                    </a>
+                                </label>
+                            </div>
+
                             <div class="d-grid mb-4">
                                 <button type="submit" class="btn btn-black" id="registerButton">Registrar</button>
                             </div>
@@ -126,6 +137,47 @@
         crossorigin="anonymous"></script>
     <!-- Custom JS -->
     <script src="{% static 'users/js/register.js' %}?v=2"></script>
+
+    <!-- Modal de Términos -->
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold" id="termsModalLabel">Términos de Servicio y Privacidad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex gap-2 mb-3">
+                        <button type="button" class="btn btn-sm btn-primary" id="btn-lang-es" onclick="switchLang('es')">Español</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-lang-en" onclick="switchLang('en')">English</button>
+                    </div>
+                    <div id="modal-terms-es" class="text-muted" style="font-size: 0.85rem; white-space: pre-wrap; font-family: monospace;">{{ es_text }}</div>
+                    <div id="modal-terms-en" class="text-muted" style="display: none; font-size: 0.85rem; white-space: pre-wrap; font-family: monospace;">{{ en_text }}</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="document.getElementById('terms_accepted').checked = true;">Aceptar Términos</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchLang(lang) {
+            document.getElementById('terms_language_input').value = lang;
+            if (lang === 'es') {
+                document.getElementById('modal-terms-es').style.display = 'block';
+                document.getElementById('modal-terms-en').style.display = 'none';
+                document.getElementById('btn-lang-es').classList.replace('btn-outline-secondary', 'btn-primary');
+                document.getElementById('btn-lang-en').classList.replace('btn-primary', 'btn-outline-secondary');
+            } else {
+                document.getElementById('modal-terms-es').style.display = 'none';
+                document.getElementById('modal-terms-en').style.display = 'block';
+                document.getElementById('btn-lang-es').classList.replace('btn-primary', 'btn-outline-secondary');
+                document.getElementById('btn-lang-en').classList.replace('btn-outline-secondary', 'btn-primary');
+            }
+        }
+    </script>
 </body>
 
 </html>

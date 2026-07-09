@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import firebase_admin
+from firebase_admin import credentials
 
 load_dotenv()
 
@@ -54,7 +56,22 @@ INSTALLED_APPS = [
     'ai_assistant',
     'emails',
     'stories',
+    'fcm_django',
+    'simple_history',
+    'legal',
 ]
+
+# Inicializar Firebase Admin SDK
+cred = credentials.Certificate(os.path.join(BASE_DIR, 'app1-29128-firebase-adminsdk-ucguk-f719c093f5.json'))
+# Solo inicializar si no se ha inicializado previamente
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
+
+FCM_DJANGO_SETTINGS = {
+    "ONE_DEVICE_PER_USER": False,
+    "DELETE_INACTIVE_DEVICES": True,
+}
+
 WEBPUSH_SETTINGS = {
     "VAPID_PUBLIC_KEY": os.getenv('VAPID_PUBLIC_KEY'),
     "VAPID_PRIVATE_KEY": os.getenv('VAPID_PRIVATE_KEY'),
@@ -75,7 +92,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
+    'simple_history.middleware.HistoryRequestMiddleware',
+    'legal.middleware.LegalConsentMiddleware',
 ]
 
 ROOT_URLCONF = 'web.urls'

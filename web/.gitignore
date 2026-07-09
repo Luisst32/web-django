@@ -143,3 +143,6 @@ Dockerfile
 docker-compose.yml
 .dockerignore
 entrypoint.sh
+
+# Secrets
+*.json

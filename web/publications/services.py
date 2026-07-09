@@ -33,6 +33,7 @@ class FeedService:
         for publicacion in page_obj:
             publicacion.love_count = publicacion.reacciones.filter(tipo=1).count()
             publicacion.fun_count = publicacion.reacciones.filter(tipo=2).count()
+            publicacion.net_score = publicacion.love_count - publicacion.fun_count
 
             if request.user.is_authenticated:
                 user_reaction = publicacion.reacciones.filter(usuario=request.user).first()

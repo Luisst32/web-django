@@ -766,6 +766,10 @@
 
     // --- Iniciar llamada (llamante) ---
     window.startCall = function(targetUserId, peerName, peerPhoto) {
+        if (currentCallData) {
+            alert('Ya estás en una llamada.');
+            return;
+        }
         if (!callSocket || callSocket.readyState !== WebSocket.OPEN) {
             alert('Conectando al servicio de llamadas, intenta en un momento...');
             return;
@@ -783,6 +787,11 @@
 
     // --- Llamada entrante (receptor) ---
     function handleIncomingCall(data) {
+        if (currentCallData) {
+            // Already in a call, reject automatically
+            callSend({ action: 'call_rejected', target_user_id: data.caller_id, llamada_id: data.llamada_id });
+            return;
+        }
         currentCallData = {
             llamada_id: data.llamada_id,
             target_user_id: data.caller_id,
@@ -860,6 +869,7 @@
     async function handleCallAccepted(data) {
         try {
             console.log('[Call] Receptor aceptó, obteniendo micrófono...');
+            if (typeof window.stopCallRingtone === 'function') window.stopCallRingtone();
             currentCallData.llamada_id = data.llamada_id;
 
             try {
@@ -937,7 +947,7 @@
     function handleRemoteEndCall() { cleanupCall(); }
 
     function handleCallRejected() {
-        document.getElementById('call-status-label').textContent = 'Llamada rechazada';
+        document.getElementById('call-status-label').textContent = 'Usuario ocupado o llamada rechazada';
         setTimeout(cleanupCall, 1500);
     }
 

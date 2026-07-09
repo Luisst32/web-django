@@ -1,0 +1,531 @@
+================================================================================
+                      MILANESA - COMPLETE LEGAL PACKAGE
+                              English Version
+                     Last Updated: June 24, 2025
+================================================================================
+
+
+================================================================================
+DOCUMENT 1: PRIVACY POLICY
+================================================================================
+
+MILANESA PRIVACY POLICY
+Last Updated: June 24, 2025
+Version: 2.1
+
+--------------------------------------------------------------------------------
+1. DATA CONTROLLER AND CONTACT
+--------------------------------------------------------------------------------
+In accordance with the General Data Protection Regulation (GDPR) and other
+applicable regulations, the Data Controller is:
+
+  - Legal Name         : Luis Enrique Peñafiel Frias
+  - Platform           : Milanesa.sbs
+  - Country            : Ecuador
+  - Privacy contact    : luis123master@gmail.com
+  - DMCA contact       : luis123master@gmail.com
+
+To exercise any of your rights or for questions about this Privacy Policy,
+please contact us at the appropriate email address above.
+
+--------------------------------------------------------------------------------
+2. INFORMATION WE COLLECT
+--------------------------------------------------------------------------------
+We collect information you provide directly when registering and using
+the Platform:
+
+  - Name and username.
+  - Email address.
+  - Date of birth (for age verification).
+  - Password (stored using bcrypt encryption or equivalent).
+  - Photos, audio files, and other user-generated content
+    (posts, stories).
+
+To provide core functionality, we request permission to access:
+  - Camera and microphone (for video calls).
+  - Photo gallery and audio files on your device.
+
+We do NOT collect: Phone numbers, postal addresses, or any financial
+information.
+
+--------------------------------------------------------------------------------
+3. LEGAL BASIS AND USE OF INFORMATION
+--------------------------------------------------------------------------------
+We process your personal data based on:
+
+  a) Performance of a contract (to provide Platform features).
+  b) Your explicit consent (upon registration and granting permissions).
+  c) Our legitimate interests (improving security and service stability).
+
+We use your information to:
+  - Create and manage your account, chats, and video calls.
+  - Send transactional emails and newsletters (unsubscribe at any time).
+  - Send push notifications (only with your express permission).
+  - Analyze Platform usage to improve our services.
+
+--------------------------------------------------------------------------------
+4. DATA RETENTION PERIOD
+--------------------------------------------------------------------------------
+  - Active account       : Data is retained for the lifetime of the account.
+  - After deletion       : Up to 30 additional days for security and fraud
+                           prevention, then permanently deleted.
+  - System logs          : Maximum 90 days.
+  - Audio content        : Deleted immediately when the post or account
+                           is removed.
+
+--------------------------------------------------------------------------------
+5. TRACKING TECHNOLOGIES AND ANALYTICS
+--------------------------------------------------------------------------------
+Our Platform uses:
+
+  - Cookies and Sessions: Required to keep your session active. You may
+    configure your browser to reject them, but this will prevent access
+    to the Platform. See our Cookie Policy for details.
+
+  - Local Storage (LocalStorage / IndexedDB): For push notification tokens
+    via Firebase.
+
+  - Google LLC (Firebase and Google Analytics): A data sub-processor for
+    push notifications and anonymous traffic analytics. Google operates
+    under its own GDPR-compliant privacy policies.
+
+We do not use advertising, Facebook Pixel, or retargeting.
+
+--------------------------------------------------------------------------------
+6. THIRD-PARTY SIGN-IN
+--------------------------------------------------------------------------------
+We offer Google Sign-In as a login option. When used, Google provides us
+with your name and email address to create your profile.
+Google's Privacy Policy: https://policies.google.com/privacy
+
+--------------------------------------------------------------------------------
+7. MINIMUM AGE
+--------------------------------------------------------------------------------
+To register on Milanesa, you must be at least 18 years old or have reached
+the legal age of majority in your country of residence.
+
+We do not knowingly collect information from minors. If we discover a user
+is underage, we will immediately delete their data and close the account.
+
+--------------------------------------------------------------------------------
+8. USER RIGHTS (GDPR - EUROPEAN UNION)
+--------------------------------------------------------------------------------
+Residents of the European Economic Area (EEA) have the right to:
+
+  - Access           : Request a copy of your personal data.
+  - Rectification    : Request correction of inaccurate data.
+  - Erasure          : Request deletion of your data ("right to be
+                       forgotten").
+  - Restriction      : Limit how we process your data.
+  - Objection        : Object to processing based on legitimate interests.
+  - Portability      : Receive your data in a structured, machine-readable
+                       format.
+
+To exercise these rights: luis123master@gmail.com
+You have the right to lodge a complaint with your local data protection
+authority.
+
+--------------------------------------------------------------------------------
+9. USER RIGHTS (CCPA, CPRA AND CalOPPA - CALIFORNIA)
+--------------------------------------------------------------------------------
+California residents have the right to:
+
+  - Know what personal information we have collected in the past 12 months.
+  - Request deletion or correction of their information.
+  - "Do Not Sell or Share My Personal Information": We do not sell or
+    share your data for cross-context behavioral advertising.
+  - Non-Discrimination for exercising privacy rights.
+  - DNT Signals: We do not perform cross-site advertising tracking.
+
+--------------------------------------------------------------------------------
+10. INTERNATIONAL DATA TRANSFERS AND SECURITY
+--------------------------------------------------------------------------------
+Your data is processed and stored on Amazon Web Services (AWS) servers
+located primarily in the United States. By using Milanesa, you consent
+to this transfer under Standard Contractual Clauses in compliance with GDPR.
+
+We apply encryption in transit (TLS) and at rest to protect your data.
+
+--------------------------------------------------------------------------------
+11. USER-GENERATED CONTENT AND INTELLECTUAL PROPERTY
+--------------------------------------------------------------------------------
+When uploading content (images, text, audio, video), you declare and
+warrant that:
+
+  a) You own the content or have explicit license/permission to share it.
+  b) The content does not infringe any copyright, trademark, or other
+     third-party rights.
+  c) You have the right to grant Milanesa the license described below.
+
+Milanesa is not liable for user-uploaded content but will manually
+review and remove infringing content upon receiving a valid notice,
+within 48 to 72 hours.
+
+--------------------------------------------------------------------------------
+12. CONTENT LICENSE
+--------------------------------------------------------------------------------
+By uploading content, you grant Milanesa a worldwide, non-exclusive,
+royalty-free license to:
+
+  - Display, reproduce, and distribute the content within the Platform.
+  - Adapt the content for technical optimization (compression, format).
+
+This license ends when you delete the content or your account.
+You retain all intellectual property rights over your original content.
+
+--------------------------------------------------------------------------------
+13. DMCA / COPYRIGHT CLAIM PROCESS
+--------------------------------------------------------------------------------
+If you believe your copyrighted work has been posted without authorization,
+send a notice to: luis123master@gmail.com
+
+Your notice must include:
+  1. Clear identification of the copyrighted work.
+  2. Exact URL of the infringing content on the Platform.
+  3. Your contact information (name and email address).
+  4. A good-faith statement that the use is not authorized by the rights
+     holder, their agent, or the law.
+  5. Electronic or physical signature.
+
+We will process your request within 48 to 72 business hours.
+
+--------------------------------------------------------------------------------
+14. CHANGES TO THIS POLICY
+--------------------------------------------------------------------------------
+We will notify users of significant changes at least 15 days in advance
+via email or a prominent notice on the Platform.
+
+--------------------------------------------------------------------------------
+15. "Milanesa IA" FEATURE: INFORMED CONSENT AND DATA PROCESSING
+--------------------------------------------------------------------------------
+Milanesa permanently incorporates into its main feed a feature called
+"Milanesa IA", powered by Google Gemini (Google LLC). This feature randomly
+selects posts from registered users and automatically generates critiques
+about them, visible to all registered users on the Platform.
+
+WARNING: This feature is always active and is a core part of the service.
+By registering on Milanesa, you acknowledge that your posts may be randomly
+selected and analyzed by this AI, and that the resulting critique will be
+visible in the feed of all registered users.
+
+The behavioral prompt of this AI is intentionally designed to produce
+critiques in an aggressive, sarcastic, and unfiltered style. You accept
+this condition as part of the service upon registration.
+
+Regarding data processing for this feature:
+
+  - Selected posts are sent to Google LLC servers for processing.
+    Google's Privacy Policy applies: https://policies.google.com/privacy
+  - Milanesa does not control which post will be selected by the random
+    algorithm, nor the exact content that Google Gemini will generate.
+
+
+================================================================================
+DOCUMENT 2: TERMS AND CONDITIONS OF USE
+================================================================================
+
+MILANESA TERMS AND CONDITIONS OF USE
+Last Updated: June 24, 2025
+Version: 1.1
+
+--------------------------------------------------------------------------------
+1. ACCEPTANCE OF TERMS
+--------------------------------------------------------------------------------
+By accessing or using Milanesa, you agree to be bound by these Terms and
+Conditions, our Privacy Policy, and our Cookie Policy. If you disagree
+with any part of these terms, do not use the Platform.
+
+--------------------------------------------------------------------------------
+2. DESCRIPTION OF SERVICE
+--------------------------------------------------------------------------------
+Milanesa is a social network that allows users to:
+  - Create profiles and publish content (images, text, audio, video).
+  - Communicate via real-time chat.
+  - Make video calls with other users.
+  - Share stories and posts.
+
+The service is provided "as is" and may be subject to changes or
+discontinuation without prior notice.
+
+--------------------------------------------------------------------------------
+3. REGISTRATION REQUIREMENTS
+--------------------------------------------------------------------------------
+To use Milanesa, you must:
+
+  a) Be at least 18 years old.
+  b) Provide accurate and up-to-date information upon registration.
+  c) Keep your password confidential.
+  d) Not create more than one personal account.
+  e) Not create accounts on behalf of third parties without authorization.
+
+You are responsible for all activity on your account. Notify us immediately
+if you detect unauthorized use at: luis123master@gmail.com
+
+--------------------------------------------------------------------------------
+4. USER CONDUCT
+--------------------------------------------------------------------------------
+When using Milanesa, you agree NOT to:
+
+  a) Post illegal, defamatory, harassing, threatening, obscene,
+     pornographic, or hate-inciting content.
+  b) Upload content that infringes copyright, trademarks, or other
+     intellectual property rights.
+  c) Impersonate other individuals or organizations.
+  d) Use bots, scripts, or automated means to interact with the Platform.
+  e) Attempt unauthorized access to systems or other users' data.
+  f) Distribute malware, spam, or malicious content.
+  g) Conduct unauthorized commercial activities (spam, phishing, fraud).
+  h) Post personal information of third parties without consent (doxxing).
+  i) Harass, intimidate, or threaten other users.
+
+--------------------------------------------------------------------------------
+5. AUDIO CONTENT AND COPYRIGHT
+--------------------------------------------------------------------------------
+When uploading audio content, you must:
+
+  - Be the original author or hold explicit license to share the audio.
+  - Not upload songs, recordings, or musical compositions protected by
+    copyright without authorization from the rights holder.
+
+Milanesa manually reviews and removes infringing audio content upon
+receiving a valid notice. We do not use automated copyright detection
+systems.
+
+Three-strike policy:
+  - 1st offense  : Warning and content removal.
+  - 2nd offense  : Temporary suspension (7 to 30 days).
+  - 3rd offense  : Permanent account deletion.
+
+--------------------------------------------------------------------------------
+6. MODERATION AND ACCOUNT SUSPENSION
+--------------------------------------------------------------------------------
+Milanesa reserves the right, without prior notice, to:
+
+  - Remove any content that violates these Terms.
+  - Temporarily suspend an account under investigation.
+  - Permanently delete accounts with repeated violations.
+
+In severe cases (illegal content, abuse, threats), removal will be
+immediate and without prior warning.
+
+--------------------------------------------------------------------------------
+7. APPEALS
+--------------------------------------------------------------------------------
+If you believe your content was removed or account suspended unfairly,
+you may appeal within 14 days by writing to:
+luis123master@gmail.com
+Subject line: "APPEAL - [your username]"
+
+We will review your case within 5 business days.
+
+--------------------------------------------------------------------------------
+8. MILANESA INTELLECTUAL PROPERTY
+--------------------------------------------------------------------------------
+All design, code, logos, trademarks, and interfaces of Milanesa are the
+exclusive property of Luis Enrique Peñafiel Frias. You may NOT:
+
+  - Copy, reproduce, or distribute the Platform's design or code.
+  - Use the Milanesa name or logo without written authorization.
+  - Reverse engineer the Platform.
+
+--------------------------------------------------------------------------------
+9. LIMITATION OF LIABILITY
+--------------------------------------------------------------------------------
+To the fullest extent permitted by applicable law, Milanesa shall not be
+liable for:
+
+  - Content posted by users.
+  - Data loss or service interruptions.
+  - Direct, indirect, or consequential damages from use of the Platform.
+  - Actions of third parties (including external attacks).
+
+The Platform is provided "as is" and "as available" without warranties
+of any kind.
+
+--------------------------------------------------------------------------------
+10. INDEMNIFICATION
+--------------------------------------------------------------------------------
+You agree to indemnify and hold harmless Milanesa and its representatives
+from any claims, damages, losses, or expenses (including legal fees) arising
+from your misuse of the Platform or violation of these Terms.
+
+--------------------------------------------------------------------------------
+11. MODIFICATIONS
+--------------------------------------------------------------------------------
+Milanesa may modify these Terms at any time. Significant changes will be
+notified at least 15 days in advance. Continued use of the Platform
+constitutes acceptance of the new Terms.
+
+--------------------------------------------------------------------------------
+12. TERMINATION AND ACCOUNT DELETION
+--------------------------------------------------------------------------------
+You may delete your account at any time from:
+
+  (a) The Platform's settings, if you have active access.
+  (b) The Terms acceptance screen, if you have not yet accepted the current
+      version, by clicking "Delete my account". This option is available
+      without needing to accept the Terms or access the Platform's content.
+
+Milanesa may terminate or suspend your access at any time for violation of
+these Terms, without prior notice or liability.
+
+Upon termination, your data will be deleted in accordance with the retention
+period described in the Privacy Policy (up to 30 additional days for
+security reasons).
+
+--------------------------------------------------------------------------------
+12.1 USERS REGISTERED BEFORE PUBLICATION OF THESE TERMS
+--------------------------------------------------------------------------------
+For users registered before the publication date of these Terms, continued
+use of the Milanesa Platform after being notified of them constitutes
+express acceptance of the Terms, Privacy Policy, and Cookie Policy in force.
+
+Users who do not agree may delete their account directly from the Terms
+acceptance screen, without needing to access the application, by clicking
+"Delete my account".
+
+--------------------------------------------------------------------------------
+13. GOVERNING LAW AND JURISDICTION
+--------------------------------------------------------------------------------
+These Terms are governed by the laws of the Republic of Ecuador. Any
+dispute shall be submitted to the competent courts of Ecuador, without
+prejudice to any consumer rights you may have in your country of residence.
+
+--------------------------------------------------------------------------------
+14. "MILANESA IA" FEATURE: INFORMED CONSENT AND LIMITATION OF LIABILITY
+--------------------------------------------------------------------------------
+Milanesa permanently incorporates into its main feed a feature called
+"Milanesa IA". This feature, powered by Google Gemini (Google LLC), randomly
+selects posts from registered users and automatically generates critiques
+about them, visible to all users on the Platform. This feature is not
+optional: it is a permanent, always-active characteristic of the service.
+
+14.1 INTENTIONALLY AGGRESSIVE NATURE OF THE CONTENT
+Before completing registration, you declare that you have read and understood
+that the "Milanesa IA" feature:
+
+  - Operates using a behavioral prompt deliberately designed to generate
+    critiques in an aggressive, sarcastic, toxic, and unfiltered style.
+  - May produce offensive, hurtful, or harsh language about any selected
+    post, including your own.
+  - Selects posts randomly, without Milanesa or the user being able to
+    predict or choose which post will be analyzed.
+  - The generated content is visible to all registered users in the
+    Platform feed.
+
+This is NOT a system error. It is the expected, deliberate, and fully
+disclosed behavior of the feature.
+
+14.2 INFORMED CONSENT AS A CONDITION OF REGISTRATION
+By completing registration on Milanesa, you grant your express and informed
+consent to the following conditions, through active acceptance on the
+registration screen:
+
+  "I have read and understand that Milanesa permanently includes in its
+  feed an Artificial Intelligence feature that randomly selects posts —
+  including my own — and generates automatic critiques using intentionally
+  aggressive, sarcastic, and unfiltered language. I understand this content
+  will be visible to all registered users. I accept these conditions as
+  part of using the service and release Milanesa from any liability for
+  the content generated by the AI."
+
+Without accepting this declaration, registration cannot be completed.
+
+14.3 MILANESA'S LIMITATION OF LIABILITY
+Having granted consent under section 14.2, Milanesa is fully and expressly
+released from liability for:
+
+  a) Offensive, toxic, sarcastic, or hurtful language generated about
+     any post, whether your own or another user's.
+  b) The random selection of your post to be publicly analyzed and
+     criticized by the AI.
+  c) Any emotional, psychological, or reputational impact resulting from
+     the generated critique and its visibility in the feed.
+  d) Any claim regarding content produced by Google Gemini, given that
+     you were explicitly warned and expressly consented upon registration.
+
+Milanesa acts solely as a technical integrator of the Google Gemini service.
+The behavior of the AI model is the sole responsibility of Google LLC.
+
+14.4 REMOVAL REQUEST
+If you wish to request the removal of a critique generated about your post,
+you may do so by writing to: luis123master@gmail.com
+
+Milanesa will evaluate the request within 5 business days. Removal is not
+guaranteed, as the content was generated under conditions you accepted
+at the time of registration.
+
+--------------------------------------------------------------------------------
+15. CONTACT
+--------------------------------------------------------------------------------
+  - General contact  : luis123master@gmail.com
+  - DMCA contact     : luis123master@gmail.com
+
+
+================================================================================
+DOCUMENT 3: COOKIE POLICY
+================================================================================
+
+MILANESA COOKIE POLICY
+Last Updated: January 1, 2025
+Version: 1.0
+
+--------------------------------------------------------------------------------
+1. WHAT ARE COOKIES?
+--------------------------------------------------------------------------------
+Cookies are small text files stored on your device when you visit a website.
+They help us remember your preferences and ensure the Platform functions
+correctly.
+
+--------------------------------------------------------------------------------
+2. TYPES OF COOKIES WE USE
+--------------------------------------------------------------------------------
+STRICTLY NECESSARY COOKIES (No consent required)
+  - User session             : Keeps your session active while browsing.
+  - Authentication token     : Verifies your identity securely.
+  - CSRF protection          : Protects against cross-site request
+                               forgery attacks.
+  Without these cookies, the Platform will not function.
+
+FUNCTIONAL COOKIES (Consent required)
+  - Language preferences     : Remembers your preferred language.
+  - Notification tokens      : Stored via Firebase for push notifications
+                               (LocalStorage / IndexedDB).
+
+ANALYTICS COOKIES (Consent required)
+  - Google Analytics         : Measures traffic anonymously. Individual
+                               users are not identified.
+
+We do NOT use advertising or retargeting cookies.
+
+--------------------------------------------------------------------------------
+3. HOW TO MANAGE COOKIES
+--------------------------------------------------------------------------------
+You can control cookies in your browser settings:
+
+  - Google Chrome    : Settings > Privacy > Cookies
+  - Mozilla Firefox  : Preferences > Privacy > Cookies
+  - Safari           : Preferences > Privacy > Cookies
+  - Microsoft Edge   : Settings > Privacy > Cookies
+
+You can also manage your cookie preferences directly on the Platform at:
+Settings > Privacy > Cookie Management.
+
+IMPORTANT: Disabling necessary cookies will prevent access to the Platform.
+
+--------------------------------------------------------------------------------
+4. THIRD-PARTY COOKIES
+--------------------------------------------------------------------------------
+  - Google LLC (Analytics / Firebase): Data sub-processor under GDPR.
+    More information: https://policies.google.com/privacy
+
+--------------------------------------------------------------------------------
+5. CONTACT
+--------------------------------------------------------------------------------
+For questions about cookies: luis123master@gmail.com
+
+
+================================================================================
+                      END OF LEGAL PACKAGE - ENGLISH VERSION
+                               Milanesa © 2025
+================================================================================
